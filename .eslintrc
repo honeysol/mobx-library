@@ -1,0 +1,26 @@
+{
+  "parser": "babel-eslint",
+  "plugins": ["react", "class-property", "babel", "prettier"],
+  "settings": {
+    "flowtype": {
+      "onlyFilesWithFlowAnnotation": true
+    }
+  },
+  "env": { "browser": true, "es6": true },
+  "globals": { "module": true },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:prettier/recommended",
+    "prettier/react"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "react/prop-types": "off",
+    "no-unused-vars": [2, {"vars": "all", "args": "none", "varsIgnorePattern": "^__dammy"}],
+    "no-console": "off",
+    "react/no-string-refs": "off",
+    "react/no-find-dom-node": "off",
+    "no-debugger": "off"
+  }
+}

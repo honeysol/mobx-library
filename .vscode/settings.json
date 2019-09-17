@@ -1,0 +1,17 @@
+{
+  "javascript.format.enable": false,
+  "javascript.validate.enable": false,
+  "editor.tabSize": 2,
+  "eslint.autoFixOnSave": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+  ], 
+  /* Use Prettier */
+  "[scss]": {
+    "editor.formatOnSave": true
+  },
+  "[css]": {
+    "editor.formatOnSave": true
+  }
+}
