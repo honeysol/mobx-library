@@ -8,25 +8,22 @@ export const resource = _handlerName => (target, fieldName, descriptor) => {
     console.error(`Handler "${handlerName}" not found for `, target);
     return;
   }
-  addHandler(this, "init", () => {
+  addHandler(target, "init", () => {
     observe(
       this,
       fieldName,
       ({ oldValue, newValue }) => {
         if (oldValue) {
           oldValue.off("update", this[handlerName]);
-          console.log("off", handlerName, oldValue);
         }
         if (newValue) {
           newValue.on("update", this[handlerName]);
-          console.log("on", handlerName, newValue);
         }
       },
       true
     );
   });
-  addHandler(this, "init", () => {
+  addHandler(target, "init", () => {
     this[fieldName].off("update", this[handlerName]);
-    console.log("off", handlerName, this[fieldName]);
   });
 };

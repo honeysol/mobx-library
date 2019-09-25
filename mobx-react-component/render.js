@@ -15,4 +15,4 @@ const _render = (target, fieldName, descriptor) => {
   });
 };
 
-export const render = combineDecorator(state, _render);
+export const render = combineDecorator(state.computed, _render);

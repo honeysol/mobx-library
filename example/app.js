@@ -30,12 +30,16 @@ window.MobxStore = MobxStore;
 @component
 class MobxComponent2 extends React.Component {
   state = {};
+  get isMobxComponent2() {
+    return true;
+  }
+  static isMobxComponent2Prototype = true;
 
   @observable
   params = {};
-  @prop
+  @prop.observable
   value = 100;
-  @prop
+  @prop.observable
   store;
   render() {
     return (
@@ -45,7 +49,7 @@ class MobxComponent2 extends React.Component {
       </div>
     );
   }
-  @prop
+  @prop.observable
   dammy = "dammyValue";
 
   @asyncComputed
@@ -61,6 +65,9 @@ class MobxComponent2 extends React.Component {
 }
 @component
 class MobxComponent3 extends MobxComponent2 {
+  isMobxComponent3 = true;
+  static isMobxComponent3Prototype = true;
+
   @observable
   internalValue = 200;
 
@@ -106,11 +113,20 @@ class MobxComponent3 extends MobxComponent2 {
         <button
           onClick={() => {
             runInAction(() => {
-              this.store = new MobxStore(this.store.value + 10);
+              this.store.value = this.store.value + 100;
             });
           }}
         >
           increment store by mobx
+        </button>
+        <button
+          onClick={() => {
+            runInAction(() => {
+              this.store = new MobxStore(this.store.value + 10);
+            });
+          }}
+        >
+          replace store by mobx
         </button>
       </div>
     );

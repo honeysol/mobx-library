@@ -1,32 +1,68 @@
-import { observe } from "mobx";
+import { observe, computed, observable } from "mobx";
 import { addHandler } from "../mobx-initializer/util";
 
-export const resource = ({ on, off, handler, resourceFieldName }) => (
-  target,
-  fieldName,
-  descriptor
-) => {
-  const wrappedHandlerFieldName = "_" + fieldName + "Handler";
+const defaultHandler = value => value;
 
-  addHandler(this, "init", () => {
-    this[wrappedHandlerFieldName] = event => {
-      this[fieldName] = (handler || (value => value))(event);
+// Example:
+// @resource({
+// 	on: (resource, handler) => resource.on("update", handler),
+// 	off: (resource, handler) => resource.off("update", handler),
+// 	handler: value => value, // or event => event.value
+// 	resourceFieldName: "documentResource"
+// })
+// @observable
+// document
+
+export const resource = ({
+  on,
+  off,
+  handler = defaultHandler,
+  resourceFieldName,
+}) => (target, fieldName, descriptor) => {
+  const wrappedHandlerFieldName = Symbol("_" + fieldName + "Handler");
+  addHandler(target, "init", function() {
+    this[wrappedHandlerFieldName] = (...args) => {
+      this[fieldName] = handler.apply(this, args);
     };
     observe(
       this,
       resourceFieldName,
-      ({ oldResource, newResource }) => {
-        if (oldResource) {
-          off(oldResource, this[wrappedHandlerFieldName]);
+      change => {
+        const { oldValue, newValue } = change;
+        if (oldValue) {
+          off(oldValue, this[wrappedHandlerFieldName]);
         }
-        if (newResource) {
-          on(oldResource, this[wrappedHandlerFieldName]);
+        if (newValue) {
+          on(newValue, this[wrappedHandlerFieldName]);
         }
       },
       true
     );
   });
-  addHandler(this, "release", () => {
+  addHandler(target, "release", function() {
     off(this[resourceFieldName], this[wrappedHandlerFieldName]);
   });
+};
+
+resource.computed = ({ on, off, handler = defaultHandler }) => (
+  target,
+  resolvedFieldName,
+  descriptor
+) => {
+  // resource
+  const resourceFieldName = resolvedFieldName + "Resource";
+  Object.defineProperty(target, resourceFieldName, descriptor);
+  computed(target, resourceFieldName, descriptor);
+
+  // resolved
+  delete target[resolvedFieldName];
+  return resource({ on, off, handler, resourceFieldName })(
+    target,
+    resolvedFieldName,
+    observable.ref(target, resolvedFieldName, {
+      configurable: true,
+      writable: true,
+      value: null,
+    })
+  );
 };

@@ -4,6 +4,7 @@ import {
   applyHandler,
   applyHandlerOnce,
   combineDecorator,
+  componentStatus,
 } from "../mobx-initializer/util";
 
 const appliedFlag = Symbol("isAppliedMobxReactComponentItializer");
@@ -12,12 +13,13 @@ const _component = (target, ...args) => {
   if (target.prototype[appliedFlag]) {
     return target;
   }
-  return class ini_componenttializer extends target {
+  return class component extends target {
     [appliedFlag] = true;
     constructor(props) {
       super(props);
       applyHandlerOnce(this, "propUpdate", props);
       applyHandlerOnce(this, "stateRegister", props);
+      applyHandlerOnce(this, "resourceRegister", props);
     }
     shouldComponentUpdate(nextProps, nextState) {
       if (nextProps !== this.props) {
@@ -33,7 +35,7 @@ const _component = (target, ...args) => {
       return result;
     }
     componentDidMount() {
-      this.status = "mounted";
+      this[componentStatus] = "mounted";
     }
     componentWillUnmount() {
       applyHandlerOnce(this, "release");

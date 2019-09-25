@@ -1,18 +1,43 @@
 import { runInAction, observable } from "mobx";
-import { addHandler, combineDecorator } from "../mobx-initializer/util";
+import {
+  addHandler,
+  combineDecorator,
+  acceptParams,
+  parametrizeDecorator,
+} from "../mobx-initializer/util";
 
-const _prop = (target, fieldName, descriptor) => {
-  addHandler(target, "propUpdate", function(props) {
-    console.log("propUpdate", fieldName);
-    runInAction(() => {
-      this[fieldName] = props[fieldName];
-    });
-  });
+// example:
+// fieldIdentifierToFunc("foo.bar")({ foo: { bar: 123} }) === 123
+const fieldIdentifierToFunc = fieldIdentifier => {
+  const exp = fieldIdentifier
+    .split(".")
+    .map(field => `(a=a[${JSON.stringify(field)}])`)
+    .join("&&");
+  return eval(`(function(a){return ${exp};})`);
 };
 
-export const prop = combineDecorator(_prop, observable);
+const _prop = parametrizeDecorator(
+  propName => (target, fieldName, descriptor) => {
+    const getter = fieldIdentifierToFunc(propName);
+    addHandler(target, "propUpdate", function(props) {
+      runInAction(() => {
+        this[fieldName] = getter(props);
+      });
+    });
+  },
+  (target, fieldName) => fieldName
+);
 
-prop.deep = combineDecorator(_prop, observable.deep);
-prop.shallow = combineDecorator(_prop, observable.shallow);
-prop.ref = combineDecorator(_prop, observable.ref);
-prop.struct = combineDecorator(_prop, observable.struct);
+export const prop = combineDecorator(acceptParams(_prop), observable);
+
+prop.observable = combineDecorator(acceptParams(_prop), observable);
+prop.observable.deep = combineDecorator(acceptParams(_prop), observable.deep);
+prop.observable.shallow = combineDecorator(
+  acceptParams(_prop),
+  observable.shallow
+);
+prop.observable.ref = combineDecorator(acceptParams(_prop), observable.ref);
+prop.observable.struct = combineDecorator(
+  acceptParams(_prop),
+  observable.struct
+);

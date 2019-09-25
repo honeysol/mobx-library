@@ -31,9 +31,13 @@ export const addHandler = (target, handlersName, handler) => {
   target[handlersPropertyName].push(handler);
 };
 
-export const combineDecorator = (...decorators) => {
+const _combineDecorator = (...decorators) => {
   return (_target, fieldName, _descriptor) => {
     if (fieldName) {
+      if (typeof fieldName !== "string") {
+        console.error(_target, fieldName, _descriptor, decorators);
+        debugger;
+      }
       const target = _target;
       let descriptor = _descriptor;
       for (const decorator of decorators) {
@@ -49,3 +53,52 @@ export const combineDecorator = (...decorators) => {
     }
   };
 };
+
+export const combineDecorator = (...decorators) => {
+  return (target, fieldName, descriptor) => {
+    if (
+      target.hasOwnProperty("constructor") ||
+      target.hasOwnProperty("prototype")
+    ) {
+      return _combineDecorator(
+        ...decorators.map(decorator =>
+          decorator[isAcceptable] ? decorator.decorator : decorator
+        )
+      )(target, fieldName, descriptor);
+    } else {
+      return _combineDecorator(
+        ...decorators.map(decorator =>
+          decorator[isAcceptable] ? decorator.decorator(target) : decorator
+        )
+      );
+    }
+  };
+};
+
+export const parametrizeDecorator = (decorator, defaultValue) => {
+  return (target, fieldName, descriptor) => {
+    if (
+      target.hasOwnProperty("constructor") ||
+      target.hasOwnProperty("prototype")
+    ) {
+      // パラメータがない時
+      return decorator(defaultValue(target, fieldName, descriptor))(
+        target,
+        fieldName,
+        descriptor
+      );
+    } else {
+      // パラメータが与えられた時
+      return decorator(target);
+    }
+  };
+};
+
+const isAcceptable = Symbol("isAcceptable");
+
+export const acceptParams = decorator => ({
+  decorator,
+  [isAcceptable]: true,
+});
+
+export const componentStatus = Symbol("componentStatus");
