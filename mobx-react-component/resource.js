@@ -42,7 +42,9 @@ export const resource = ({
     );
   });
   addHandler(target, "release", function() {
-    off(this[resourceFieldName], this[wrappedHandlerFieldName]);
+    if (this[resourceFieldName]) {
+      off(this[resourceFieldName], this[wrappedHandlerFieldName]);
+    }
     this[cancelObserveFieldname]();
   });
 };
