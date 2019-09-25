@@ -6,14 +6,19 @@ import {
 } from "../mobx-initializer/util";
 
 const _state = (target, fieldName, descriptor) => {
+  const cancelObserveFieldname = Symbol("_observe_" + fieldName);
+
   addHandler(target, "stateRegister", function(props) {
-    observe(this, fieldName, () => {
+    this[cancelObserveFieldname] = observe(this, fieldName, () => {
       if (this[componentStatus] === "mounted") {
         this.setState({ [fieldName]: this[fieldName] });
       }
     });
     this.state = this.state || { dammy: "###" };
     this.state[fieldName] = this[fieldName];
+  });
+  addHandler(target, "release", function(props) {
+    this[cancelObserveFieldname]();
   });
 };
 

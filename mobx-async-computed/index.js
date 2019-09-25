@@ -8,9 +8,11 @@ const createAsyncComputed = observableFunc => (
   descriptor
 ) => {
   const promiseFieldName = resolvedFieldName + "Promise";
+  const cancelObserveFieldname = Symbol("_observe_" + promiseFieldName);
+
   addHandler(target, "init", function() {
     const asyncCommiter = new AsyncCommitter();
-    observe(
+    this[cancelObserveFieldname] = observe(
       this,
       promiseFieldName,
       async ({ newValue }) => {
@@ -31,6 +33,10 @@ const createAsyncComputed = observableFunc => (
     configurable: true,
     writable: true,
     value: null,
+  });
+
+  addHandler(target, "release", function(props) {
+    this[cancelObserveFieldname]();
   });
 };
 

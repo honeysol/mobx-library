@@ -20,11 +20,13 @@ export const resource = ({
   resourceFieldName,
 }) => (target, fieldName, descriptor) => {
   const wrappedHandlerFieldName = Symbol("_" + fieldName + "Handler");
+  const cancelObserveFieldname = Symbol("_observe_" + fieldName);
+
   addHandler(target, "init", function() {
     this[wrappedHandlerFieldName] = (...args) => {
       this[fieldName] = handler.apply(this, args);
     };
-    observe(
+    this[cancelObserveFieldname] = observe(
       this,
       resourceFieldName,
       change => {
@@ -41,6 +43,7 @@ export const resource = ({
   });
   addHandler(target, "release", function() {
     off(this[resourceFieldName], this[wrappedHandlerFieldName]);
+    this[cancelObserveFieldname]();
   });
 };
 
