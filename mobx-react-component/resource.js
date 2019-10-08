@@ -20,7 +20,7 @@ export const resource = ({
   resourceFieldName,
 }) => (target, fieldName, descriptor) => {
   const wrappedHandlerFieldName = Symbol("_" + fieldName + "Handler");
-  const cancelObserveFieldname = Symbol("_observe_" + fieldName);
+  const cancelObserveFieldname = Symbol("_resource_" + fieldName);
 
   addHandler(target, "init", function() {
     this[wrappedHandlerFieldName] = (...args) => {
