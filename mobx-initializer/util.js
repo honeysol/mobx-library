@@ -55,7 +55,7 @@ const _combineDecorator = (...decorators) => {
 };
 
 export const combineDecorator = (...decorators) => {
-  return (target, fieldName, descriptor) => {
+  return (target, ...args) => {
     if (
       target.hasOwnProperty("constructor") ||
       target.hasOwnProperty("prototype")
@@ -64,11 +64,13 @@ export const combineDecorator = (...decorators) => {
         ...decorators.map(decorator =>
           decorator[isAcceptable] ? decorator.decorator : decorator
         )
-      )(target, fieldName, descriptor);
+      )(target, ...args);
     } else {
       return _combineDecorator(
         ...decorators.map(decorator =>
-          decorator[isAcceptable] ? decorator.decorator(target) : decorator
+          decorator[isAcceptable]
+            ? decorator.decorator(target, ...args)
+            : decorator
         )
       );
     }
@@ -76,20 +78,16 @@ export const combineDecorator = (...decorators) => {
 };
 
 export const parametrizeDecorator = (decorator, defaultValue) => {
-  return (target, fieldName, descriptor) => {
+  return (target, ...args) => {
     if (
       target.hasOwnProperty("constructor") ||
       target.hasOwnProperty("prototype")
     ) {
       // パラメータがない時
-      return decorator(defaultValue(target, fieldName, descriptor))(
-        target,
-        fieldName,
-        descriptor
-      );
+      return decorator(defaultValue(target, ...args))(target, ...args);
     } else {
       // パラメータが与えられた時
-      return decorator(target);
+      return decorator(target, ...args);
     }
   };
 };

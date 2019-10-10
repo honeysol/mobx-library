@@ -17,9 +17,14 @@ const fieldIdentifierToFunc = fieldIdentifier => {
 };
 
 const _prop = parametrizeDecorator(
-  propName => (target, fieldName, descriptor) => {
+  (propName, intercepter) => (target, fieldName, descriptor) => {
     const getter = fieldIdentifierToFunc(propName);
     addHandler(target, "propUpdate", function(props) {
+      const newValue = getter(props),
+        oldValue = this[fieldName];
+      if (intercepter && !intercepter({ newValue, oldValue })) {
+        return;
+      }
       runInAction(() => {
         this[fieldName] = getter(props);
       });
