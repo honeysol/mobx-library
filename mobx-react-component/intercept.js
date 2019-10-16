@@ -1,15 +1,19 @@
-import { observe } from "mobx";
+import { intercept as mobxIntercept } from "mobx";
 import { addHandler, parametrizeDecorator } from "../mobx-initializer/util";
 
-export const _watch = watchFieldName => (target, fieldName, descriptor) => {
+export const _intercept = interceptFieldName => (
+  target,
+  fieldName,
+  descriptor
+) => {
   if (fieldName) {
     const cancelObserveFieldname = Symbol(
       "cancelObserveFieldname: " + fieldName
     );
     addHandler(target, "stateRegister", function(props) {
-      this[cancelObserveFieldname] = observe(
+      this[cancelObserveFieldname] = mobxIntercept(
         this,
-        watchFieldName,
+        interceptFieldName,
         descriptor.value.bind(this)
       );
     });
@@ -19,8 +23,8 @@ export const _watch = watchFieldName => (target, fieldName, descriptor) => {
   } else {
     const cancelObserveFieldname = Symbol("cancelObserveFieldname");
     addHandler(target, "stateRegister", function(props) {
-      this[cancelObserveFieldname] = observe(
-        watchFieldName,
+      this[cancelObserveFieldname] = mobxIntercept(
+        interceptFieldName,
         descriptor.value.bind(this)
       );
     });
@@ -30,4 +34,4 @@ export const _watch = watchFieldName => (target, fieldName, descriptor) => {
   }
 };
 
-export const watch = parametrizeDecorator(_watch, () => null);
+export const intercept = parametrizeDecorator(_intercept, () => null);
