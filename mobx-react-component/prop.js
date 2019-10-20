@@ -33,16 +33,9 @@ const _prop = parametrizeDecorator(
   (target, fieldName) => fieldName
 );
 
-export const prop = combineDecorator(acceptParams(_prop), observable);
+export const prop = combineDecorator(acceptParams(_prop), observable.ref);
 
-prop.observable = combineDecorator(acceptParams(_prop), observable);
-prop.observable.deep = combineDecorator(acceptParams(_prop), observable.deep);
-prop.observable.shallow = combineDecorator(
-  acceptParams(_prop),
-  observable.shallow
-);
-prop.observable.ref = combineDecorator(acceptParams(_prop), observable.ref);
-prop.observable.struct = combineDecorator(
-  acceptParams(_prop),
-  observable.struct
-);
+prop.deep = combineDecorator(acceptParams(_prop), observable.deep);
+prop.shallow = combineDecorator(acceptParams(_prop), observable.shallow);
+prop.ref = combineDecorator(acceptParams(_prop), observable.ref);
+prop.struct = combineDecorator(acceptParams(_prop), observable.struct);
