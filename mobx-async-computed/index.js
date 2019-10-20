@@ -1,18 +1,48 @@
-import { observe, computed, runInAction, observable } from "mobx";
+import {
+  observe,
+  computed,
+  runInAction,
+  observable,
+  onBecomeUnobserved,
+} from "mobx";
 import { AsyncCommitter } from "./asyncCommitter";
-import { addHandler } from "../mobx-initializer/util";
+import * as crypto from "crypto";
 
 const createAsyncComputed = observableFunc => (
   target,
-  resolvedFieldName,
+  fieldName,
   descriptor
 ) => {
-  const promiseFieldName = resolvedFieldName + "Promise";
-  const cancelObserveFieldname = Symbol("_observe_" + promiseFieldName);
+  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
+  const getterFieldName = fieldName;
+  const resolvedFieldName = fieldId + "Result";
+  const promiseFieldName = fieldId + "Promise";
+  const isObservingFieldName = fieldId + "IsObserving";
+  const asyncCommitterFieldName = fieldId + "AsyncCommitter";
+  Object.defineProperty(target, promiseFieldName, descriptor);
+  delete target[resolvedFieldName];
+  computed(target, promiseFieldName, descriptor);
+  computed(target, getterFieldName, {
+    configurable: true,
+    writable: true,
+    get() {
+      if (!this[isObservingFieldName]) {
+        this[isObservingFieldName] = true;
+        startObserving.apply(this);
+      }
+      return this[resolvedFieldName];
+    },
+  });
+  observableFunc(target, resolvedFieldName, {
+    configurable: true,
+    writable: true,
+    value: null,
+  });
 
-  addHandler(target, "init", function() {
-    const asyncCommiter = new AsyncCommitter();
-    this[cancelObserveFieldname] = observe(
+  const startObserving = function() {
+    const asyncCommiter = (this[asyncCommitterFieldName] =
+      this[asyncCommitterFieldName] || new AsyncCommitter());
+    const cancelObserve = observe(
       this,
       promiseFieldName,
       async ({ newValue }) => {
@@ -25,22 +55,19 @@ const createAsyncComputed = observableFunc => (
       },
       true
     );
-  });
-  Object.defineProperty(target, promiseFieldName, descriptor);
-  delete target[resolvedFieldName];
-  computed(target, promiseFieldName, descriptor);
-  observableFunc(target, resolvedFieldName, {
-    configurable: true,
-    writable: true,
-    value: null,
-  });
-
-  addHandler(target, "release", function(props) {
-    this[cancelObserveFieldname]();
-  });
+    const cancelOnBecomeUnobserved = onBecomeUnobserved(
+      this,
+      resolvedFieldName,
+      () => {
+        cancelOnBecomeUnobserved();
+        cancelObserve();
+        this[isObservingFieldName] = false;
+      }
+    );
+  };
 };
 
-export const asyncComputed = createAsyncComputed(observable);
+export const asyncComputed = createAsyncComputed(observable.ref);
 asyncComputed.deep = createAsyncComputed(observable.deep);
 asyncComputed.shallow = createAsyncComputed(observable.shallow);
 asyncComputed.ref = createAsyncComputed(observable.ref);
