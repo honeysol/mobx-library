@@ -6,64 +6,77 @@ import {
 } from "mobx";
 import * as crypto from "crypto";
 
-// import { initializeInstance } from "mobx/utils/decorators";
-
-export const becomeObserved = handler => (target, fieldName, descriptor) => {
+const becomeObservedRaw = ({ handler, observingFieldName }) => (
+  target,
+  fieldName,
+  descriptor
+) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const temporaryFieldName = fieldId + "Temporary";
   const isObservingFieldName = fieldId + "IsObserving";
-  const cancelObservingFieldName = fieldId + "CancelObserving";
-  const computedFieldName = fieldId + "Computed";
-
-  //TODO getのときの分岐処理
-
-  const startObserving = function() {
-    this[cancelObservingFieldName] = onBecomeObserved(
-      this,
-      computedFieldName,
-      () => {
-        const cancelHandler =
-          typeof handler === "function" ? handler.apply(this) : this[handler]();
-        const cancelOnBecomeUnobserved = onBecomeUnobserved(
-          this,
-          computedFieldName,
-          () => {
-            cancelOnBecomeUnobserved();
-            cancelHandler();
-            this[isObservingFieldName] = false;
-          }
-        );
-      }
-    );
-  };
-
-  const computedDescriptor = computed(target, computedFieldName, {
+  return computed(target, fieldName, {
     configurable: true,
     get() {
       if (!this[isObservingFieldName]) {
         this[isObservingFieldName] = true;
-        startObserving.apply(this);
+        const cancelOnBecomeObserved = onBecomeObserved(
+          this,
+          observingFieldName,
+          () => {
+            const cancelHandler =
+              typeof handler === "function"
+                ? handler.apply(this)
+                : this[handler]();
+            const cancelOnBecomeUnobserved = onBecomeUnobserved(
+              this,
+              observingFieldName,
+              () => {
+                cancelOnBecomeUnobserved();
+                cancelHandler();
+                this[isObservingFieldName] = false;
+              }
+            );
+          }
+        );
+        const result = this[observingFieldName];
+        cancelOnBecomeObserved();
+        return result;
+      } else {
+        return this[observingFieldName];
       }
-      const result = this[temporaryFieldName];
-      this[cancelObservingFieldName]();
-      return result;
     },
   });
+};
 
-  if (descriptor.get && !descriptor.set) {
+export const becomeObserved = handler => (target, fieldName, descriptor) => {
+  const isComputed = descriptor.get && !descriptor.set;
+  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
+  const temporaryFieldName = fieldId + "Temporary";
+  const computedFieldName = fieldId + "Computed";
+
+  if (isComputed) {
     Object.defineProperty(
       target,
       temporaryFieldName,
       computed(target, temporaryFieldName, descriptor)
     );
-    return computedDescriptor;
+    return becomeObservedRaw({
+      handler,
+      observingFieldName: temporaryFieldName,
+    })(target, fieldName);
   } else {
     Object.defineProperty(
       target,
       temporaryFieldName,
       observable.ref(target, temporaryFieldName, descriptor)
     );
-    Object.defineProperty(target, computedFieldName, computedDescriptor);
+    Object.defineProperty(
+      target,
+      computedFieldName,
+      becomeObservedRaw({
+        handler,
+        observingFieldName: temporaryFieldName,
+      })(target, computedFieldName)
+    );
     return {
       configurable: true,
       get(value) {
