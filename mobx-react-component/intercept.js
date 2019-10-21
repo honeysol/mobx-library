@@ -6,6 +6,7 @@ export const _intercept = interceptFieldName => (
   fieldName,
   descriptor
 ) => {
+  console.log("_intercept", descriptor);
   if (fieldName) {
     const cancelObserveFieldname = Symbol(
       "cancelObserveFieldname: " + fieldName
@@ -24,7 +25,7 @@ export const _intercept = interceptFieldName => (
     const cancelObserveFieldname = Symbol("cancelObserveFieldname");
     addHandler(target, "stateRegister", function(props) {
       this[cancelObserveFieldname] = mobxIntercept(
-        interceptFieldName,
+        this,
         descriptor.value.bind(this)
       );
     });
