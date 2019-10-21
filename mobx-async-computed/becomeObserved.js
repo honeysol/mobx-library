@@ -6,7 +6,7 @@ import {
 } from "mobx";
 import * as crypto from "crypto";
 
-const becomeObservedRaw = ({ handler, observingFieldName }) => (
+export const becomeObserved = (handler, observingFieldName) => (
   target,
   fieldName,
   descriptor
@@ -47,44 +47,39 @@ const becomeObservedRaw = ({ handler, observingFieldName }) => (
   });
 };
 
-export const becomeObserved = handler => (target, fieldName, descriptor) => {
-  const isComputed = descriptor.get && !descriptor.set;
+becomeObserved.computed = handler => (target, fieldName, descriptor) => {
+  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
+  const temporaryFieldName = fieldId + "Temporary";
+  Object.defineProperty(
+    target,
+    temporaryFieldName,
+    computed(target, temporaryFieldName, descriptor)
+  );
+  return becomeObserved(handler, temporaryFieldName)(target, fieldName);
+};
+
+becomeObserved.observable = handler => (target, fieldName, descriptor) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
   const temporaryFieldName = fieldId + "Temporary";
   const computedFieldName = fieldId + "Computed";
 
-  if (isComputed) {
-    Object.defineProperty(
-      target,
-      temporaryFieldName,
-      computed(target, temporaryFieldName, descriptor)
-    );
-    return becomeObservedRaw({
-      handler,
-      observingFieldName: temporaryFieldName,
-    })(target, fieldName);
-  } else {
-    Object.defineProperty(
-      target,
-      temporaryFieldName,
-      observable.ref(target, temporaryFieldName, descriptor)
-    );
-    Object.defineProperty(
-      target,
-      computedFieldName,
-      becomeObservedRaw({
-        handler,
-        observingFieldName: temporaryFieldName,
-      })(target, computedFieldName)
-    );
-    return {
-      configurable: true,
-      get(value) {
-        return this[computedFieldName];
-      },
-      set(value) {
-        this[temporaryFieldName] = value;
-      },
-    };
-  }
+  Object.defineProperty(
+    target,
+    temporaryFieldName,
+    observable.ref(target, temporaryFieldName, descriptor)
+  );
+  Object.defineProperty(
+    target,
+    computedFieldName,
+    becomeObserved(handler, temporaryFieldName)(target, computedFieldName)
+  );
+  return {
+    configurable: true,
+    get(value) {
+      return this[computedFieldName];
+    },
+    set(value) {
+      this[temporaryFieldName] = value;
+    },
+  };
 };

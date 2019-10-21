@@ -40,9 +40,5 @@ export const asyncComputed = (target, fieldName, descriptor) => {
       },
       true
     );
-  })(target, fieldName, {
-    get() {
-      return this[resultFieldName];
-    },
-  });
+  }, resultFieldName)(target, fieldName);
 };
