@@ -3,6 +3,7 @@ import {
   computed,
   runInAction,
   observable,
+  onBecomeObserved,
   onBecomeUnobserved,
 } from "mobx";
 import { AsyncCommitter } from "./asyncCommitter";
@@ -19,20 +20,11 @@ const createAsyncComputed = observableFunc => (
   const promiseFieldName = fieldId + "Promise";
   const isObservingFieldName = fieldId + "IsObserving";
   const asyncCommitterFieldName = fieldId + "AsyncCommitter";
-  Object.defineProperty(target, promiseFieldName, descriptor);
-  delete target[resolvedFieldName];
+  const cancelObservingFieldName = fieldId + "CancelObserving";
+  // Object.defineProperty(target, promiseFieldName, descriptor);
+  // delete target[resolvedFieldName];
   computed(target, promiseFieldName, descriptor);
-  computed(target, getterFieldName, {
-    configurable: true,
-    writable: true,
-    get() {
-      if (!this[isObservingFieldName]) {
-        this[isObservingFieldName] = true;
-        startObserving.apply(this);
-      }
-      return this[resolvedFieldName];
-    },
-  });
+
   observableFunc(target, resolvedFieldName, {
     configurable: true,
     writable: true,
@@ -42,29 +34,48 @@ const createAsyncComputed = observableFunc => (
   const startObserving = function() {
     const asyncCommiter = (this[asyncCommitterFieldName] =
       this[asyncCommitterFieldName] || new AsyncCommitter());
-    const cancelObserve = observe(
-      this,
-      promiseFieldName,
-      async ({ newValue }) => {
-        const { successed, value } = await asyncCommiter.resolve(newValue);
-        if (successed) {
-          runInAction(() => {
-            this[resolvedFieldName] = value;
-          });
-        }
-      },
-      true
-    );
-    const cancelOnBecomeUnobserved = onBecomeUnobserved(
+    this[cancelObservingFieldName] = onBecomeObserved(
       this,
       resolvedFieldName,
       () => {
-        cancelOnBecomeUnobserved();
-        cancelObserve();
-        this[isObservingFieldName] = false;
+        const cancelObserve = observe(
+          this,
+          promiseFieldName,
+          async ({ newValue }) => {
+            const { successed, value } = await asyncCommiter.resolve(newValue);
+            if (successed) {
+              runInAction(() => {
+                this[resolvedFieldName] = value;
+              });
+            }
+          },
+          true
+        );
+        const cancelOnBecomeUnobserved = onBecomeUnobserved(
+          this,
+          resolvedFieldName,
+          () => {
+            cancelOnBecomeUnobserved();
+            cancelObserve();
+            this[isObservingFieldName] = false;
+          }
+        );
       }
     );
   };
+  return computed(target, getterFieldName, {
+    configurable: true,
+    writable: true,
+    get() {
+      if (!this[isObservingFieldName]) {
+        this[isObservingFieldName] = true;
+        startObserving.apply(this);
+      }
+      const result = this[resolvedFieldName];
+      this[cancelObservingFieldName]();
+      return result;
+    },
+  });
 };
 
 export const asyncComputed = createAsyncComputed(observable.ref);
