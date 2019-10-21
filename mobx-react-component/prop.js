@@ -1,10 +1,5 @@
-import { runInAction, observable } from "mobx";
-import {
-  addHandler,
-  combineDecorator,
-  acceptParams,
-  parametrizeDecorator,
-} from "../mobx-initializer/util";
+import { computed } from "mobx";
+import { parametrizeDecorator } from "../mobx-initializer/util";
 
 // example:
 // fieldIdentifierToFunc("foo.bar")({ foo: { bar: 123} }) === 123
@@ -17,25 +12,17 @@ const fieldIdentifierToFunc = fieldIdentifier => {
 };
 
 const _prop = parametrizeDecorator(
-  (propName, intercepter) => (target, fieldName, descriptor) => {
+  propName => (target, fieldName, descriptor) => {
     const getter = fieldIdentifierToFunc(propName);
-    addHandler(target, "propUpdate", function(props) {
-      const newValue = getter(props),
-        oldValue = this[fieldName];
-      if (intercepter && !intercepter({ newValue, oldValue })) {
-        return;
-      }
-      runInAction(() => {
-        this[fieldName] = getter(props);
-      });
+    return computed(target, fieldName, {
+      ...descriptor,
+      value: null,
+      get: function() {
+        return getter(this.props);
+      },
     });
   },
   (target, fieldName) => fieldName
 );
 
-export const prop = combineDecorator(acceptParams(_prop), observable.ref);
-
-prop.deep = combineDecorator(acceptParams(_prop), observable.deep);
-prop.shallow = combineDecorator(acceptParams(_prop), observable.shallow);
-prop.ref = combineDecorator(acceptParams(_prop), observable.ref);
-prop.struct = combineDecorator(acceptParams(_prop), observable.struct);
+export const prop = _prop;

@@ -1,3 +1,5 @@
+import { observable } from "mobx";
+
 import { initializer } from "../mobx-initializer";
 
 import {
@@ -15,24 +17,12 @@ const _component = (target, ...args) => {
   }
   return class component extends target {
     [appliedFlag] = true;
+    @observable.ref
+    props;
     constructor(props) {
       super(props);
-      applyHandlerOnce(this, "propUpdate", props);
       applyHandlerOnce(this, "stateRegister", props);
       applyHandlerOnce(this, "resourceRegister", props);
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-      if (nextProps !== this.props) {
-        if (!this._shouldComponentUpdateInAction) {
-          this._shouldComponentUpdateInAction = true;
-          applyHandler(this, "propUpdate", nextProps);
-        }
-      }
-      const result = super.shouldComponentUpdate
-        ? super.shouldComponentUpdate(nextProps)
-        : true;
-      this._shouldComponentUpdateInAction = false;
-      return result;
     }
     componentDidMount() {
       this[componentStatus] = "mounted";
