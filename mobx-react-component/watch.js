@@ -10,7 +10,8 @@ export const _watch = watchFieldName => (target, fieldName, descriptor) => {
       this[cancelObserveFieldname] = observe(
         this,
         watchFieldName,
-        descriptor.value.bind(this)
+        descriptor.value.bind(this),
+        true
       );
     });
     addHandler(target, "release", function(props) {
