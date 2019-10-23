@@ -26,7 +26,7 @@ export const state = _state;
 
 state.computed = combineDecorator(computed, _state);
 state.computed.struct = combineDecorator(computed.struct, _state);
-state.observable = combineDecorator(observable.deep, _state);
+state.observable = combineDecorator(observable.ref, _state);
 state.deep = combineDecorator(observable.deep, _state);
 state.shallow = combineDecorator(observable.shallow, _state);
 state.ref = combineDecorator(observable.ref, _state);
