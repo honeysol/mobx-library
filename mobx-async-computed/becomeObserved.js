@@ -12,7 +12,7 @@ export const becomeObserved = (handler, observingFieldName) => (
   descriptor
 ) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const isObservingFieldName = fieldId + "IsObserving";
+  const isObservingFieldName = fieldId + "IsObserving(becomeObserved)";
   return computed(target, fieldName, {
     configurable: true,
     get() {
@@ -49,7 +49,7 @@ export const becomeObserved = (handler, observingFieldName) => (
 
 becomeObserved.computed = handler => (target, fieldName, descriptor) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const temporaryFieldName = fieldId + "Temporary";
+  const temporaryFieldName = fieldId + "Temporary(becomeObserved.computed)";
   Object.defineProperty(
     target,
     temporaryFieldName,
@@ -60,8 +60,8 @@ becomeObserved.computed = handler => (target, fieldName, descriptor) => {
 
 becomeObserved.observable = handler => (target, fieldName, descriptor) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const temporaryFieldName = fieldId + "Temporary";
-  const computedFieldName = fieldId + "Computed";
+  const temporaryFieldName = fieldId + "Temporary(becomeObserved.observable)";
+  const computedFieldName = fieldId + "Computed(becomeObserved.observable)";
 
   Object.defineProperty(
     target,

@@ -5,13 +5,15 @@ import { becomeObserved } from "./becomeObserved";
 
 export const asyncComputed = (target, fieldName, descriptor) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const resultFieldName = fieldId + "Result";
-  const promiseFieldName = fieldId + "Promise";
-  const asyncCommitterFieldName = fieldId + "AsyncCommitter";
+  const resultFieldName = fieldId + "Result(asyncComputed)";
+  const promiseFieldName = fieldId + "Promise(asyncComputed)";
+  const asyncCommitterFieldName = fieldId + "AsyncCommitter(asyncComputed)";
   Object.defineProperty(
     target,
     promiseFieldName,
-    computed(target, promiseFieldName, descriptor)
+    computed(target, promiseFieldName, {
+      get: descriptor.get || descriptor.value,
+    })
   );
 
   Object.defineProperty(
