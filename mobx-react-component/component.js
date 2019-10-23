@@ -3,20 +3,22 @@ import { observable } from "mobx";
 import { initializer } from "../mobx-initializer";
 
 import {
-  applyHandler,
   applyHandlerOnce,
   combineDecorator,
   componentStatus,
 } from "../mobx-initializer/util";
 
-const appliedFlag = Symbol("isAppliedMobxReactComponentItializer");
+const componentAppliedFlag = Symbol("isAppliedMobxReactComponentInitializer");
+const pureComponentAppliedFlag = Symbol(
+  "isAppliedMobxReactPureComponentInitializer"
+);
 
-const _component = (target, ...args) => {
-  if (target.prototype[appliedFlag]) {
+const _component = target => {
+  if (target.prototype[componentAppliedFlag]) {
     return target;
   }
   return class component extends target {
-    [appliedFlag] = true;
+    [componentAppliedFlag] = true;
     @observable.ref
     props;
     constructor(props) {
@@ -33,4 +35,20 @@ const _component = (target, ...args) => {
   };
 };
 
+const _pureComponent = target => {
+  if (target.prototype[pureComponentAppliedFlag]) {
+    return target;
+  }
+  return class component extends target {
+    [pureComponentAppliedFlag] = true;
+    shouldComponentUpdate(nextProps: any, nextState: any) {
+      if (nextState !== this.state) {
+        return nextState !== this.state;
+      }
+    }
+  };
+};
+
 export const component = combineDecorator(initializer, _component);
+
+component.pure = combineDecorator(initializer, _component, _pureComponent);
