@@ -20,6 +20,7 @@ const _state = (target, fieldName, descriptor) => {
   addHandler(target, "release", function(props) {
     this[cancelObserveFieldname]();
   });
+  return descriptor;
 };
 
 export const state = _state;

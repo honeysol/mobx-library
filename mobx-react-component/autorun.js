@@ -9,4 +9,5 @@ export const autorun = watchFieldName => (target, fieldName, descriptor) => {
   addHandler(target, "release", function(props) {
     this[cancelAutoRunFieldname]();
   });
+  return descriptor;
 };
