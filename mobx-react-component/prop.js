@@ -1,5 +1,6 @@
 import { computed } from "mobx";
 import { parametrizeDecorator } from "../mobx-initializer/util";
+import { intercept } from "./intercept";
 
 // example:
 // fieldIdentifierToFunc("foo.bar")({ foo: { bar: 123} }) === 123
@@ -11,18 +12,19 @@ const fieldIdentifierToFunc = fieldIdentifier => {
   return eval(`(function(a){return ${exp};})`);
 };
 
-const _prop = parametrizeDecorator(
-  propName => (target, fieldName, descriptor) => {
-    const getter = fieldIdentifierToFunc(propName);
-    return computed(target, fieldName, {
-      ...descriptor,
-      value: null,
-      get: function() {
-        return getter(this.props);
-      },
-    });
-  },
-  (target, fieldName) => fieldName
-);
+const createPropDecorator = computedFunc =>
+  parametrizeDecorator(
+    propName => (target, fieldName, descriptor) => {
+      const getter = fieldIdentifierToFunc(propName);
+      return computedFunc(target, fieldName, {
+        get: function() {
+          return getter(this.props);
+        },
+      });
+    },
+    (target, fieldName) => fieldName
+  );
 
-export const prop = _prop;
+export const prop = createPropDecorator(computed);
+
+prop.deep = createPropDecorator(intercept.isEqual);
