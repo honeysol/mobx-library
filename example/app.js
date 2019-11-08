@@ -8,6 +8,12 @@ import * as mobx from "mobx";
 
 window.mobx = mobx;
 
+console.log(
+  { observable, configure, runInAction, computed },
+  { component, prop, render },
+  { asyncComputed }
+);
+
 import { delay } from "delay";
 
 // configure({
@@ -40,9 +46,9 @@ class MobxComponent2 extends React.Component {
 
   @observable
   params = {};
-  @prop.observable
+  @prop
   value = 100;
-  @prop.observable
+  @prop
   store;
   render() {
     return (
@@ -52,7 +58,7 @@ class MobxComponent2 extends React.Component {
       </div>
     );
   }
-  @prop.observable
+  @prop
   dammy = "dammyValue";
 
   @asyncComputed
