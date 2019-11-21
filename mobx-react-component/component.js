@@ -27,9 +27,11 @@ const _component = target => {
       applyHandlerOnce(this, "resourceRegister", props);
     }
     componentDidMount() {
+      super.componentDidMount?.call(this);
       this[componentStatus] = "mounted";
     }
     componentWillUnmount() {
+      super.componentWillUnmount?.call(this);
       applyHandlerOnce(this, "release");
     }
   };
