@@ -1,18 +1,31 @@
 import { addHandler, combineDecorator } from "../mobx-initializer/util";
 import { state } from "./state";
+import * as crypto from "crypto";
+
+// エラーの原因: combineDecoratorの扱いがおかしい
 
 const _render = (target, fieldName, descriptor) => {
-  addHandler(target, "init", function(props) {
-    if (target.hasOwnProperty("render")) {
-      console.warn(
-        "render decorator is used but render method is already implemented",
-        this
-      );
-    }
-    this.render = function() {
-      return this[fieldName];
+  if (fieldName === "render") {
+    const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
+    Object.defineProperty(
+      target,
+      fieldId,
+      state.computed(target, fieldId, descriptor)
+    );
+    return {
+      configurable: true,
+      value() {
+        return this[fieldId];
+      },
     };
-  });
+  } else {
+    addHandler(target, "init", function(props) {
+      this.render = function() {
+        return this[fieldName];
+      };
+    });
+    return state.computed(target, fieldName, descriptor);
+  }
 };
 
-export const render = combineDecorator(state.computed, _render);
+export const render = _render;

@@ -37,6 +37,8 @@ const _component = target => {
   };
 };
 
+// pure componentでは、propの変更があってもstateの変更がない限り、renderされない
+
 const _pureComponent = target => {
   if (target.prototype[pureComponentAppliedFlag]) {
     return target;
@@ -44,9 +46,7 @@ const _pureComponent = target => {
   return class component extends target {
     [pureComponentAppliedFlag] = true;
     shouldComponentUpdate(nextProps: any, nextState: any) {
-      if (nextState !== this.state) {
-        return nextState !== this.state;
-      }
+      return nextState !== this.state;
     }
   };
 };
