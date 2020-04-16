@@ -43,7 +43,7 @@
     "html-webpack-plugin": "^2.30.1",
     "http-proxy-agent": "^2.1.0",
     "http-server": "^0.11.1",
-    "https-proxy-agent": "^2.2.1",
+    "https-proxy-agent": "^2.2.3",
     "less": "^3.7.1",
     "less-loader": "^4.1.0",
     "node-sass": "^4.7.2",
