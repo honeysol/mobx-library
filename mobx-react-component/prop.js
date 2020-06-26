@@ -28,3 +28,18 @@ const createPropDecorator = computedFunc =>
 export const prop = createPropDecorator(computed);
 
 prop.deep = createPropDecorator(intercept.isEqual);
+
+const propDelegateDecorator = parametrizeDecorator(
+  propName => (target, fieldName, descriptor) => {
+    return {
+      get() {
+        return (...args) => {
+          this.props[propName](...args);
+        };
+      },
+    };
+  },
+  (target, fieldName) => fieldName
+);
+
+prop.delegate = propDelegateDecorator;
