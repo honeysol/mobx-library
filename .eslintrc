@@ -1,26 +1,64 @@
 {
-  "parser": "babel-eslint",
-  "plugins": ["react", "class-property", "babel", "prettier"],
-  "settings": {
-    "flowtype": {
-      "onlyFilesWithFlowAnnotation": true
-    }
-  },
-  "env": { "browser": true, "es6": true },
-  "globals": { "module": true },
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "prettier",
+    "@typescript-eslint",
+    "simple-import-sort",
+    "import",
+    "react"
+  ],
   "extends": [
     "eslint:recommended",
-    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
     "plugin:prettier/recommended",
-    "prettier/react"
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "prettier/@typescript-eslint"
   ],
+  "env": {
+    "es6": true,
+    "jest": true
+  },
   "rules": {
+    "@typescript-eslint/camelcase": ["off"],
+    "@typescript-eslint/explicit-function-return-type": ["off"],
+    "@typescript-eslint/no-empty-function": ["off"],
+    "@typescript-eslint/no-unused-vars": ["off"],
+    "@typescript-eslint/no-use-before-define": ["off"],
+    "@typescript-eslint/no-var-requires": ["off"],
+    "no-console": "error",
+    "no-empty": ["error", { "allowEmptyCatch": true }],
+    "simple-import-sort/sort": [
+      "error",
+      {
+        "groups": [["^\\u0000"],["^[^.]"], ["^~?\\w"], ["^\\."]]
+      }
+    ],
+    "sort-imports": "off",
     "prettier/prettier": "error",
-    "react/prop-types": "off",
-    "no-unused-vars": [2, {"vars": "all", "args": "none", "varsIgnorePattern": "^__dammy"}],
-    "no-console": "off",
-    "react/no-string-refs": "off",
-    "react/no-find-dom-node": "off",
-    "no-debugger": "off"
+    "import/first": "off",
+    "import/newline-after-import": "off",
+    "import/no-duplicates": "off",
+    "import/named": 0
+  },
+  "overrides": [
+    {
+      "files": "*.js",
+      "rules": {
+        "import/order": ["error", { "newlines-between": "always" }],
+        "simple-import-sort/sort": "off"
+      }
+    },
+    {
+      "files": ["*.{config,d,test}.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ],
+  "settings": {
+    "import/resolver": "webpack"
   }
 }
