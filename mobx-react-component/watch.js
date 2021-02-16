@@ -2,6 +2,9 @@ import { observe } from "mobx";
 import { addHandler, parametrizeDecorator } from "../mobx-initializer/util";
 
 export const _watch = watchFieldName => (target, fieldName, descriptor) => {
+  if (!descriptor.value) {
+    console.error("decorator errsor", watchFieldName, fieldName, descriptor);
+  }
   if (fieldName) {
     const cancelObserveFieldname = Symbol(
       "cancelObserveFieldname: " + fieldName
