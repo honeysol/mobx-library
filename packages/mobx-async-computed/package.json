@@ -1,0 +1,31 @@
+{
+  "name": "mobx-async-computed",
+  "version": "0.0.2",
+  "description": "Official React library for @thefakeorg",
+  "author": "Jared Palmer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/honeysol/mobx-library.git",
+    "directory": "packages/mobx-async-computed"
+  },
+  "scripts": {
+    "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
+    "build": "tsdx build --tsconfig tsconfig.build.json",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepublish": "npm run build"
+  },
+  "main": "dist/index.js",
+  "module": "dist/react.esm.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "dependencies": {
+    "mobx": "^5.13.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

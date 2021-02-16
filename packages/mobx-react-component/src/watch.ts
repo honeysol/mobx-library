@@ -1,0 +1,37 @@
+import { observe } from "mobx";
+import { addHandler, parametrizeDecorator } from "mobx-initializer";
+
+export const _watch = watchFieldName => (target, fieldName, descriptor) => {
+  if (!descriptor.value) {
+    console.error("decorator errsor", watchFieldName, fieldName, descriptor);
+  }
+  if (fieldName) {
+    const cancelObserveFieldname = Symbol(
+      "cancelObserveFieldname: " + fieldName
+    );
+    addHandler(target, "stateRegister", function(props) {
+      this[cancelObserveFieldname] = observe(
+        this,
+        watchFieldName,
+        descriptor.value.bind(this),
+        true
+      );
+    });
+    addHandler(target, "release", function(props) {
+      this[cancelObserveFieldname]();
+    });
+  } else {
+    const cancelObserveFieldname = Symbol("cancelObserveFieldname");
+    addHandler(target, "stateRegister", function(props) {
+      this[cancelObserveFieldname] = observe(
+        watchFieldName,
+        descriptor.value.bind(this)
+      );
+    });
+    addHandler(target, "release", function(props) {
+      this[cancelObserveFieldname]();
+    });
+  }
+};
+
+export const watch = parametrizeDecorator(_watch, () => null);

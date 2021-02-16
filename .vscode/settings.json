@@ -5,6 +5,8 @@
   "eslint.validate": [
     "javascript",
     "javascriptreact",
+    "typescript",
+    "typescriptreact",
   ], 
   /* Use Prettier */
   "[scss]": {
