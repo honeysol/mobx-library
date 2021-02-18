@@ -1,1 +1,1 @@
-export declare const asyncComputed: (target: any, fieldName: any, descriptor: any) => any;
+export declare const asyncComputed: <T>(target: T, fieldName: keyof T, descriptor: PropertyDescriptor) => any;

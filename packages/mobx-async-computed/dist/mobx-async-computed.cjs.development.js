@@ -2,8 +2,8 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var mobx = require('mobx');
 var crypto = require('crypto');
+var mobx = require('mobx');
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -897,7 +897,7 @@ becomeObserved.observable = function (handler) {
     Object.defineProperty(target, computedFieldName, becomeObserved(handler, temporaryFieldName)(target, computedFieldName));
     return {
       configurable: true,
-      get: function get(value) {
+      get: function get() {
         return this[computedFieldName];
       },
       set: function set(value) {

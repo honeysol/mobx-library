@@ -8,6 +8,7 @@
     "paths": {
       "mobx-async-computed": ["packages/mobx-async-computed/src"],
       "mobx-initializer": ["packages/mobx-initializer/src"],
+      "mobx-react-component": ["packages/mobx-react-component/src"],
       "$test/*": ["test/*"]
     }
   }

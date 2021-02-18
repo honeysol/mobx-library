@@ -1,17 +1,35 @@
-import { applyHandlerOnce } from "./util";
-export * from "./util";
+export * from "./class";
+export * from "./method";
+export * from "./property";
 
-const appliedFlag = Symbol("isAppliedMobxInitializer");
-
-export const initializer = (target, ...args) => {
-  if (target.prototype[appliedFlag]) {
-    return target;
+export const applyHandler = <T>(
+  target: any,
+  handlersName: string,
+  ...args: any
+) => {
+  const handlersPropertyName = "_" + handlersName + "Handler";
+  const flagPropetyName = handlersPropertyName + "Done";
+  if (target[flagPropetyName]) {
+    return;
   }
-  return class Initializer extends target {
-    [appliedFlag] = true;
-    constructor(props) {
-      super(props);
-      applyHandlerOnce(this, "init", props);
+  target[flagPropetyName] = true;
+  for (
+    let current = target;
+    current;
+    current = Object.getPrototypeOf(current)
+  ) {
+    if (Object.prototype.hasOwnProperty.call(current, handlersPropertyName)) {
+      for (const handler of current[handlersPropertyName] || []) {
+        handler.apply(target, args);
+      }
     }
-  };
+  }
+};
+
+export const addHandler = (target: any, handlersName: string, handler: any) => {
+  const handlersPropertyName = "_" + handlersName + "Handler";
+  if (!Object.prototype.hasOwnProperty.call(target, handlersPropertyName)) {
+    target[handlersPropertyName] = [];
+  }
+  target[handlersPropertyName].push(handler);
 };

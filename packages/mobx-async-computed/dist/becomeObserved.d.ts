@@ -1,9 +1,11 @@
+declare type handlerType<T> = keyof T | (() => () => void);
 export declare const becomeObserved: {
-    (handler: any, observingFieldName: any): (target: any, fieldName: any, descriptor: any) => void;
-    computed(handler: any): (target: any, fieldName: any, descriptor: any) => any;
-    observable(handler: any): (target: any, fieldName: any, descriptor: any) => {
+    <T>(handler: handlerType<T>, observingFieldName: string): (target: T, fieldName: string, descriptor: PropertyDescriptor) => void;
+    computed<T_1>(handler: handlerType<T_1>): (target: T_1, fieldName: string, descriptor: PropertyDescriptor) => any;
+    observable<T_2>(handler: handlerType<T_2>): (target: T_2, fieldName: string, descriptor: PropertyDescriptor) => {
         configurable: boolean;
-        get(value: any): any;
-        set(value: any): void;
+        get(this: any): any;
+        set(this: any, value: any): void;
     };
 };
+export {};

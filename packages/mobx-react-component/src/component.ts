@@ -1,10 +1,10 @@
 import { observable } from "mobx";
 import {
-  initializer,
-  applyHandlerOnce,
-  combineDecorator,
+  applyHandler,
+  ClassType,
+  combineClassDecorator,
 } from "mobx-initializer";
-
+import React from "react";
 const componentAppliedFlag = Symbol("isAppliedMobxReactComponentInitializer");
 const pureComponentAppliedFlag = Symbol(
   "isAppliedMobxReactPureComponentInitializer"
@@ -12,11 +12,9 @@ const pureComponentAppliedFlag = Symbol(
 
 export const componentStatus = Symbol("componentStatus");
 
-interface MobXComponent extends React.Component {
-  componentStatus?: "mounted";
-}
+export type ReactComponentType = ClassType<React.Component>;
 
-const _component = (target: new (...args: any[]) => MobXComponent) => {
+const _component = (target: ReactComponentType): ReactComponentType => {
   if (target.prototype[componentAppliedFlag]) {
     return target;
   }
@@ -24,11 +22,12 @@ const _component = (target: new (...args: any[]) => MobXComponent) => {
     [componentAppliedFlag] = true;
     [componentStatus]?: string;
     @observable.ref
-    props;
-    constructor(props) {
+    props: any;
+    constructor(props: any) {
       super(props);
-      applyHandlerOnce(this, "stateRegister", props);
-      applyHandlerOnce(this, "resourceRegister", props);
+      applyHandler(this, "init", props);
+      applyHandler(this, "stateRegister", props);
+      applyHandler(this, "resourceRegister", props);
     }
     componentDidMount() {
       super.componentDidMount?.call(this);
@@ -36,7 +35,7 @@ const _component = (target: new (...args: any[]) => MobXComponent) => {
     }
     componentWillUnmount() {
       super.componentWillUnmount?.call(this);
-      applyHandlerOnce(this, "release");
+      applyHandler(this, "release");
     }
   }
   return Component;
@@ -44,7 +43,7 @@ const _component = (target: new (...args: any[]) => MobXComponent) => {
 
 // pure componentでは、propの変更があってもstateの変更がない限り、renderされない
 
-const _pureComponent = target => {
+const _pureComponent = (target: any) => {
   if (target.prototype[pureComponentAppliedFlag]) {
     return target;
   }
@@ -56,6 +55,11 @@ const _pureComponent = target => {
   };
 };
 
-export const component: any = combineDecorator(initializer, _component);
+export const component = _component as ClassDecorator & {
+  pure: ClassDecorator;
+};
 
-component.pure = combineDecorator(initializer, _component, _pureComponent);
+component.pure = combineClassDecorator(
+  _component,
+  _pureComponent
+) as ClassDecorator;

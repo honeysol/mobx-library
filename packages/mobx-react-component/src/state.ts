@@ -1,14 +1,12 @@
-import { observe, observable, computed } from "mobx";
-import {
-  addHandler,
-  combineDecorator,
-} from "mobx-initializer";
-import {  componentStatus } from "./component";
+import { computed, observable, observe } from "mobx";
+import { addHandler, combinePropertyDecorator } from "mobx-initializer";
 
-const _state = (target, fieldName, descriptor) => {
+import { componentStatus } from "./component";
+
+const _state = (target: object, fieldName: string) => {
   const cancelObserveFieldname = Symbol("_observe_" + fieldName);
 
-  addHandler(target, "stateRegister", function(props) {
+  addHandler(target, "stateRegister", function(this: any) {
     this[cancelObserveFieldname] = observe(this, fieldName, () => {
       if (this[componentStatus] === "mounted") {
         this.setState({ [fieldName]: this[fieldName] });
@@ -17,18 +15,54 @@ const _state = (target, fieldName, descriptor) => {
     this.state = this.state || { dammy: "###" };
     this.state[fieldName] = this[fieldName];
   });
-  addHandler(target, "release", function(props) {
+  addHandler(target, "release", function(this: any) {
     this[cancelObserveFieldname]();
   });
-  return descriptor;
 };
 
-export const state: any = _state;
+export const state = _state as typeof _state & {
+  computed: MethodDecorator & {
+    struct: MethodDecorator;
+  };
+  observable: MethodDecorator;
+  deep: MethodDecorator;
+  shallow: MethodDecorator;
+  ref: MethodDecorator;
+  struct: MethodDecorator;
+};
 
-state.computed = combineDecorator(computed, _state);
-state.computed.struct = combineDecorator(computed.struct, _state);
-state.observable = combineDecorator(observable.ref, _state);
-state.deep = combineDecorator(observable.deep, _state);
-state.shallow = combineDecorator(observable.shallow, _state);
-state.ref = combineDecorator(observable.ref, _state);
-state.struct = combineDecorator(observable.struct, _state);
+state.computed = combinePropertyDecorator(
+  computed,
+  _state as PropertyDecorator
+) as PropertyDecorator & {
+  struct: PropertyDecorator;
+};
+state.computed.struct = combinePropertyDecorator(
+  computed.struct,
+  _state as PropertyDecorator
+);
+state.observable = combinePropertyDecorator(
+  observable.ref,
+  _state as PropertyDecorator
+);
+state.deep = combinePropertyDecorator(
+  observable.deep,
+  _state as PropertyDecorator
+);
+state.shallow = combinePropertyDecorator(
+  observable.shallow,
+  _state as PropertyDecorator
+);
+state.ref = combinePropertyDecorator(
+  observable.ref,
+  _state as PropertyDecorator
+);
+state.struct = combinePropertyDecorator(
+  observable.struct,
+  _state as PropertyDecorator
+);
+
+export class X {
+  @state
+  x = 0;
+}

@@ -1,10 +1,14 @@
 import { computed } from "mobx";
-import { parametrizeDecorator } from "mobx-initializer";
+import {
+  parametrizePropertyDecorator,
+  PropertyDecoratorOptionalGenerator,
+} from "mobx-initializer";
+
 import { intercept } from "./intercept";
 
 // example:
 // fieldIdentifierToFunc("foo.bar")({ foo: { bar: 123} }) === 123
-const fieldIdentifierToFunc = fieldIdentifier => {
+const fieldIdentifierToFunc = (fieldIdentifier: string) => {
   const exp = fieldIdentifier
     .split(".")
     .map(field => `(a=a[${JSON.stringify(field)}])`)
@@ -12,34 +16,37 @@ const fieldIdentifierToFunc = fieldIdentifier => {
   return eval(`(function(a){return ${exp};})`);
 };
 
-const createPropDecorator = computedFunc =>
-  parametrizeDecorator(
-    propName => (target, fieldName, descriptor) => {
+const createPropDecorator = (baseDecorator: MethodDecorator) => {
+  return parametrizePropertyDecorator(
+    (propName: string) => (target, fieldName) => {
       const getter = fieldIdentifierToFunc(propName);
-      return computedFunc(target, fieldName, {
-        get: function() {
+      baseDecorator(target, fieldName, {
+        get: function(this: any) {
           return getter(this.props);
         },
       });
     },
-    (target, fieldName) => fieldName
+    (_target: unknown, fieldName: string) => fieldName
   );
-
-export const prop:any = createPropDecorator(computed);
+};
+export const prop = createPropDecorator(
+  computed
+) as PropertyDecoratorOptionalGenerator<string> & {
+  deep: PropertyDecoratorOptionalGenerator<string>;
+  delegate: PropertyDecoratorOptionalGenerator<string>;
+};
 
 prop.deep = createPropDecorator(intercept.isEqual);
 
-const propDelegateDecorator = parametrizeDecorator(
-  propName => (target, fieldName, descriptor) => {
+prop.delegate = parametrizePropertyDecorator(
+  (propName: string) => (target: object, fieldName: string | symbol) => {
     return {
-      get() {
-        return (...args) => {
+      get(this: any) {
+        return (...args: any) => {
           this.props[propName](...args);
         };
       },
-    };
+    } as PropertyDescriptor;
   },
-  (target, fieldName) => fieldName
+  (_target: unknown, fieldName: string) => fieldName
 );
-
-prop.delegate = propDelegateDecorator;

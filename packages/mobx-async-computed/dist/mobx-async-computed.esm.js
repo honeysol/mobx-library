@@ -1,5 +1,5 @@
-import { computed, onBecomeObserved, onBecomeUnobserved, observable, observe, runInAction } from 'mobx';
 import { randomBytes } from 'crypto';
+import { computed, onBecomeObserved, onBecomeUnobserved, observable, observe, runInAction } from 'mobx';
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -893,7 +893,7 @@ becomeObserved.observable = function (handler) {
     Object.defineProperty(target, computedFieldName, becomeObserved(handler, temporaryFieldName)(target, computedFieldName));
     return {
       configurable: true,
-      get: function get(value) {
+      get: function get() {
         return this[computedFieldName];
       },
       set: function set(value) {
