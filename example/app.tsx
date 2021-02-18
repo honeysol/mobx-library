@@ -1,12 +1,11 @@
-import "babel-polyfill";
-import React from "react";
-import ReactDOM from "react-dom";
-import { observable, configure, runInAction, computed } from "mobx";
-import { asyncComputed } from "@/mobx-async-computed";
-import { component, prop, render } from "@/mobx-react-component";
+import { computed, configure, observable, runInAction } from "mobx";
 import * as mobx from "mobx";
+import { asyncComputed } from "mobx-async-computed";
+import { component, prop, render, state } from "mobx-react-component";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
-window.mobx = mobx;
+/* eslint-disable no-console */
 
 console.log(
   { observable, configure, runInAction, computed },
@@ -14,13 +13,11 @@ console.log(
   { asyncComputed }
 );
 
-import { delay } from "delay";
+import { delay } from "./delay";
 
 // configure({
 //   enforceActions: "always",
 // });
-
-window.runInAction = runInAction;
 
 class MobxStore {
   constructor(value) {
@@ -29,15 +26,17 @@ class MobxStore {
     });
   }
   @observable
-  value;
+  value: any;
 }
 
 const store = new MobxStore(300);
 
-window.MobxStore = MobxStore;
-
 @component
-class MobxComponent2 extends React.Component {
+class MobxComponent2 extends React.Component<{
+  value: number;
+  store: MobxStore;
+  dammy: string;
+}> {
   state = {};
   get isMobxComponent2() {
     return true;
@@ -47,52 +46,45 @@ class MobxComponent2 extends React.Component {
   @observable
   params = {};
   @prop
-  value = 100;
+  value;
+  @prop
+  dammy;
   @prop
   store;
+  @render
   render() {
     return (
       <div>
         <div>value: {this.value}</div>
+        <div>dammy: {this.dammy}</div>
         <div>lazyValue: {this.lazyValue}</div>
+        <div>lazyStoreValue: {this.lazyStoreValue}</div>
       </div>
     );
   }
-  @prop
-  dammy = "dammyValue";
-
+  @state
   @asyncComputed
   get lazyValue() {
     return delay(1000, this.value);
   }
+  @state
   @asyncComputed
   get lazyStoreValue() {
     if (!this.store) console.error(this);
-
     return delay(1000, this.store && this.store.value + 1);
   }
 }
 @component
 class MobxComponent3 extends MobxComponent2 {
-  isMobxComponent3 = true;
-  static isMobxComponent3Prototype = true;
-
   @observable
   internalValue = 200;
-
-  @asyncComputed
-  get lazyDammy() {
-    return delay(1000, this.dammy + 1);
-  }
-
   @asyncComputed
   get lazyInternalValue() {
     return delay(1000, this.internalValue + 1);
   }
 
   @render
-  get rendered() {
-    console.error("MobxComponent3 render");
+  render() {
     return (
       <div>
         <div>value: {this.value}</div>
@@ -117,7 +109,7 @@ class MobxComponent3 extends MobxComponent2 {
             });
           }}
         >
-          increment value by mobx
+          increment value by mobx(error)
         </button>
         <button
           onClick={() => {
@@ -135,14 +127,14 @@ class MobxComponent3 extends MobxComponent2 {
             });
           }}
         >
-          replace store by mobx
+          replace store by mobx(error)
         </button>
       </div>
     );
   }
 }
 
-class App extends React.Component {
+export class App extends React.Component {
   state = { value: 300, dammy: "dammyValue", store };
   onUpdateValue = () => {};
   render() {
@@ -151,7 +143,6 @@ class App extends React.Component {
       <div>
         <MobxComponent3
           ref="target"
-          params={{}}
           value={this.state.value}
           dammy={this.state.dammy}
           store={this.state.store}
@@ -172,7 +163,9 @@ class App extends React.Component {
         </button>
         <button
           onClick={() => {
-            this.setState({ store: new MobxStore(this.state.store.value + 1) });
+            this.setState({
+              store: new MobxStore((this.state.store.value || 0) + 1),
+            });
           }}
         >
           replace store by external props
@@ -181,16 +174,16 @@ class App extends React.Component {
     );
   }
   componentDidMount() {
-    window.target = this.refs.target;
-    window.app = this;
+    // window.target = this.refs.target;
+    // window.app = this;
   }
 }
-const targetElement = (() => {
-  const element = document.createElement("div");
-  document.body.insertAdjacentElement("afterbegin", element);
-  return element;
-})();
-ReactDOM.render(<App />, targetElement);
+// const targetElement = (() => {
+//   const element = document.createElement("div");
+//   document.body.insertAdjacentElement("afterbegin", element);
+//   return element;
+// })();
+// ReactDOM.render(<App />, targetElement);
 
 console.log({
   // Base: Base.prototype,
@@ -262,8 +255,8 @@ mobx.observe(sample, "objectRef", change => console.log("observe objectRef"));
 mobx.observe(sample, "_object", change => console.log("observe _object"));
 mobx.observe(sample, "_objectRef", change => console.log("observe _objectRef"));
 
-window.sample = sample;
-sample.array.push(1);
+// window.sample = sample;
+// sample.array.push(1);
 
 @component
 class MobxComponent4 extends React.Component {
@@ -277,4 +270,4 @@ class MobxComponent4 extends React.Component {
   }
 }
 
-window.mobxComponent4 = new MobxComponent4();
+// window.mobxComponent4 = new MobxComponent4();

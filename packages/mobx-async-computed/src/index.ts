@@ -4,7 +4,11 @@ import { computed, observable, observe, runInAction } from "mobx";
 import { AsyncCommitter } from "./asyncCommitter";
 import { becomeObserved } from "./becomeObserved";
 
-export const asyncComputed = (target, fieldName, descriptor) => {
+export const asyncComputed = <T>(
+  target: T,
+  fieldName: keyof T,
+  descriptor: PropertyDescriptor
+) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
   const resultFieldName = fieldId + "Result(asyncComputed)";
   const promiseFieldName = fieldId + "Promise(asyncComputed)";
@@ -27,7 +31,7 @@ export const asyncComputed = (target, fieldName, descriptor) => {
     }) as any
   );
 
-  return (becomeObserved(function() {
+  return (becomeObserved(function(this: any) {
     const asyncCommiter = (this[asyncCommitterFieldName] =
       this[asyncCommitterFieldName] || new AsyncCommitter());
     return observe(

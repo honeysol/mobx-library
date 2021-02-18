@@ -23,7 +23,10 @@
     "dist"
   ],
   "dependencies": {
-    "mobx": "^5.13.0"
+    "@types/lodash.isequal": "^4.5.5",
+    "lodash.isequal": "^4.5.0",
+    "mobx": "^5.13.0",
+    "mobx-initializer": "^0.0.2"
   },
   "publishConfig": {
     "access": "public"

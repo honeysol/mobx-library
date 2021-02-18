@@ -11,6 +11,8 @@
     "removeComments": true,
     "strictNullChecks": true,
     "preserveConstEnums": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "sourceMap": true,
     "lib": ["es2015", "es2016", "dom"],
     "types": ["node"]

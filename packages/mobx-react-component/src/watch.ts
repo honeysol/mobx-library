@@ -1,15 +1,20 @@
 import { observe } from "mobx";
-import { addHandler, parametrizeDecorator } from "mobx-initializer";
+import { addHandler } from "mobx-initializer";
 
-export const _watch = watchFieldName => (target, fieldName, descriptor) => {
+export const watch = (watchFieldName: string) => (
+  target: Function,
+  fieldName: string,
+  descriptor: PropertyDescriptor
+) => {
   if (!descriptor.value) {
-    console.error("decorator errsor", watchFieldName, fieldName, descriptor);
+    // eslint-disable-next-line no-console
+    console.error("decorator error", watchFieldName, fieldName, descriptor);
   }
   if (fieldName) {
     const cancelObserveFieldname = Symbol(
       "cancelObserveFieldname: " + fieldName
     );
-    addHandler(target, "stateRegister", function(props) {
+    addHandler(target, "stateRegister", function(this: any) {
       this[cancelObserveFieldname] = observe(
         this,
         watchFieldName,
@@ -17,21 +22,19 @@ export const _watch = watchFieldName => (target, fieldName, descriptor) => {
         true
       );
     });
-    addHandler(target, "release", function(props) {
+    addHandler(target, "release", function(this: any) {
       this[cancelObserveFieldname]();
     });
   } else {
     const cancelObserveFieldname = Symbol("cancelObserveFieldname");
-    addHandler(target, "stateRegister", function(props) {
+    addHandler(target, "stateRegister", function(this: any) {
       this[cancelObserveFieldname] = observe(
         watchFieldName,
         descriptor.value.bind(this)
       );
     });
-    addHandler(target, "release", function(props) {
+    addHandler(target, "release", function(this: any) {
       this[cancelObserveFieldname]();
     });
   }
 };
-
-export const watch = parametrizeDecorator(_watch, () => null);

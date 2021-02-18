@@ -1,2 +1,1 @@
-export declare const _watch: (watchFieldName: any) => (target: any, fieldName: any, descriptor: any) => void;
-export declare const watch: (target: any, ...args: any[]) => any;
+export declare const watch: (watchFieldName: string) => (target: Function, fieldName: string, descriptor: PropertyDescriptor) => void;

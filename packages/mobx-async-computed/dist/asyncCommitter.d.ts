@@ -1,18 +1,18 @@
-export declare class AsyncCommitter {
+export declare class AsyncCommitter<T> {
     requestId: number;
     commitId: number;
-    resolve(promise: any): Promise<{
+    resolve(promise: Promise<T>): Promise<{
         successed: boolean;
         value?: undefined;
     } | {
         successed: boolean;
-        value: any;
+        value: T;
     }>;
-    run(asyncFunction: any): Promise<{
+    run(asyncFunction: () => Promise<T>): Promise<{
         successed: boolean;
         value?: undefined;
     } | {
         successed: boolean;
-        value: any;
+        value: T;
     }>;
 }

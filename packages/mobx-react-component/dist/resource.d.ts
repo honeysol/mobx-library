@@ -1,13 +1,14 @@
 export declare const resource: {
-    ({ on, off, handler, resourceFieldName, }: {
-        on: any;
-        off: any;
-        handler?: (value: any) => any;
-        resourceFieldName: any;
-    }): (target: any, fieldName: any, descriptor: any) => void;
-    computed({ on, off, handler }: {
-        on: any;
-        off: any;
-        handler?: (value: any) => any;
-    }): (target: any, resolvedFieldName: any, descriptor: any) => void;
+    <Resource>({ on, off, handler, resourceFieldName, }: {
+        on: (resource: Resource, handler: Function) => void;
+        off: (resource: Resource, handler: Function) => void;
+        handler: Function;
+        resourceFieldName: string;
+    }): (target: object, fieldName: string, descriptor: PropertyDescriptor) => void;
+    computed<Resource_1>({ on, off, handler, }: {
+        on: (resource: Resource_1, handler: Function) => void;
+        off: (resource: Resource_1, handler: Function) => void;
+        handler: Function;
+        resourceFieldName: string;
+    }): (target: object, resolvedFieldName: string, descriptor: PropertyDescriptor) => void;
 };

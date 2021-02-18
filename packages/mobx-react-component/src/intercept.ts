@@ -1,30 +1,46 @@
-import { intercept as mobxIntercept, computed } from "mobx";
-import { addHandler, parametrizeDecorator } from "mobx-initializer";
-import _ from "lodash";
+import isEqual from "lodash.isequal";
+import { computed, intercept as mobxIntercept } from "mobx";
+import { addHandler } from "mobx-initializer";
 
-export const _intercept = handler => (target, fieldName, descriptor) => {
-  console.log("_intercept", descriptor);
-  const cancelObserveFieldname = Symbol("cancelObserveFieldname: " + fieldName);
-  addHandler(target, "stateRegister", function(props) {
+export const _intercept = (handler: Function): MethodDecorator => (
+  target: object,
+  fieldName: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
+  const cancelObserveFieldname = Symbol(
+    "cancelObserveFieldname: " + fieldName.toString()
+  );
+  addHandler(target, "stateRegister", function(this: any) {
     this[cancelObserveFieldname] = mobxIntercept(
       this,
       fieldName,
       handler.bind(this)
     );
   });
-  addHandler(target, "release", function(props) {
+  addHandler(target, "release", function(this: any) {
     this[cancelObserveFieldname]();
   });
   return descriptor;
 };
 
-export const intercept:any = parametrizeDecorator(_intercept, () => null);
+export const intercept = _intercept as ((
+  handler: Function
+) => MethodDecorator) & {
+  isEqual: MethodDecorator;
+  computed: (handler: Function) => MethodDecorator;
+};
 
-intercept.computed = handler => (target, fieldName, descriptor) => {
-  const temporaryFieldName = Symbol("temporaryFieldName: " + fieldName);
+intercept.computed = (handler: Function): MethodDecorator => (
+  target: object,
+  fieldName: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
+  const temporaryFieldName = Symbol(
+    "temporaryFieldName: " + fieldName.toString()
+  );
   return computed(target, fieldName, {
-    get() {
-      const newValue = descriptor.get.apply(this);
+    get(this: any) {
+      const newValue = descriptor.get?.apply(this);
       const oldValue = this[temporaryFieldName];
       if (handler.call(this, { newValue, oldValue })) {
         this[temporaryFieldName] = newValue;
@@ -35,5 +51,6 @@ intercept.computed = handler => (target, fieldName, descriptor) => {
 };
 
 intercept.isEqual = intercept.computed(
-  ({ newValue, oldValue }) => !_.isEqual(newValue, oldValue)
+  ({ newValue, oldValue }: { newValue: any; oldValue: any }) =>
+    !isEqual(newValue, oldValue)
 );

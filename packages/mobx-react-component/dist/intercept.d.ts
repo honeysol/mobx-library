@@ -1,2 +1,5 @@
-export declare const _intercept: (handler: any) => (target: any, fieldName: any, descriptor: any) => any;
-export declare const intercept: any;
+export declare const _intercept: (handler: Function) => MethodDecorator;
+export declare const intercept: ((handler: Function) => MethodDecorator) & {
+    isEqual: MethodDecorator;
+    computed: (handler: Function) => MethodDecorator;
+};

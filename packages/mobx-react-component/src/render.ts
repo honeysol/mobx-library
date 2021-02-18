@@ -1,31 +1,31 @@
-import { addHandler, combineDecorator } from "mobx-initializer";
-import { state } from "./state";
 import * as crypto from "crypto";
 
-// エラーの原因: combineDecoratorの扱いがおかしい
+import { state } from "./state";
 
-const _render = (target, fieldName, descriptor) => {
+export const render = (
+  target: object,
+  fieldName: string,
+  descriptor: PropertyDescriptor
+) => {
   if (fieldName === "render") {
     const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-    Object.defineProperty(
-      target,
-      fieldId,
-      state.computed(target, fieldId, descriptor)
-    );
+    state.computed(target, fieldId, {
+      get: descriptor.value,
+    });
     return {
       configurable: true,
-      value() {
+      value(this: any) {
         return this[fieldId];
       },
     };
   } else {
-    addHandler(target, "init", function(props) {
-      this.render = function() {
-        return this[fieldName];
-      };
+    state.computed(target, fieldName, {
+      get: descriptor.get || descriptor.value,
     });
-    return state.computed(target, fieldName, descriptor);
+    Object.defineProperty(target, "render", {
+      value() {
+        return this[fieldName];
+      },
+    });
   }
 };
-
-export const render = _render;
