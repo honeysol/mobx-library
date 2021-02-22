@@ -3,10 +3,10 @@ import { getDerivedPropertyString } from "./util";
 
 export const render = (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  if (fieldName === "render") {
+  if (propertyKey === "render") {
     const fieldId = getDerivedPropertyString("render", "original");
     state.computed(target, fieldId, {
       get: descriptor.value,
@@ -16,15 +16,15 @@ export const render = (
       value(this: any) {
         return this[fieldId];
       },
-    };
+    } as PropertyDescriptor;
   } else {
     Object.defineProperty(target, "render", {
       value() {
-        return this[fieldName];
+        return this[propertyKey];
       },
     });
-    return state.computed(target, fieldName, {
+    return state.computed(target, propertyKey, {
       get: descriptor.get || descriptor.value,
-    });
+    }) as PropertyDescriptor;
   }
 };

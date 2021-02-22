@@ -16,15 +16,15 @@ const fieldIdentifierToFunc = (fieldIdentifier: string) => {
 
 const createPropDecorator = (baseDecorator: MethodDecorator) => {
   return parametrizePropertyDecorator(
-    (propName: string) => (target, fieldName) => {
+    (propName: string) => (target, propertyKey) => {
       const getter = fieldIdentifierToFunc(propName);
-      return baseDecorator(target, fieldName, {
+      return baseDecorator(target, propertyKey, {
         get: function(this: any) {
           return getter(this.props);
         },
       });
     },
-    (_target: unknown, fieldName: string | symbol) => fieldName as string
+    (_target: unknown, propertyKey: string | symbol) => propertyKey as string
   );
 };
 export const prop = createPropDecorator(
@@ -38,7 +38,7 @@ prop.deep = createPropDecorator(computed.struct);
 
 // 値ではなく、props中の関数の結果を評価する
 prop.delegate = parametrizePropertyDecorator(
-  (propName: string) => (target: object, fieldName: string | symbol) => {
+  (propName: string) => (target: object, propertyKey: string | symbol) => {
     return {
       get(this: any) {
         return (...args: any) => {
@@ -47,5 +47,5 @@ prop.delegate = parametrizePropertyDecorator(
       },
     } as PropertyDescriptor;
   },
-  (_target: unknown, fieldName: string | symbol) => fieldName as string
+  (_target: unknown, propertyKey: string | symbol) => propertyKey as string
 );

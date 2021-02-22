@@ -4,15 +4,15 @@ import { combinePropertyDecorator } from "mobx-initializer";
 import { componentStatus } from "./component";
 import { watch } from "./watch";
 
-const _state = (target: object, fieldName: string | symbol) => {
+const _state = (target: object, propertyKey: string | symbol) => {
   return watch(function(this: any) {
     if (this[componentStatus] === "mounted") {
-      this.setState({ [fieldName]: this[fieldName] });
+      this.setState({ [propertyKey]: this[propertyKey] });
     } else {
       this.state = this.state || {};
-      this.state[fieldName] = this[fieldName];
+      this.state[propertyKey] = this[propertyKey];
     }
-  })(target, fieldName);
+  })(target, propertyKey);
 };
 
 export const state = _state as typeof _state & {

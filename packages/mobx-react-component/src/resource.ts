@@ -12,7 +12,7 @@ const defaultHandler = (value: any) => value;
 // 	on: (resource, handler) => resource.on("update", handler),
 // 	off: (resource, handler) => resource.off("update", handler),
 // 	handler: value => value, // or event => event.value
-// 	resourceFieldName: "documentResource"
+// 	resourceKey: "documentResource"
 // })
 // @observable
 // document
@@ -21,47 +21,44 @@ export const resource = <Resource>({
   on,
   off,
   handler = defaultHandler,
-  resourceFieldName,
+  resourceKey,
 }: {
   on: (resource: Resource, handler: Function) => void;
   off: (resource: Resource, handler: Function) => void;
   handler: Function;
-  resourceFieldName: string;
+  resourceKey: string;
 }) => (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const wrappedHandlerFieldName = getDerivedPropertyKey(fieldName, "wrapped");
-  const cancelObserveFieldName = getDerivedPropertyKey(
-    fieldName,
-    "cancelObserve"
-  );
+  const wrappedHandlerKey = getDerivedPropertyKey(propertyKey, "wrapped");
+  const cancelObserveKey = getDerivedPropertyKey(propertyKey, "cancelObserve");
 
   addHandler(target, "init", function(this: any) {
-    this[wrappedHandlerFieldName] = (...args: any) => {
-      this[fieldName] = handler.apply(this, args);
+    this[wrappedHandlerKey] = (...args: any) => {
+      this[propertyKey] = handler.apply(this, args);
     };
-    this[cancelObserveFieldName] = observe(
+    this[cancelObserveKey] = observe(
       this,
-      resourceFieldName,
+      resourceKey,
       change => {
         const { oldValue, newValue } = change;
         if (oldValue) {
-          off(oldValue, this[wrappedHandlerFieldName]);
+          off(oldValue, this[wrappedHandlerKey]);
         }
         if (newValue) {
-          on(newValue, this[wrappedHandlerFieldName]);
+          on(newValue, this[wrappedHandlerKey]);
         }
       },
       true
     );
   });
   addHandler(target, "release", function(this: any) {
-    if (this[resourceFieldName]) {
-      off(this[resourceFieldName], this[wrappedHandlerFieldName]);
+    if (this[resourceKey]) {
+      off(this[resourceKey], this[wrappedHandlerKey]);
     }
-    this[cancelObserveFieldName]();
+    this[cancelObserveKey]();
   });
 };
 
@@ -73,23 +70,19 @@ resource.computed = <Resource>({
   on: (resource: Resource, handler: Function) => void;
   off: (resource: Resource, handler: Function) => void;
   handler: Function;
-  resourceFieldName: string;
-}) => (
-  target: object,
-  resolvedFieldName: string,
-  descriptor: PropertyDescriptor
-) => {
+  resourceKey: string;
+}) => (target: object, resolvedKey: string, descriptor: PropertyDescriptor) => {
   // resource
-  const resourceFieldName = resolvedFieldName + "Resource";
-  Object.defineProperty(target, resourceFieldName, descriptor);
-  computed(target, resourceFieldName, descriptor);
+  const resourceKey = resolvedKey + "Resource";
+  Object.defineProperty(target, resourceKey, descriptor);
+  computed(target, resourceKey, descriptor);
 
   // resolved
-  delete (target as any)[resolvedFieldName];
-  return resource({ on, off, handler, resourceFieldName })(
+  delete (target as any)[resolvedKey];
+  return resource({ on, off, handler, resourceKey })(
     target,
-    resolvedFieldName,
-    (observable.ref(target, resolvedFieldName, {
+    resolvedKey,
+    (observable.ref(target, resolvedKey, {
       configurable: true,
       writable: true,
       value: null,

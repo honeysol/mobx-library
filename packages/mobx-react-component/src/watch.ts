@@ -5,52 +5,41 @@ import { getDerivedPropertyKey } from "./util";
 
 // Watch field during a component lifecycle
 
-export const watchFor = (watchFieldName: string) => (
+export const watchFor = (watchKey: string) => (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
   const handler = descriptor.value;
   if (typeof handler !== "function") {
     // eslint-disable-next-line no-console
-    console.error("decorator error", watchFieldName, fieldName, descriptor);
+    console.error("decorator error", watchKey, propertyKey, descriptor);
     return;
   }
-  const cancelObserveFieldName = getDerivedPropertyKey(
-    fieldName,
-    "cancelObserve"
-  );
+  const cancelObserveKey = getDerivedPropertyKey(propertyKey, "cancelObserve");
 
   addHandler(target, "init", function(this: any) {
-    this[cancelObserveFieldName] = observe(
-      this,
-      watchFieldName,
-      handler.bind(this),
-      true
-    );
+    this[cancelObserveKey] = observe(this, watchKey, handler.bind(this), true);
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelObserveFieldName]();
+    this[cancelObserveKey]();
   });
 };
 
 export const watch = (handler: Function) => (
   target: object,
-  fieldName: string | symbol
+  propertyKey: string | symbol
 ) => {
-  const cancelObserveFieldName = getDerivedPropertyKey(
-    fieldName,
-    "cancelObserve"
-  );
+  const cancelObserveKey = getDerivedPropertyKey(propertyKey, "cancelObserve");
   addHandler(target, "init", function(this: any) {
-    this[cancelObserveFieldName] = observe(
+    this[cancelObserveKey] = observe(
       this,
-      fieldName,
+      propertyKey,
       handler.bind(this),
       true
     );
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelObserveFieldName]();
+    this[cancelObserveKey]();
   });
 };

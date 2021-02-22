@@ -8,23 +8,20 @@ export const intercept = (
   closeHandler?: ({ oldValue }: { oldValue: any }) => void
 ): MethodDecorator => (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const cancelObserveFieldName = getDerivedPropertyKey(
-    fieldName,
-    "cancelObserve"
-  );
+  const cancelObserveKey = getDerivedPropertyKey(propertyKey, "cancelObserve");
   addHandler(target, "init", function(this: any) {
-    this[cancelObserveFieldName] = mobxIntercept(
+    this[cancelObserveKey] = mobxIntercept(
       this,
-      fieldName,
+      propertyKey,
       handler.bind(this)
     );
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelObserveFieldName]();
-    closeHandler?.({ oldValue: this[fieldName] });
+    this[cancelObserveKey]();
+    closeHandler?.({ oldValue: this[propertyKey] });
   });
   return descriptor;
 };
@@ -36,24 +33,24 @@ const interceptComputed = (
   closeHandler?: ({ oldValue }: { oldValue: any }) => void
 ) => (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const originalFieldName = getDerivedPropertyKey(fieldName, "original");
+  const originalKey = getDerivedPropertyKey(propertyKey, "original");
 
   if (closeHandler) {
     addHandler(target, "release", function(this: any) {
-      closeHandler?.({ oldValue: this[originalFieldName] });
+      closeHandler?.({ oldValue: this[originalKey] });
     });
   }
-  return computed(target, fieldName, {
+  return computed(target, propertyKey, {
     get(this: any) {
       const newValue = descriptor.get?.apply(this);
-      const oldValue = this[originalFieldName];
+      const oldValue = this[originalKey];
       if (handler.call(this, { newValue, oldValue })) {
-        this[originalFieldName] = newValue;
+        this[originalKey] = newValue;
       }
-      return this[originalFieldName];
+      return this[originalKey];
     },
   });
 };

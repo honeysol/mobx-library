@@ -3,13 +3,13 @@ export const combineMethodDecorator = (
 ): MethodDecorator => {
   return (
     _target: object,
-    fieldName: string | symbol,
+    propertyKey: string | symbol,
     _descriptor: PropertyDescriptor
   ) => {
     const target = _target;
     let descriptor = _descriptor;
     for (const decorator of decorators) {
-      descriptor = decorator(target, fieldName, descriptor) || descriptor;
+      descriptor = decorator(target, propertyKey, descriptor) || descriptor;
     }
     //return descriptor === _descriptor ? undefined : descriptor;
   };
@@ -29,21 +29,21 @@ export const parametrizeMethodDecorator = <T, S>(
   decoratorFactory: MethodDecoratorGenerator<S>,
   defaultValue: (
     target: T,
-    fieldName: string,
+    propertyKey: string,
     descriptor: PropertyDescriptor
   ) => S
 ): MethodDecoratorOptionalGenerator<S> => {
   return (((...args: any[]) => {
     if (isClass(args[0])) {
       // without parameter
-      const [target, fieldName, descriptor] = args as [
+      const [target, propertyKey, descriptor] = args as [
         T,
         string,
         PropertyDescriptor
       ];
-      return decoratorFactory(defaultValue(target, fieldName, descriptor))(
+      return decoratorFactory(defaultValue(target, propertyKey, descriptor))(
         target,
-        fieldName,
+        propertyKey,
         descriptor
       );
     } else {

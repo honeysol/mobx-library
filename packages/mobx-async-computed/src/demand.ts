@@ -8,13 +8,13 @@ import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
  * 
   class InternalImplementation{
     @computed
-    [originalFieldName];
+    [originalKey];
     @observable
-    [resolvedFieldName];
+    [resolvedKey];
     @becomeObservedFor(() => {
       do something
-    }, "resolvedFieldName")
-    [fieldName];
+    }, "resolvedKey")
+    [propertyKey];
   }
  */
 export const demand = ({
@@ -40,23 +40,23 @@ export const demand = ({
   ) => void;
 }) => (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const resolvedFieldName = getDerivedPropertyKey(fieldName, "resolved");
-  const originalFieldName = getDerivedPropertyString(fieldName, "original");
+  const resolvedKey = getDerivedPropertyKey(propertyKey, "resolved");
+  const originalKey = getDerivedPropertyString(propertyKey, "original");
   Object.defineProperty(
     target,
-    originalFieldName,
-    computed(target, originalFieldName, {
+    originalKey,
+    computed(target, originalKey, {
       get: descriptor.get || descriptor.value,
     }) as any
   );
 
   Object.defineProperty(
     target,
-    resolvedFieldName,
-    observable.ref(target, resolvedFieldName, {
+    resolvedKey,
+    observable.ref(target, resolvedKey, {
       configurable: true,
       writable: true,
       value: null,
@@ -64,11 +64,11 @@ export const demand = ({
   );
 
   return (becomeObservedFor<any>(function(this: any) {
-    const setter = (value: any) => (this[resolvedFieldName] = value);
-    enter?.({ oldValue: this[originalFieldName], type: "enter" }, setter);
+    const setter = (value: any) => (this[resolvedKey] = value);
+    enter?.({ oldValue: this[originalKey], type: "enter" }, setter);
     const cancelObserve = observe(
       this,
-      originalFieldName,
+      originalKey,
       ({ newValue, oldValue }) => {
         change?.({ newValue, oldValue, type: "change" }, setter);
       },
@@ -76,9 +76,9 @@ export const demand = ({
     );
     return () => {
       cancelObserve();
-      leave?.({ oldValue: this[originalFieldName], type: "leave" }, setter);
+      leave?.({ oldValue: this[originalKey], type: "leave" }, setter);
     };
-  }, resolvedFieldName) as any)(target, fieldName);
+  }, resolvedKey) as any)(target, propertyKey);
 };
 
 demand.autoclose = (_handler: (oldValue: any) => void) => {

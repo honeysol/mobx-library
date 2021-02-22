@@ -5,18 +5,15 @@ import { getDerivedPropertyKey } from "./util";
 
 export const autorun = (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: any
 ) => {
-  const cancelAutoRunFieldName = getDerivedPropertyKey(
-    fieldName,
-    "cancelAutorun"
-  );
+  const cancelAutoRunKey = getDerivedPropertyKey(propertyKey, "cancelAutorun");
   addHandler(target, "init", function(this: any) {
-    this[cancelAutoRunFieldName] = mobxAutorun(this[fieldName].bind(this));
+    this[cancelAutoRunKey] = mobxAutorun(this[propertyKey].bind(this));
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelAutoRunFieldName]();
+    this[cancelAutoRunKey]();
   });
   return descriptor;
 };

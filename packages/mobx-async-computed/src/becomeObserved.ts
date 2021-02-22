@@ -7,79 +7,80 @@ import {
 
 import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
 
-type handlerType<T> = keyof T | (() => () => void);
+type handlerType = string | (() => () => void);
 
-const readValueAndCallHandlerIfBecomeObserved = <T>(
-  target: T,
-  fieldName: keyof T,
-  handler: (this: T) => () => void
+const readValueAndCallHandlerIfBecomeObserved = (
+  target: object,
+  propertyKey: string | symbol,
+  handler: (this: any) => () => void
 ) => {
-  const cancelOnBecomeObserved = onBecomeObserved(target, fieldName, () => {
+  const cancelOnBecomeObserved = onBecomeObserved(target, propertyKey, () => {
     const cancelHandler = handler.apply(target);
     const cancelOnBecomeUnobserved = onBecomeUnobserved(
       target,
-      fieldName,
+      propertyKey,
       () => {
         cancelOnBecomeUnobserved();
         cancelHandler();
       }
     );
   });
-  const result = target[fieldName];
+  const result = (target as any)[propertyKey];
   cancelOnBecomeObserved();
   return result;
 };
 
-// observedFieldName のフィールドをproxyして、
+// observedKey のフィールドをproxyして、
 // handlerを呼ぶ
-const _becomeObservedFor = <T>(
-  handler: handlerType<T>,
-  observedFieldName: keyof T
-) => (target: T, fieldName: string | symbol) => {
-  const isObservingFieldName = getDerivedPropertyKey(fieldName, "isObserving");
+const _becomeObservedFor = (
+  handler: handlerType,
+  observedKey: string | symbol
+) => (target: object, propertyKey: string | symbol) => {
+  const isObservingKey = getDerivedPropertyKey(propertyKey, "isObserving");
   return {
     configurable: true,
     get(this: any) {
-      if (!this[isObservingFieldName]) {
-        this[isObservingFieldName] = true;
+      if (!this[isObservingKey]) {
+        this[isObservingKey] = true;
         return readValueAndCallHandlerIfBecomeObserved(
           this,
-          observedFieldName,
+          observedKey,
           () => {
+            // const cancelHandler = this[handler]();
             const cancelHandler =
               typeof handler === "function"
                 ? handler.apply(this)
                 : this[handler]();
             return () => {
               cancelHandler();
-              this[isObservingFieldName] = false;
+              this[isObservingKey] = false;
             };
           }
         );
       } else {
-        return this[observedFieldName];
+        return this[observedKey];
       }
     },
     set(this: any, value: any) {
-      this[observedFieldName] = value;
+      this[observedKey] = value;
     },
   };
 };
 
-export const becomeObservedFor = <T>(
-  handler: handlerType<T>,
-  observedFieldName: keyof T
-) => (target: T, fieldName: string | symbol) => {
+export const becomeObservedFor = (
+  handler: handlerType,
+  observedKey: string | symbol
+) => (target: object, propertyKey: string | symbol) => {
   return computed(
     target,
-    fieldName,
-    _becomeObservedFor(handler, observedFieldName)(target, fieldName)
+    propertyKey,
+    _becomeObservedFor(handler, observedKey)(target, propertyKey)
   );
 };
 
 const noopDecorator = (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => descriptor;
 
@@ -91,41 +92,38 @@ const noopDecorator = (
  * @becomObserved(handler, observable)
  * のようにする。
   InternalImplementation{
-    [originalFieldName];
-    @becomeObservedFor("originalFieldName")
-    [fieldName];
+    [originalKey];
+    @becomeObservedFor("originalKey")
+    [propertyKey];
   }
  */
-export const becomeObserved = <T>(
-  handler: handlerType<T>,
+export const becomeObserved = (
+  handler: handlerType,
   decorator: MethodDecorator = noopDecorator
 ) => (
-  target: T,
-  fieldName: string | symbol,
-  descriptor: PropertyDescriptor
+  target: object,
+  propertyKey: string | symbol,
+  descriptor?: PropertyDescriptor
 ) => {
-  const originalFieldName = getDerivedPropertyString(
-    fieldName,
+  const originalKey = getDerivedPropertyString(
+    propertyKey,
     "original(becomeObserved)"
   );
   Object.defineProperty(
     target,
-    originalFieldName,
+    originalKey,
     (decorator(
       target,
-      originalFieldName,
-      descriptor
+      originalKey,
+      descriptor as any
     ) as unknown) as MethodDecorator
   );
-  return (becomeObservedFor(handler, originalFieldName as keyof T) as any)(
-    target,
-    fieldName
-  );
+  return becomeObservedFor(handler, originalKey)(target, propertyKey) as void;
 };
 
-becomeObserved.observable = <T>(handler: handlerType<T>) => {
+becomeObserved.observable = (handler: handlerType) => {
   return becomeObserved(handler, observable.ref);
 };
-becomeObserved.computed = <T>(handler: handlerType<T>) => {
+becomeObserved.computed = (handler: handlerType) => {
   return becomeObserved(handler, computed);
 };

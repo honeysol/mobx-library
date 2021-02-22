@@ -42,6 +42,7 @@ class MobxComponent2 extends React.Component<{
   store;
   @render
   render() {
+    console.log(this);
     return (
       <div>
         <div>value: {this.value}</div>
@@ -175,10 +176,10 @@ export class App extends React.Component {
 
 const methodDecorator: any = (
   target: object,
-  fieldName: string,
+  propertyKey: string,
   desciptor: PropertyDescriptor
 ) => {
-  console.log("methodDecorator", fieldName, desciptor);
+  console.log("methodDecorator", propertyKey, desciptor);
   return {
     get() {
       return "methodDecorator";
@@ -189,9 +190,9 @@ const methodDecorator: any = (
 
 const propertyDecorator: PropertyDecorator = (
   target: object,
-  fieldName: string
+  propertyKey: string
 ) => {
-  console.log("propertyDecorator", fieldName);
+  console.log("propertyDecorator", propertyKey);
   return {
     get(): any {
       return "propertyDecorator";

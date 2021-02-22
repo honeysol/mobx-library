@@ -4,21 +4,21 @@ import { getDerivedPropertyKey } from "./util";
 
 export const asyncComputed = (
   target: object,
-  fieldName: string | symbol,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const asyncCommitterFieldName = getDerivedPropertyKey(
-    fieldName,
+  const asyncCommitterKey = getDerivedPropertyKey(
+    propertyKey,
     "asyncCommitter"
   );
   return demand({
     async change(this: any, { newValue }, setter) {
-      const asyncCommiter = (this[asyncCommitterFieldName] =
-        this[asyncCommitterFieldName] || new AsyncCommitter());
+      const asyncCommiter = (this[asyncCommitterKey] =
+        this[asyncCommitterKey] || new AsyncCommitter());
       const { successed, value } = await asyncCommiter.resolve(newValue);
       if (successed) {
         setter(value);
       }
     },
-  })(target, fieldName, descriptor);
+  })(target, propertyKey, descriptor);
 };

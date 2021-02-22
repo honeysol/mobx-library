@@ -3,14 +3,14 @@ export const combinePropertyDecorator = (
 ): PropertyDecorator => {
   return (
     _target: object,
-    fieldName: string | symbol,
+    propertyKey: string | symbol,
     _descriptor?: PropertyDescriptor
   ) => {
     const target = _target;
     let descriptor = _descriptor;
     for (const decorator of decorators) {
       descriptor =
-        (decorator as any)(target, fieldName, descriptor) || descriptor;
+        (decorator as any)(target, propertyKey, descriptor) || descriptor;
     }
     return descriptor === _descriptor ? undefined : descriptor;
   };
@@ -33,21 +33,21 @@ export const parametrizePropertyDecorator = <T, S>(
   decoratorGenerator: PropertyDecoratorGenerator<S>,
   defaultValue: (
     target: T,
-    fieldName: string | symbol,
+    propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) => S
 ): PropertyDecoratorOptionalGenerator<S> => {
   return (((...args: any[]) => {
     if (isClass(args[0])) {
       // without parameter
-      const [target, fieldName, descriptor] = args as [
+      const [target, propertyKey, descriptor] = args as [
         T,
         string | symbol,
         PropertyDescriptor
       ];
-      return decoratorGenerator(defaultValue(target, fieldName, descriptor))(
+      return decoratorGenerator(defaultValue(target, propertyKey, descriptor))(
         target,
-        fieldName
+        propertyKey
       );
     } else {
       // with parameter
