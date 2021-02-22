@@ -8,14 +8,15 @@
     "build": "parcel build index.html"
   },
   "dependencies": {
-    "react-app-polyfill": "^1.0.0",
-    "mobx-async-computed": "*",
-    "mobx-initializer": "*"
+    "react-app-polyfill": "^1.0.0"
   },
   "alias": {
     "react": "../node_modules/react",
     "react-dom": "../node_modules/react-dom/profiling",
-    "scheduler/tracing": "../node_modules/scheduler/tracing-profiling"
+    "scheduler/tracing": "../node_modules/scheduler/tracing-profiling",
+    "mobx-async-computed": "../packages/mobx-async-computed",
+    "mobx-observed": "../packages/mobx-observed",
+    "mobx-initializer": "../packages/mobx-initializer"
   },
   "devDependencies": {
     "@types/react": "^16.9.11",

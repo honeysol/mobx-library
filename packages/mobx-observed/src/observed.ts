@@ -8,6 +8,7 @@ import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
  * 
   class InternalImplementation{
     @computed
+    @replace(descriptor)
     [originalKey];
     @observable
     [resolvedKey];
@@ -63,7 +64,7 @@ export const observed = ({
     }) as any
   );
 
-  return (becomeObservedFor<any>(function(this: any) {
+  return (becomeObservedFor(function(this: any) {
     const setter = (value: any) => (this[resolvedKey] = value);
     enter?.({ oldValue: this[originalKey], type: "enter" }, setter);
     const cancelObserve = observe(

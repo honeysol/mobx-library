@@ -7,6 +7,7 @@
     "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "mobx-async-computed": ["packages/mobx-async-computed/src"],
+      "mobx-observed": ["packages/mobx-observed/src"],
       "mobx-initializer": ["packages/mobx-initializer/src"],
       "mobx-react-component": ["packages/mobx-react-component/src"],
       "$test/*": ["test/*"]

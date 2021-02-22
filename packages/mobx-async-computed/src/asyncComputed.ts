@@ -1,5 +1,6 @@
+import { observed } from "mobx-observed";
+
 import { AsyncCommitter } from "./asyncCommitter";
-import { observed } from "./observed";
 import { getDerivedPropertyKey } from "./util";
 
 export const asyncComputed = (

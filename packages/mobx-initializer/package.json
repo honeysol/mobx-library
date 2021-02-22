@@ -2,7 +2,7 @@
   "name": "mobx-initializer",
   "version": "0.0.2",
   "description": "Official React library for @thefakeorg",
-  "author": "Jared Palmer",
+  "author": "norami",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/honeysol/mobx-library.git",
