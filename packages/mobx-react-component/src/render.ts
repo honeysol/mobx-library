@@ -19,13 +19,13 @@ export const render = (
       },
     };
   } else {
-    state.computed(target, fieldName, {
-      get: descriptor.get || descriptor.value,
-    });
     Object.defineProperty(target, "render", {
       value() {
         return this[fieldName];
       },
+    });
+    return state.computed(target, fieldName, {
+      get: descriptor.get || descriptor.value,
     });
   }
 };

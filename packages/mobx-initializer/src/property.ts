@@ -4,13 +4,15 @@ export const combinePropertyDecorator = (
   return (
     _target: object,
     fieldName: string | symbol,
-    descriptor?: PropertyDescriptor
+    _descriptor?: PropertyDescriptor
   ) => {
     const target = _target;
+    let descriptor = _descriptor;
     for (const decorator of decorators) {
-      (decorator as any)(target, fieldName, descriptor);
+      descriptor =
+        (decorator as any)(target, fieldName, descriptor) || descriptor;
     }
-    //return descriptor === _descriptor ? undefined : descriptor;
+    return descriptor === _descriptor ? undefined : descriptor;
   };
 };
 

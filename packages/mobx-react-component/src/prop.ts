@@ -4,8 +4,6 @@ import {
   PropertyDecoratorOptionalGenerator,
 } from "mobx-initializer";
 
-import { intercept } from "./intercept";
-
 // example:
 // fieldIdentifierToFunc("foo.bar")({ foo: { bar: 123} }) === 123
 const fieldIdentifierToFunc = (fieldIdentifier: string) => {
@@ -20,7 +18,7 @@ const createPropDecorator = (baseDecorator: MethodDecorator) => {
   return parametrizePropertyDecorator(
     (propName: string) => (target, fieldName) => {
       const getter = fieldIdentifierToFunc(propName);
-      baseDecorator(target, fieldName, {
+      return baseDecorator(target, fieldName, {
         get: function(this: any) {
           return getter(this.props);
         },
@@ -36,8 +34,9 @@ export const prop = createPropDecorator(
   delegate: PropertyDecoratorOptionalGenerator<string>;
 };
 
-prop.deep = createPropDecorator(intercept.isEqual);
+prop.deep = createPropDecorator(computed.struct);
 
+// 値ではなく、props中の関数の結果を評価する
 prop.delegate = parametrizePropertyDecorator(
   (propName: string) => (target: object, fieldName: string | symbol) => {
     return {

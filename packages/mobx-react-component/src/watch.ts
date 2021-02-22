@@ -1,40 +1,47 @@
 import { observe } from "mobx";
 import { addHandler } from "mobx-initializer";
 
-export const watch = (watchFieldName: string) => (
-  target: Function,
+// Watch field during a component lifecycle
+
+export const watchFor = (watchFieldName: string) => (
+  target: object,
   fieldName: string,
   descriptor: PropertyDescriptor
 ) => {
-  if (!descriptor.value) {
+  const handler = descriptor.value;
+  if (typeof handler !== "function") {
     // eslint-disable-next-line no-console
     console.error("decorator error", watchFieldName, fieldName, descriptor);
+    return;
   }
-  if (fieldName) {
-    const cancelObserveFieldname = Symbol(
-      "cancelObserveFieldname: " + fieldName
+  const cancelObserveFieldname = Symbol("cancelObserveFieldname: " + fieldName);
+  addHandler(target, "init", function(this: any) {
+    this[cancelObserveFieldname] = observe(
+      this,
+      watchFieldName,
+      handler.bind(this),
+      true
     );
-    addHandler(target, "stateRegister", function(this: any) {
-      this[cancelObserveFieldname] = observe(
-        this,
-        watchFieldName,
-        descriptor.value.bind(this),
-        true
-      );
-    });
-    addHandler(target, "release", function(this: any) {
-      this[cancelObserveFieldname]();
-    });
-  } else {
-    const cancelObserveFieldname = Symbol("cancelObserveFieldname");
-    addHandler(target, "stateRegister", function(this: any) {
-      this[cancelObserveFieldname] = observe(
-        watchFieldName,
-        descriptor.value.bind(this)
-      );
-    });
-    addHandler(target, "release", function(this: any) {
-      this[cancelObserveFieldname]();
-    });
-  }
+  });
+  addHandler(target, "release", function(this: any) {
+    this[cancelObserveFieldname]();
+  });
+};
+
+export const watch = (handler: Function) => (
+  target: object,
+  fieldName: string
+) => {
+  const cancelObserveFieldname = Symbol("cancelObserveFieldname: " + fieldName);
+  addHandler(target, "init", function(this: any) {
+    this[cancelObserveFieldname] = observe(
+      this,
+      fieldName,
+      handler.bind(this),
+      true
+    );
+  });
+  addHandler(target, "release", function(this: any) {
+    this[cancelObserveFieldname]();
+  });
 };

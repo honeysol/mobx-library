@@ -1,6 +1,8 @@
 import { computed, observable, observe } from "mobx";
 import { addHandler } from "mobx-initializer";
 
+// resource is deprecated
+
 const defaultHandler = (value: any) => value;
 
 // Example:
@@ -85,3 +87,25 @@ resource.computed = <Resource>({
     }) as unknown) as PropertyDescriptor
   );
 };
+type PromiseCallback<T> = (
+  resolve: (value: T) => void,
+  reject?: (reason: any) => void
+) => void;
+
+export class FastPromise<T> {
+  promise: Promise<T>;
+  constructor(callback: PromiseCallback<T>) {
+    this.promise = new Promise(callback);
+  }
+  static resolve<T>(value: PromiseLike<T> | any) {
+    if (value.then) {
+      return new Promise((resolve, rejected) => value.then(resolve, rejected));
+    } else {
+      return {
+        then(handler: PromiseCallback<T>) {
+          handler(value);
+        },
+      };
+    }
+  }
+}

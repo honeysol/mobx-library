@@ -8,97 +8,118 @@ import {
 
 type handlerType<T> = keyof T | (() => () => void);
 
-export const becomeObserved = <T>(
+const readValueAndCallHandlerIfBecomeObserved = <T>(
+  target: T,
+  fieldName: keyof T,
+  handler: (this: T) => () => void
+) => {
+  const cancelOnBecomeObserved = onBecomeObserved(target, fieldName, () => {
+    const cancelHandler = handler.apply(target);
+    const cancelOnBecomeUnobserved = onBecomeUnobserved(
+      target,
+      fieldName,
+      () => {
+        cancelOnBecomeUnobserved();
+        cancelHandler();
+      }
+    );
+  });
+  const result = target[fieldName];
+  cancelOnBecomeObserved();
+  return result;
+};
+
+// observedFieldName のフィールドをproxyして、
+// handlerを呼ぶ
+const _becomeObservedFor = <T>(
   handler: handlerType<T>,
-  observingFieldName: string
-) => (target: T, fieldName: string, descriptor: PropertyDescriptor) => {
+  observedFieldName: keyof T
+) => (target: T, fieldName: string) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
   const isObservingFieldName = fieldId + "IsObserving(becomeObserved)";
-  return computed(target, fieldName, {
+  return {
     configurable: true,
     get(this: any) {
       if (!this[isObservingFieldName]) {
         this[isObservingFieldName] = true;
-        const cancelOnBecomeObserved = onBecomeObserved(
+        return readValueAndCallHandlerIfBecomeObserved(
           this,
-          observingFieldName,
+          observedFieldName,
           () => {
             const cancelHandler =
               typeof handler === "function"
                 ? handler.apply(this)
                 : this[handler]();
-            const cancelOnBecomeUnobserved = onBecomeUnobserved(
-              this,
-              observingFieldName,
-              () => {
-                cancelOnBecomeUnobserved();
-                cancelHandler();
-                this[isObservingFieldName] = false;
-              }
-            );
+            return () => {
+              cancelHandler();
+              this[isObservingFieldName] = false;
+            };
           }
         );
-        const result = this[observingFieldName];
-        cancelOnBecomeObserved();
-        return result;
       } else {
-        return this[observingFieldName];
+        return this[observedFieldName];
       }
     },
-  });
+    set(this: any, value: any) {
+      this[observedFieldName] = value;
+    },
+  };
 };
 
-becomeObserved.computed = <T>(handler: handlerType<T>) => (
-  target: T,
-  fieldName: string,
+export const becomeObservedFor = <T>(
+  handler: handlerType<T>,
+  observedFieldName: keyof T
+) => (target: T, fieldName: string) => {
+  return computed(
+    target,
+    fieldName,
+    _becomeObservedFor(handler, observedFieldName)(target, fieldName)
+  );
+};
+
+const noopDecorator = (
+  target: object,
+  fieldName: string | symbol,
   descriptor: PropertyDescriptor
-) => {
+) => descriptor;
+
+/**
+ * @becomeObserved(handler) @computed などと使う
+ * ただし、observableのようなPropertyDecoratorとは組み合わせられない
+ * （PropertyDecoratorは、decorate呼び出し時点でフィールド名を確定させるため）
+ * その場合、
+ * @becomObserved(handler, observable)
+ * のようにする。
+  InternalImplementation{
+    [originalFieldName];
+    @becomeObservedFor("originalFieldName")
+    [fieldName];
+  }
+ */
+export const becomeObserved = <T>(
+  handler: handlerType<T>,
+  decorator: MethodDecorator = noopDecorator
+) => (target: T, fieldName: string, descriptor: PropertyDescriptor) => {
   const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const temporaryFieldName = fieldId + "Temporary(becomeObserved.computed)";
+  const originalFieldName = fieldId + "Original(becomeObserved)";
   Object.defineProperty(
     target,
-    temporaryFieldName,
-    computed(target, temporaryFieldName, descriptor) as any
+    originalFieldName,
+    (decorator(
+      target,
+      originalFieldName,
+      descriptor
+    ) as unknown) as MethodDecorator
   );
-  return (becomeObserved(handler, temporaryFieldName) as any)(
+  return (becomeObservedFor(handler, originalFieldName as keyof T) as any)(
     target,
     fieldName
   );
 };
 
-becomeObserved.observable = <T>(handler: handlerType<T>) => (
-  target: T,
-  fieldName: string,
-  descriptor: PropertyDescriptor
-) => {
-  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const temporaryFieldName = fieldId + "Temporary(becomeObserved.observable)";
-  const computedFieldName = fieldId + "Computed(becomeObserved.observable)";
-
-  Object.defineProperty(
-    target,
-    temporaryFieldName,
-    (observable.ref(
-      target,
-      temporaryFieldName,
-      descriptor
-    ) as unknown) as PropertyDescriptor
-  );
-  Object.defineProperty(
-    target,
-    computedFieldName,
-    (becomeObserved(handler, temporaryFieldName) as any)(
-      target,
-      computedFieldName
-    )
-  );
-  return {
-    configurable: true,
-    get(this: any) {
-      return this[computedFieldName];
-    },
-    set(this: any, value: any) {
-      this[temporaryFieldName] = value;
-    },
-  };
+becomeObserved.observable = <T>(handler: handlerType<T>) => {
+  return becomeObserved(handler, observable.ref);
+};
+becomeObserved.computed = <T>(handler: handlerType<T>) => {
+  return becomeObserved(handler, computed);
 };

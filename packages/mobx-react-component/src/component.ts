@@ -26,8 +26,6 @@ const _component = (target: ReactComponentType): ReactComponentType => {
     constructor(props: any) {
       super(props);
       applyHandler(this, "init", props);
-      applyHandler(this, "stateRegister", props);
-      applyHandler(this, "resourceRegister", props);
     }
     componentDidMount() {
       super.componentDidMount?.call(this);

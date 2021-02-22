@@ -1,8 +1,10 @@
-import isEqual from "lodash.isequal";
 import { computed, intercept as mobxIntercept } from "mobx";
 import { addHandler } from "mobx-initializer";
 
-export const _intercept = (handler: Function): MethodDecorator => (
+export const intercept = (
+  handler: ({ newValue, oldValue }: { newValue?: any; oldValue?: any }) => any,
+  closeHandler?: ({ oldValue }: { oldValue: any }) => void
+): MethodDecorator => (
   target: object,
   fieldName: string | symbol,
   descriptor: PropertyDescriptor
@@ -10,7 +12,7 @@ export const _intercept = (handler: Function): MethodDecorator => (
   const cancelObserveFieldname = Symbol(
     "cancelObserveFieldname: " + fieldName.toString()
   );
-  addHandler(target, "stateRegister", function(this: any) {
+  addHandler(target, "init", function(this: any) {
     this[cancelObserveFieldname] = mobxIntercept(
       this,
       fieldName,
@@ -19,18 +21,17 @@ export const _intercept = (handler: Function): MethodDecorator => (
   });
   addHandler(target, "release", function(this: any) {
     this[cancelObserveFieldname]();
+    closeHandler?.({ oldValue: this[fieldName] });
   });
   return descriptor;
 };
 
-export const intercept = _intercept as ((
-  handler: Function
-) => MethodDecorator) & {
-  isEqual: MethodDecorator;
-  computed: (handler: Function) => MethodDecorator;
-};
-
-intercept.computed = (handler: Function): MethodDecorator => (
+// mobのinterceptは、computedには使えない。
+// computedにも使えるような独自実装。
+const interceptComputed = (
+  handler: ({ newValue, oldValue }: { newValue?: any; oldValue?: any }) => any,
+  closeHandler?: ({ oldValue }: { oldValue: any }) => void
+) => (
   target: object,
   fieldName: string | symbol,
   descriptor: PropertyDescriptor
@@ -38,6 +39,11 @@ intercept.computed = (handler: Function): MethodDecorator => (
   const temporaryFieldName = Symbol(
     "temporaryFieldName: " + fieldName.toString()
   );
+  if (closeHandler) {
+    addHandler(target, "release", function(this: any) {
+      closeHandler?.({ oldValue: this[temporaryFieldName] });
+    });
+  }
   return computed(target, fieldName, {
     get(this: any) {
       const newValue = descriptor.get?.apply(this);
@@ -50,7 +56,28 @@ intercept.computed = (handler: Function): MethodDecorator => (
   });
 };
 
-intercept.isEqual = intercept.computed(
-  ({ newValue, oldValue }: { newValue: any; oldValue: any }) =>
-    !isEqual(newValue, oldValue)
-);
+// demand.autocloseが、unobservedで呼ばれるのと異なり、
+// intercept.computed.autoclose, intercept.autoclose
+// は、React.componentが破棄されるタイミングで呼ばれる
+// 値の更新ではいずれでも呼ばれる
+interceptComputed.autoclose = (handler: (value: any) => void) => {
+  const wrappedHandler = ({ oldValue }: { oldValue?: any }) => {
+    if (oldValue) {
+      handler(oldValue);
+    }
+    return true;
+  };
+  return interceptComputed(wrappedHandler, wrappedHandler);
+};
+
+intercept.autoclose = (handler: (value: any) => void) => {
+  const wrappedHandler = ({ oldValue }: { oldValue?: any }) => {
+    if (oldValue) {
+      handler(oldValue);
+    }
+    return true;
+  };
+  return intercept(wrappedHandler, wrappedHandler);
+};
+
+intercept.computed = interceptComputed;
