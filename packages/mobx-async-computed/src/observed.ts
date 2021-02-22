@@ -17,7 +17,7 @@ import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
     [propertyKey];
   }
  */
-export const demand = ({
+export const observed = ({
   change,
   enter,
   leave,
@@ -81,7 +81,7 @@ export const demand = ({
   }, resolvedKey) as any)(target, propertyKey);
 };
 
-demand.autoclose = (_handler: (oldValue: any) => void) => {
+observed.autoclose = (_handler: (oldValue: any) => void) => {
   const handler = (
     { oldValue, type }: { oldValue?: any; type: "change" | "leave" },
     setter: (value: any) => void
@@ -93,5 +93,5 @@ demand.autoclose = (_handler: (oldValue: any) => void) => {
       setter(null);
     }
   };
-  return demand({ leave: handler, change: handler });
+  return observed({ leave: handler, change: handler });
 };

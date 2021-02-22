@@ -1,5 +1,5 @@
 import { AsyncCommitter } from "./asyncCommitter";
-import { demand } from "./demand";
+import { observed } from "./observed";
 import { getDerivedPropertyKey } from "./util";
 
 export const asyncComputed = (
@@ -11,7 +11,7 @@ export const asyncComputed = (
     propertyKey,
     "asyncCommitter"
   );
-  return demand({
+  return observed({
     async change(this: any, { newValue }, setter) {
       const asyncCommiter = (this[asyncCommitterKey] =
         this[asyncCommitterKey] || new AsyncCommitter());

@@ -55,7 +55,7 @@ const interceptComputed = (
   });
 };
 
-// demand.autocloseが、unobservedで呼ばれるのと異なり、
+// observed.autocloseが、unobservedで呼ばれるのと異なり、
 // intercept.computed.autoclose, intercept.autoclose
 // は、React.componentが破棄されるタイミングで呼ばれる
 // 値の更新ではいずれでも呼ばれる
