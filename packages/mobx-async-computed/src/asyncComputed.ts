@@ -1,15 +1,16 @@
-import * as crypto from "crypto";
-
 import { AsyncCommitter } from "./asyncCommitter";
 import { demand } from "./demand";
+import { getDerivedPropertyKey } from "./util";
 
 export const asyncComputed = (
   target: object,
-  fieldName: string,
+  fieldName: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const asyncCommitterFieldName = fieldId + "AsyncCommitter(asyncComputed)";
+  const asyncCommitterFieldName = getDerivedPropertyKey(
+    fieldName,
+    "asyncCommitter"
+  );
   return demand({
     async change(this: any, { newValue }, setter) {
       const asyncCommiter = (this[asyncCommitterFieldName] =

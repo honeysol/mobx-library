@@ -1,11 +1,13 @@
 import { observe } from "mobx";
 import { addHandler } from "mobx-initializer";
 
+import { getDerivedPropertyKey } from "./util";
+
 // Watch field during a component lifecycle
 
 export const watchFor = (watchFieldName: string) => (
   target: object,
-  fieldName: string,
+  fieldName: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
   const handler = descriptor.value;
@@ -14,9 +16,13 @@ export const watchFor = (watchFieldName: string) => (
     console.error("decorator error", watchFieldName, fieldName, descriptor);
     return;
   }
-  const cancelObserveFieldname = Symbol("cancelObserveFieldname: " + fieldName);
+  const cancelObserveFieldName = getDerivedPropertyKey(
+    fieldName,
+    "cancelObserve"
+  );
+
   addHandler(target, "init", function(this: any) {
-    this[cancelObserveFieldname] = observe(
+    this[cancelObserveFieldName] = observe(
       this,
       watchFieldName,
       handler.bind(this),
@@ -24,17 +30,20 @@ export const watchFor = (watchFieldName: string) => (
     );
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelObserveFieldname]();
+    this[cancelObserveFieldName]();
   });
 };
 
 export const watch = (handler: Function) => (
   target: object,
-  fieldName: string
+  fieldName: string | symbol
 ) => {
-  const cancelObserveFieldname = Symbol("cancelObserveFieldname: " + fieldName);
+  const cancelObserveFieldName = getDerivedPropertyKey(
+    fieldName,
+    "cancelObserve"
+  );
   addHandler(target, "init", function(this: any) {
-    this[cancelObserveFieldname] = observe(
+    this[cancelObserveFieldName] = observe(
       this,
       fieldName,
       handler.bind(this),
@@ -42,6 +51,6 @@ export const watch = (handler: Function) => (
     );
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelObserveFieldname]();
+    this[cancelObserveFieldName]();
   });
 };

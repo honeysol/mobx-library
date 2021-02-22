@@ -1,13 +1,22 @@
 import { autorun as mobxAutorun } from "mobx";
 import { addHandler } from "mobx-initializer";
 
-export const autorun = (target: object, fieldName: string, descriptor: any) => {
-  const cancelAutoRunFieldname = Symbol("_autorun_" + fieldName);
+import { getDerivedPropertyKey } from "./util";
+
+export const autorun = (
+  target: object,
+  fieldName: string | symbol,
+  descriptor: any
+) => {
+  const cancelAutoRunFieldName = getDerivedPropertyKey(
+    fieldName,
+    "cancelAutorun"
+  );
   addHandler(target, "init", function(this: any) {
-    this[cancelAutoRunFieldname] = mobxAutorun(this[fieldName].bind(this));
+    this[cancelAutoRunFieldName] = mobxAutorun(this[fieldName].bind(this));
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelAutoRunFieldname]();
+    this[cancelAutoRunFieldName]();
   });
   return descriptor;
 };

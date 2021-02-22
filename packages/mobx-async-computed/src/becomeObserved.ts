@@ -1,10 +1,11 @@
-import * as crypto from "crypto";
 import {
   computed,
   observable,
   onBecomeObserved,
   onBecomeUnobserved,
 } from "mobx";
+
+import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
 
 type handlerType<T> = keyof T | (() => () => void);
 
@@ -34,9 +35,8 @@ const readValueAndCallHandlerIfBecomeObserved = <T>(
 const _becomeObservedFor = <T>(
   handler: handlerType<T>,
   observedFieldName: keyof T
-) => (target: T, fieldName: string) => {
-  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const isObservingFieldName = fieldId + "IsObserving(becomeObserved)";
+) => (target: T, fieldName: string | symbol) => {
+  const isObservingFieldName = getDerivedPropertyKey(fieldName, "isObserving");
   return {
     configurable: true,
     get(this: any) {
@@ -69,7 +69,7 @@ const _becomeObservedFor = <T>(
 export const becomeObservedFor = <T>(
   handler: handlerType<T>,
   observedFieldName: keyof T
-) => (target: T, fieldName: string) => {
+) => (target: T, fieldName: string | symbol) => {
   return computed(
     target,
     fieldName,
@@ -99,9 +99,15 @@ const noopDecorator = (
 export const becomeObserved = <T>(
   handler: handlerType<T>,
   decorator: MethodDecorator = noopDecorator
-) => (target: T, fieldName: string, descriptor: PropertyDescriptor) => {
-  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const originalFieldName = fieldId + "Original(becomeObserved)";
+) => (
+  target: T,
+  fieldName: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
+  const originalFieldName = getDerivedPropertyString(
+    fieldName,
+    "original(becomeObserved)"
+  );
   Object.defineProperty(
     target,
     originalFieldName,

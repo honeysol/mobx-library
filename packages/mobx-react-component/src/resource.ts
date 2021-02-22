@@ -1,6 +1,8 @@
 import { computed, observable, observe } from "mobx";
 import { addHandler } from "mobx-initializer";
 
+import { getDerivedPropertyKey } from "./util";
+
 // resource is deprecated
 
 const defaultHandler = (value: any) => value;
@@ -25,15 +27,22 @@ export const resource = <Resource>({
   off: (resource: Resource, handler: Function) => void;
   handler: Function;
   resourceFieldName: string;
-}) => (target: object, fieldName: string, descriptor: PropertyDescriptor) => {
-  const wrappedHandlerFieldName = Symbol("_" + fieldName + "Handler");
-  const cancelObserveFieldname = Symbol("_resource_" + fieldName);
+}) => (
+  target: object,
+  fieldName: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
+  const wrappedHandlerFieldName = getDerivedPropertyKey(fieldName, "wrapped");
+  const cancelObserveFieldName = getDerivedPropertyKey(
+    fieldName,
+    "cancelObserve"
+  );
 
   addHandler(target, "init", function(this: any) {
     this[wrappedHandlerFieldName] = (...args: any) => {
       this[fieldName] = handler.apply(this, args);
     };
-    this[cancelObserveFieldname] = observe(
+    this[cancelObserveFieldName] = observe(
       this,
       resourceFieldName,
       change => {
@@ -52,7 +61,7 @@ export const resource = <Resource>({
     if (this[resourceFieldName]) {
       off(this[resourceFieldName], this[wrappedHandlerFieldName]);
     }
-    this[cancelObserveFieldname]();
+    this[cancelObserveFieldName]();
   });
 };
 

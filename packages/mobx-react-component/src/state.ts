@@ -4,7 +4,7 @@ import { combinePropertyDecorator } from "mobx-initializer";
 import { componentStatus } from "./component";
 import { watch } from "./watch";
 
-const _state = (target: object, fieldName: string) => {
+const _state = (target: object, fieldName: string | symbol) => {
   return watch(function(this: any) {
     if (this[componentStatus] === "mounted") {
       this.setState({ [fieldName]: this[fieldName] });

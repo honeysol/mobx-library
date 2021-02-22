@@ -33,7 +33,7 @@ export const parametrizePropertyDecorator = <T, S>(
   decoratorGenerator: PropertyDecoratorGenerator<S>,
   defaultValue: (
     target: T,
-    fieldName: string,
+    fieldName: string | symbol,
     descriptor: PropertyDescriptor
   ) => S
 ): PropertyDecoratorOptionalGenerator<S> => {
@@ -42,7 +42,7 @@ export const parametrizePropertyDecorator = <T, S>(
       // without parameter
       const [target, fieldName, descriptor] = args as [
         T,
-        string,
+        string | symbol,
         PropertyDescriptor
       ];
       return decoratorGenerator(defaultValue(target, fieldName, descriptor))(

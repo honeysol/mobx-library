@@ -1,14 +1,13 @@
-import * as crypto from "crypto";
-
 import { state } from "./state";
+import { getDerivedPropertyString } from "./util";
 
 export const render = (
   target: object,
-  fieldName: string,
+  fieldName: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
   if (fieldName === "render") {
-    const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
+    const fieldId = getDerivedPropertyString("render", "original");
     state.computed(target, fieldId, {
       get: descriptor.value,
     });

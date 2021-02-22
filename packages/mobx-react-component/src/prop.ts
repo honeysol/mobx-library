@@ -24,7 +24,7 @@ const createPropDecorator = (baseDecorator: MethodDecorator) => {
         },
       });
     },
-    (_target: unknown, fieldName: string) => fieldName
+    (_target: unknown, fieldName: string | symbol) => fieldName as string
   );
 };
 export const prop = createPropDecorator(
@@ -47,5 +47,5 @@ prop.delegate = parametrizePropertyDecorator(
       },
     } as PropertyDescriptor;
   },
-  (_target: unknown, fieldName: string) => fieldName
+  (_target: unknown, fieldName: string | symbol) => fieldName as string
 );

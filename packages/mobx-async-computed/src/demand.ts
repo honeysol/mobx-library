@@ -1,7 +1,7 @@
-import * as crypto from "crypto";
 import { computed, observable, observe } from "mobx";
 
 import { becomeObservedFor } from "./becomeObserved";
+import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
 
 /**
  * 
@@ -38,10 +38,13 @@ export const demand = ({
     { oldValue, type }: { oldValue?: any; type: "leave" },
     setter: (value: any) => void
   ) => void;
-}) => (target: object, fieldName: string, descriptor: PropertyDescriptor) => {
-  const fieldId = fieldName + crypto.randomBytes(8).toString("hex");
-  const resolvedFieldName = fieldId + "Resolved(demand)";
-  const originalFieldName = fieldId + "Original(demand)";
+}) => (
+  target: object,
+  fieldName: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
+  const resolvedFieldName = getDerivedPropertyKey(fieldName, "resolved");
+  const originalFieldName = getDerivedPropertyString(fieldName, "original");
   Object.defineProperty(
     target,
     originalFieldName,
@@ -60,7 +63,7 @@ export const demand = ({
     }) as any
   );
 
-  return (becomeObservedFor(function(this: any) {
+  return (becomeObservedFor<any>(function(this: any) {
     const setter = (value: any) => (this[resolvedFieldName] = value);
     enter?.({ oldValue: this[originalFieldName], type: "enter" }, setter);
     const cancelObserve = observe(

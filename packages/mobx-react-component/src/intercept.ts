@@ -1,6 +1,8 @@
 import { computed, intercept as mobxIntercept } from "mobx";
 import { addHandler } from "mobx-initializer";
 
+import { getDerivedPropertyKey } from "./util";
+
 export const intercept = (
   handler: ({ newValue, oldValue }: { newValue?: any; oldValue?: any }) => any,
   closeHandler?: ({ oldValue }: { oldValue: any }) => void
@@ -9,18 +11,19 @@ export const intercept = (
   fieldName: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const cancelObserveFieldname = Symbol(
-    "cancelObserveFieldname: " + fieldName.toString()
+  const cancelObserveFieldName = getDerivedPropertyKey(
+    fieldName,
+    "cancelObserve"
   );
   addHandler(target, "init", function(this: any) {
-    this[cancelObserveFieldname] = mobxIntercept(
+    this[cancelObserveFieldName] = mobxIntercept(
       this,
       fieldName,
       handler.bind(this)
     );
   });
   addHandler(target, "release", function(this: any) {
-    this[cancelObserveFieldname]();
+    this[cancelObserveFieldName]();
     closeHandler?.({ oldValue: this[fieldName] });
   });
   return descriptor;
@@ -36,22 +39,21 @@ const interceptComputed = (
   fieldName: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const temporaryFieldName = Symbol(
-    "temporaryFieldName: " + fieldName.toString()
-  );
+  const originalFieldName = getDerivedPropertyKey(fieldName, "original");
+
   if (closeHandler) {
     addHandler(target, "release", function(this: any) {
-      closeHandler?.({ oldValue: this[temporaryFieldName] });
+      closeHandler?.({ oldValue: this[originalFieldName] });
     });
   }
   return computed(target, fieldName, {
     get(this: any) {
       const newValue = descriptor.get?.apply(this);
-      const oldValue = this[temporaryFieldName];
+      const oldValue = this[originalFieldName];
       if (handler.call(this, { newValue, oldValue })) {
-        this[temporaryFieldName] = newValue;
+        this[originalFieldName] = newValue;
       }
-      return this[temporaryFieldName];
+      return this[originalFieldName];
     },
   });
 };
