@@ -4,8 +4,10 @@ import {
   onBecomeObserved,
   onBecomeUnobserved,
 } from "mobx";
-
-import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
+import {
+  getDerivedPropertyKey,
+  getDerivedPropertyString,
+} from "ts-decorator-manipulator";
 
 type handlerType = string | (() => () => void);
 

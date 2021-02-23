@@ -1,7 +1,7 @@
 import { computed, configure, observable, runInAction } from "mobx";
 import * as mobx from "mobx";
 import { asyncComputed } from "mobx-async-computed";
-import { component, prop, render, state } from "mobx-react-component";
+import { component, prop, render, state } from "mobx-react-class-component";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 

@@ -16,7 +16,7 @@
     "scheduler/tracing": "../node_modules/scheduler/tracing-profiling",
     "mobx-async-computed": "../packages/mobx-async-computed",
     "mobx-observed": "../packages/mobx-observed",
-    "mobx-initializer": "../packages/mobx-initializer"
+    "ts-decorator-manipulator": "../packages/ts-decorator-manipulator"
   },
   "devDependencies": {
     "@types/react": "^16.9.11",

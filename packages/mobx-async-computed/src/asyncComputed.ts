@@ -1,7 +1,7 @@
 import { observed } from "mobx-observed";
+import { getDerivedPropertyKey } from "ts-decorator-manipulator";
 
 import { AsyncCommitter } from "./asyncCommitter";
-import { getDerivedPropertyKey } from "./util";
 
 export const asyncComputed = (
   target: object,

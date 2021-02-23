@@ -1,14 +1,36 @@
 import { observable } from "mobx";
-import {
-  applyHandler,
-  ClassType,
-  combineClassDecorator,
-} from "mobx-initializer";
 import React from "react";
-const componentAppliedFlag = Symbol("isAppliedMobxReactComponentInitializer");
-const pureComponentAppliedFlag = Symbol(
-  "isAppliedMobxReactPureComponentInitializer"
-);
+import { ClassType, combineClassDecorator } from "ts-decorator-manipulator";
+const componentAppliedFlag = Symbol("isInitializedMobxReactComponent");
+const pureComponentAppliedFlag = Symbol("isInitializedMobxReactPureComponent");
+
+const applyHandler = (target: any, handlersName: string, ...args: any) => {
+  const handlersKey = "_" + handlersName + "Handler";
+  const flagPropetyName = handlersKey + "Done";
+  if (target[flagPropetyName]) {
+    return;
+  }
+  target[flagPropetyName] = true;
+  for (
+    let current = target;
+    current;
+    current = Object.getPrototypeOf(current)
+  ) {
+    if (Object.prototype.hasOwnProperty.call(current, handlersKey)) {
+      for (const handler of current[handlersKey] || []) {
+        handler.apply(target, args);
+      }
+    }
+  }
+};
+
+export const addHandler = (target: any, handlersName: string, handler: any) => {
+  const handlersKey = "_" + handlersName + "Handler";
+  if (!Object.prototype.hasOwnProperty.call(target, handlersKey)) {
+    target[handlersKey] = [];
+  }
+  target[handlersKey].push(handler);
+};
 
 export const componentStatus = Symbol("componentStatus");
 

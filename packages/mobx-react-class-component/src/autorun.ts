@@ -1,7 +1,7 @@
 import { autorun as mobxAutorun } from "mobx";
-import { addHandler } from "mobx-initializer";
+import { getDerivedPropertyKey } from "ts-decorator-manipulator";
 
-import { getDerivedPropertyKey } from "./util";
+import { addHandler } from "./component";
 
 export const autorun = (
   target: object,

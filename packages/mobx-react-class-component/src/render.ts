@@ -1,5 +1,6 @@
+import { getDerivedPropertyString } from "ts-decorator-manipulator";
+
 import { state } from "./state";
-import { getDerivedPropertyString } from "./util";
 
 export const render = (
   target: object,

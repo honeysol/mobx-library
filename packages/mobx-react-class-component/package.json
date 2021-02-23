@@ -1,12 +1,12 @@
 {
-  "name": "mobx-initializer",
+  "name": "mobx-react-class-component",
   "version": "0.0.2",
   "description": "Official React library for @thefakeorg",
   "author": "norami",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/honeysol/mobx-library.git",
-    "directory": "packages/mobx-initializer"
+    "directory": "packages/mobx-react-class-component"
   },
   "scripts": {
     "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
@@ -23,7 +23,8 @@
     "dist"
   ],
   "dependencies": {
-    "mobx": "^5.13.0"
+    "mobx": "^5.13.0",
+    "ts-decorator-manipulator": "^0.0.2"
   },
   "publishConfig": {
     "access": "public"

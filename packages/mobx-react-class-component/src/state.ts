@@ -1,5 +1,5 @@
 import { computed, observable } from "mobx";
-import { combinePropertyDecorator } from "mobx-initializer";
+import { combinePropertyDecorator } from "ts-decorator-manipulator";
 
 import { componentStatus } from "./component";
 import { watch } from "./watch";

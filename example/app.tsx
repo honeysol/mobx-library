@@ -1,7 +1,7 @@
 import { autorun, computed, configure, observable, runInAction } from "mobx";
 import { asyncComputed } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
-import { component, prop, render, state } from "mobx-react-component";
+import { component, prop, render, state } from "mobx-react-class-component";
 import * as React from "react";
 
 import { delay } from "./delay";

@@ -1,12 +1,12 @@
 {
-  "name": "mobx-react-component",
+  "name": "ts-decorator-manipulator",
   "version": "0.0.2",
   "description": "Official React library for @thefakeorg",
   "author": "norami",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/honeysol/mobx-library.git",
-    "directory": "packages/mobx-react-component"
+    "directory": "packages/ts-decorator-manipulator"
   },
   "scripts": {
     "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
@@ -22,10 +22,7 @@
     "README.md",
     "dist"
   ],
-  "dependencies": {
-    "mobx": "^5.13.0",
-    "mobx-initializer": "^0.0.2"
-  },
+  "dependencies": {},
   "publishConfig": {
     "access": "public"
   }

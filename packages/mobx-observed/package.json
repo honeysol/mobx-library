@@ -23,7 +23,8 @@
     "dist"
   ],
   "dependencies": {
-    "mobx": "^5.13.0"
+    "mobx": "^5.13.0",
+    "ts-decorator-manipulator": "^0.0.2"
   },
   "publishConfig": {
     "access": "public"

@@ -1,7 +1,10 @@
 import { computed, observable, observe } from "mobx";
+import {
+  getDerivedPropertyKey,
+  getDerivedPropertyString,
+} from "ts-decorator-manipulator";
 
 import { becomeObservedFor } from "./becomeObserved";
-import { getDerivedPropertyKey, getDerivedPropertyString } from "./util";
 
 /**
  * 

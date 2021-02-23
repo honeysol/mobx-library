@@ -2,7 +2,7 @@ import { computed } from "mobx";
 import {
   parametrizePropertyDecorator,
   PropertyDecoratorOptionalGenerator,
-} from "mobx-initializer";
+} from "ts-decorator-manipulator";
 
 // example:
 // fieldIdentifierToFunc("foo.bar")({ foo: { bar: 123} }) === 123
