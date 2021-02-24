@@ -10,5 +10,4 @@ export const autorun = (
   addInitializer(target, function(this: any) {
     return mobxAutorun(this[propertyKey].bind(this));
   });
-  return descriptor;
 };

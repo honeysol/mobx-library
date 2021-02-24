@@ -31,21 +31,21 @@ const interceptComputed = (
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const originalKey = getDerivedPropertyKey(propertyKey, "original");
+  const oldValueKey = getDerivedPropertyKey(propertyKey, "oldValue");
 
   if (closeHandler) {
     addTerminator(target, function(this: any) {
-      closeHandler?.({ oldValue: this[originalKey] });
+      closeHandler?.({ oldValue: this[oldValueKey] });
     });
   }
   return computed(target, propertyKey, {
     get(this: any) {
       const newValue = descriptor.get?.apply(this);
-      const oldValue = this[originalKey];
+      const oldValue = this[oldValueKey];
       if (handler.call(this, { newValue, oldValue })) {
-        this[originalKey] = newValue;
+        this[oldValueKey] = newValue;
       }
-      return this[originalKey];
+      return this[oldValueKey];
     },
   });
 };
