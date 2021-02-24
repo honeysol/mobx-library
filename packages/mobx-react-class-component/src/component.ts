@@ -1,16 +1,26 @@
 import { observable } from "mobx";
 import React from "react";
 import { ClassType, combineClassDecorator } from "ts-decorator-manipulator";
-const componentAppliedFlag = Symbol("isInitializedMobxReactComponent");
-const pureComponentAppliedFlag = Symbol("isInitializedMobxReactPureComponent");
+const componentAppliedFlag = Symbol("isAppliedMobxReactClassComponent");
+const pureComponentAppliedFlag = Symbol("isAppliedMobxReactClassComponentPure");
 
-const applyHandler = (target: any, handlersName: string, ...args: any) => {
-  const handlersKey = "_" + handlersName + "Handler";
-  const flagPropetyName = handlersKey + "Done";
-  if (target[flagPropetyName]) {
+const keyMap = new Map<string, symbol>();
+
+const getKey = (name: string) => {
+  if (!keyMap.has(name)) {
+    keyMap.set(name, Symbol(name));
+  }
+  return keyMap.get(name) as symbol;
+};
+
+// targetはインスタンス
+const applyHandler = (target: any, handlerName: string, ...args: any) => {
+  const handlersKey = getKey(handlerName + "Handler");
+  const appliedflagKey = getKey(handlerName + "HandlerApplied");
+  if (target[appliedflagKey]) {
     return;
   }
-  target[flagPropetyName] = true;
+  target[appliedflagKey] = true;
   for (
     let current = target;
     current;
@@ -24,17 +34,32 @@ const applyHandler = (target: any, handlersName: string, ...args: any) => {
   }
 };
 
-export const addHandler = (target: any, handlersName: string, handler: any) => {
-  const handlersKey = "_" + handlersName + "Handler";
+// targetは、classのprototype
+const addHandler = (target: any, handlerName: string, handler: any) => {
+  const handlersKey = getKey(handlerName + "Handler");
   if (!Object.prototype.hasOwnProperty.call(target, handlersKey)) {
     target[handlersKey] = [];
   }
   target[handlersKey].push(handler);
 };
 
+export const addInitializer = (target: any, handler: any) => {
+  const cancelerKey = Symbol("canceler");
+  addHandler(target, "init", function(this: any) {
+    this[cancelerKey] = handler.apply(this);
+  });
+  addHandler(target, "release", function(this: any) {
+    this[cancelerKey]?.();
+  });
+};
+
+export const addTerminator = (target: any, handler: any) => {
+  addHandler(target, "release", handler);
+};
+
 export const componentStatus = Symbol("componentStatus");
 
-export type ReactComponentType = ClassType<React.Component>;
+type ReactComponentType = ClassType<React.Component>;
 
 const _component = (target: ReactComponentType): ReactComponentType => {
   if (target.prototype[componentAppliedFlag]) {

@@ -1,7 +1,7 @@
 import { computed, intercept as mobxIntercept } from "mobx";
 import { getDerivedPropertyKey } from "ts-decorator-manipulator";
 
-import { addHandler } from "./component";
+import { addInitializer, addTerminator } from "./component";
 
 export const intercept = (
   handler: ({ newValue, oldValue }: { newValue?: any; oldValue?: any }) => any,
@@ -11,17 +11,12 @@ export const intercept = (
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const cancelObserveKey = getDerivedPropertyKey(propertyKey, "cancelObserve");
-  addHandler(target, "init", function(this: any) {
-    this[cancelObserveKey] = mobxIntercept(
-      this,
-      propertyKey,
-      handler.bind(this)
-    );
-  });
-  addHandler(target, "release", function(this: any) {
-    this[cancelObserveKey]();
-    closeHandler?.({ oldValue: this[propertyKey] });
+  addInitializer(target, function(this: any) {
+    const canceler = mobxIntercept(this, propertyKey, handler.bind(this));
+    return () => {
+      canceler();
+      closeHandler?.({ oldValue: this[propertyKey] });
+    };
   });
   return descriptor;
 };
@@ -39,7 +34,7 @@ const interceptComputed = (
   const originalKey = getDerivedPropertyKey(propertyKey, "original");
 
   if (closeHandler) {
-    addHandler(target, "release", function(this: any) {
+    addTerminator(target, function(this: any) {
       closeHandler?.({ oldValue: this[originalKey] });
     });
   }

@@ -1,7 +1,7 @@
 import { computed, observable, observe } from "mobx";
 import { getDerivedPropertyKey } from "ts-decorator-manipulator";
 
-import { addHandler } from "./component";
+import { addInitializer } from "./component";
 
 // resource is deprecated
 
@@ -33,13 +33,11 @@ export const resource = <Resource>({
   descriptor: PropertyDescriptor
 ) => {
   const wrappedHandlerKey = getDerivedPropertyKey(propertyKey, "wrapped");
-  const cancelObserveKey = getDerivedPropertyKey(propertyKey, "cancelObserve");
-
-  addHandler(target, "init", function(this: any) {
+  addInitializer(target, function(this: any) {
     this[wrappedHandlerKey] = (...args: any) => {
       this[propertyKey] = handler.apply(this, args);
     };
-    this[cancelObserveKey] = observe(
+    const canceler = observe(
       this,
       resourceKey,
       change => {
@@ -53,12 +51,12 @@ export const resource = <Resource>({
       },
       true
     );
-  });
-  addHandler(target, "release", function(this: any) {
-    if (this[resourceKey]) {
-      off(this[resourceKey], this[wrappedHandlerKey]);
-    }
-    this[cancelObserveKey]();
+    return () => {
+      if (this[resourceKey]) {
+        off(this[resourceKey], this[wrappedHandlerKey]);
+      }
+      canceler();
+    };
   });
 };
 
