@@ -1,4 +1,12 @@
-import { autorun, computed, configure, observable, runInAction } from "mobx";
+import {
+  action,
+  autorun,
+  computed,
+  configure,
+  getObserverTree,
+  observable,
+  runInAction,
+} from "mobx";
 import { asyncComputed } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
 import { component, prop, render, state } from "mobx-react-class-component";
@@ -6,13 +14,15 @@ import * as React from "react";
 
 import { delay } from "./delay";
 
+configure({
+  enforceActions: "observed",
+});
+
 /* eslint-disable no-console */
 
 class MobxStore {
   constructor(value) {
-    runInAction(() => {
-      this.value = value;
-    });
+    this.value = value;
   }
   @observable
   value: any;
@@ -24,7 +34,7 @@ class MobxStore {
 
 const store = new MobxStore(300);
 
-@component
+@component.smart
 class MobxComponent2 extends React.Component<{
   value: number;
   store: MobxStore;
@@ -33,20 +43,17 @@ class MobxComponent2 extends React.Component<{
   get isMobxComponent2() {
     return true;
   }
-  static isMobxComponent2Prototype = true;
+  static isMobxComponent2Constructor = true;
 
-  @observable
-  params = {};
-  @prop
-  value;
-  @prop
-  store;
+  // @prop
+  // value;
+  // @prop
+  // store;
   @render
   render() {
-    console.log(this);
     return (
       <div>
-        <div>value: {this.value}</div>
+        <div>value: {this.props.value}</div>
         <div>lazyValue: {this.lazyValue}</div>
         <div>lazyStoreValue: {this.lazyStoreValue}</div>
       </div>
@@ -56,17 +63,21 @@ class MobxComponent2 extends React.Component<{
   @asyncComputed
   lazyValue() {
     console.log("lazyValue");
-    return delay(1000, this.value);
+    return delay(1000, this.props.value);
   }
   @state
   @asyncComputed
   lazyStoreValue() {
-    if (!this.store) console.error(this);
-    return delay(1000, this.store?.value);
+    if (!this.props.store) console.error(this, this.props.store);
+    return delay(1000, this.props.store?.value);
   }
 }
-@component
+
+@component.smart
 class MobxComponent3 extends MobxComponent2 {
+  constructor(props) {
+    super(props);
+  }
   @observable
   internalValue = 200;
   @asyncComputed
@@ -82,13 +93,15 @@ class MobxComponent3 extends MobxComponent2 {
 
   @render
   render() {
+    console.log("MobxComponent3 render");
+
     return (
       <div>
-        <div>value: {this.value}</div>
+        {/* <div>value: {this.props.value}</div> */}
         <div>lazyValue: {this.lazyValue}</div>
         <div>internalValue: {this.internalValue}</div>
         <div>lazyInternalValue: {this.lazyInternalValue}</div>
-        <div>storeValue: {this.store?.value}</div>
+        {/* <div>storeValue: {this.store?.value}</div> */}
         <div>lazyStoreValue: {this.lazyStoreValue}</div>
         <div>internalStoreValue: {this.internalStore?.value}</div>
         <div>lazyInternalStoreValue: {this.internalStore?.lazyValue}</div>
@@ -104,20 +117,11 @@ class MobxComponent3 extends MobxComponent2 {
         <button
           onClick={() => {
             runInAction(() => {
-              this.value = this.value + 10;
+              this.props.store.value = this.props.store.value + 100;
             });
           }}
         >
-          increment value by mobx(error)
-        </button>
-        <button
-          onClick={() => {
-            runInAction(() => {
-              this.store.value = this.store.value + 100;
-            });
-          }}
-        >
-          increment store by mobx
+          increment store by mobx#
         </button>
         <button
           onClick={() => {
@@ -223,15 +227,31 @@ export class X {
   // })
   // @observable.ref
   y = 100;
+
+  @observable
+  z = { a: 100 };
 }
 
 const x = new X();
 const canceler = autorun(() => {
-  console.log("#");
-  console.log(x.y);
-  x.y = 200;
-  console.log(x.y);
+  // console.log("x.z", x.z);
+  console.log("x.z.a", x.z?.a);
 });
-console.log("#1");
-canceler();
-console.log("#2");
+
+autorun(() => {
+  x.y = 200;
+  // console.log("x.z", x.z);
+  console.log("x.z.b", x.z?.b);
+});
+
+// console.log("#1");
+// canceler();
+// console.log("#2");
+console.log("x", x);
+
+interface Window {
+  x: X;
+}
+declare let window: Window;
+
+window.x = x;

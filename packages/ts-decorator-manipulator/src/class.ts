@@ -1,12 +1,12 @@
 export type ClassType<T> = new (...args: any[]) => T;
-export type ClassDecorator<T> = (
-  target: ClassType<T>
-) => ClassType<T> | undefined;
+export type ClassDecorator<T extends typeof Object> = (
+  target: T
+) => T | undefined;
 
 export const combineClassDecorator = <T>(
   ...decorators: ClassDecorator<T>[]
 ): ClassDecorator<T> => {
-  return ((target: ClassType<T>) => {
+  return ((target: T) => {
     let current = target;
     for (const decorator of decorators) {
       current = decorator(current) || current;

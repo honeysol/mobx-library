@@ -1,4 +1,4 @@
-import { computed, observable, observe } from "mobx";
+import { action, computed, observable, observe } from "mobx";
 import {
   getDerivedPropertyKey,
   getDerivedPropertyString,
@@ -11,12 +11,11 @@ import { becomeObservedFor } from "./becomeObserved";
  * 
   class InternalImplementation{
     @computed
-    @replace(descriptor)
     [originalKey];
     @observable
     [resolvedKey];
     @becomeObservedFor(() => {
-      do something
+      convert originalKey to resolvedKey
     }, "resolvedKey")
     [propertyKey];
   }
@@ -68,7 +67,7 @@ export const observed = ({
   );
 
   return (becomeObservedFor(function(this: any) {
-    const setter = (value: any) => (this[resolvedKey] = value);
+    const setter = action((value: any) => (this[resolvedKey] = value));
     enter?.({ oldValue: this[originalKey], type: "enter" }, setter);
     const cancelObserve = observe(
       this,

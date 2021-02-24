@@ -1,8 +1,14 @@
-import { observable } from "mobx";
+import { createAtom, observable, runInAction } from "mobx";
 import React from "react";
-import { ClassType, combineClassDecorator } from "ts-decorator-manipulator";
-const componentAppliedFlag = Symbol("isAppliedMobxReactClassComponent");
-const pureComponentAppliedFlag = Symbol("isAppliedMobxReactClassComponentPure");
+import {
+  ClassDecorator,
+  ClassType,
+  combineClassDecorator,
+} from "ts-decorator-manipulator";
+const isBaseComponentKey = Symbol("isBaseComponentKey");
+
+type ReactComponentType = ClassType<React.Component>;
+type ObjectComponentType = ClassType<object>;
 
 const keyMap = new Map<string, symbol>();
 
@@ -14,18 +20,34 @@ const getKey = (name: string) => {
 };
 
 // targetはインスタンス
-const applyHandler = (target: any, handlerName: string, ...args: any) => {
+const applyHandler = (
+  target: any,
+  prototype: any,
+  key: symbol,
+  handlerName: string,
+  ...args: any
+) => {
   const handlersKey = getKey(handlerName + "Handler");
-  const appliedflagKey = getKey(handlerName + "HandlerApplied");
-  if (target[appliedflagKey]) {
-    return;
-  }
-  target[appliedflagKey] = true;
+  let shouldBeApplied = false;
+  // console.log("start", target);
   for (
     let current = target;
     current;
     current = Object.getPrototypeOf(current)
   ) {
+    // console.log(current, current === prototype, shouldBeApplied, target[key]);
+    if (current === prototype) {
+      shouldBeApplied = true;
+    } else if (
+      shouldBeApplied &&
+      Object.prototype.hasOwnProperty.call(current, key)
+    ) {
+      break;
+    }
+    if (!shouldBeApplied) {
+      continue;
+    }
+    // console.log("#");
     if (Object.prototype.hasOwnProperty.call(current, handlersKey)) {
       for (const handler of current[handlersKey] || []) {
         handler.apply(target, args);
@@ -59,20 +81,22 @@ export const addTerminator = (target: any, handler: any) => {
 
 export const componentStatus = Symbol("componentStatus");
 
-type ReactComponentType = ClassType<React.Component>;
-
-const _component = (target: ReactComponentType): ReactComponentType => {
-  if (target.prototype[componentAppliedFlag]) {
-    return target;
-  }
-  class Component extends target {
-    [componentAppliedFlag] = true;
+const baseComponent = (target: ReactComponentType): ReactComponentType => {
+  // if (target.prototype[isBaseComponentKey]) {
+  //   return target;
+  // }
+  class BaseComponent extends target {
+    [isBaseComponentKey]: boolean;
     [componentStatus]?: string;
-    @observable.ref
-    props: any;
     constructor(props: any) {
       super(props);
-      applyHandler(this, "init", props);
+      applyHandler(
+        this,
+        BaseComponent.prototype,
+        isBaseComponentKey,
+        "init",
+        props
+      );
     }
     componentDidMount() {
       super.componentDidMount?.call(this);
@@ -80,31 +104,98 @@ const _component = (target: ReactComponentType): ReactComponentType => {
     }
     componentWillUnmount() {
       super.componentWillUnmount?.call(this);
-      applyHandler(this, "release");
+      applyHandler(
+        this,
+        BaseComponent.prototype,
+        isBaseComponentKey,
+        "release"
+      );
     }
   }
-  return Component;
+  BaseComponent.prototype[isBaseComponentKey] = true;
+  return BaseComponent;
 };
 
 // pure componentでは、propの変更があってもstateの変更がない限り、renderされない
 
-const _pureComponent = (target: any) => {
-  if (target.prototype[pureComponentAppliedFlag]) {
-    return target;
-  }
-  return class Component extends target {
-    [pureComponentAppliedFlag] = true;
+const _pureComponent = (target: ReactComponentType): ReactComponentType => {
+  class PureComponent extends target {
+    constructor(props: any) {
+      super(props);
+    }
     shouldComponentUpdate(nextProps: any, nextState: any) {
       return nextState !== this.state;
     }
-  };
+  }
+  return PureComponent;
 };
 
-export const component = _component as ClassDecorator & {
-  pure: ClassDecorator;
+const copyProps = (dst: object, src: object) => {
+  for (const key of Object.getOwnPropertyNames(dst)) {
+    if (!Object.prototype.hasOwnProperty.call(src, key)) {
+      delete (dst as any)[key];
+    }
+  }
+  Object.assign(dst, src);
+};
+
+const _legacyComponent = (target: ReactComponentType): ReactComponentType => {
+  class LegacyComponent extends target {
+    constructor(props: any) {
+      super(props);
+    }
+    @observable.ref
+    props: any;
+  }
+  return LegacyComponent;
+};
+
+const _smartComponent = (target: ObjectComponentType): ObjectComponentType => {
+  class SmartComponent extends target {
+    constructor(props: any) {
+      super(props);
+    }
+    @observable
+    mobxProps: any;
+    originalProps: any;
+    propsAtom: any;
+    state: any;
+    set props(props: any) {
+      this.originalProps = props;
+      runInAction(() => {
+        this.mobxProps = this.mobxProps || {};
+        copyProps(this.mobxProps, props);
+      });
+    }
+    get props() {
+      this.propsAtom = this.propsAtom || createAtom("props");
+      if (this.propsAtom.reportObserved()) {
+        return this.mobxProps;
+      } else {
+        return this.originalProps;
+      }
+    }
+    shouldComponentUpdate(nextProps: any, nextState: any) {
+      return nextState !== this.state;
+    }
+  }
+  return SmartComponent;
+};
+
+export const component = combineClassDecorator(
+  baseComponent,
+  _legacyComponent
+) as ClassDecorator<any> & {
+  pure: ClassDecorator<any>;
+  smart: ClassDecorator<any>;
 };
 
 component.pure = combineClassDecorator(
-  _component,
+  baseComponent,
   _pureComponent
-) as ClassDecorator;
+) as ClassDecorator<any>;
+
+component.smart = combineClassDecorator(
+  baseComponent,
+  _smartComponent as ClassDecorator<any>
+) as ClassDecorator<any>;
