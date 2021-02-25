@@ -1,7 +1,7 @@
 import { action, computed, observable, reaction } from "mobx";
+import { evacuate } from "ts-decorator-manipulator";
 
 import { becomeObserved } from "./becomeObserved";
-import { evacuate } from "./util";
 
 export const observed = ({
   change,

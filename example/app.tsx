@@ -3,14 +3,16 @@ import {
   autorun,
   computed,
   configure,
+  createAtom,
   getObserverTree,
   observable,
   runInAction,
 } from "mobx";
 import { asyncComputed } from "mobx-async-computed";
-import { becomeObserved, evacuate } from "mobx-observed";
+import { becomeObserved } from "mobx-observed";
 import { component, prop, render, state } from "mobx-react-class-component";
 import * as React from "react";
+import { evacuate } from "ts-decorator-manipulator";
 
 import { delay } from "./delay";
 
@@ -49,24 +51,22 @@ class MobxComponent2 extends React.Component<{
   // value;
   // @prop
   // store;
-  @render
-  render() {
-    console.log("MobxComponent2 render");
-    return (
-      <div>
-        <div>value: {this.props.value}</div>
-        <div>lazyValue: {this.lazyValue}</div>
-        <div>lazyStoreValue: {this.lazyStoreValue}</div>
-      </div>
-    );
-  }
-  // @state
+  // @render
+  // render() {
+  //   console.log("MobxComponent2 render");
+  //   return (
+  //     <div>
+  //       <div>value: {this.props.value}</div>
+  //       <div>lazyValue: {this.lazyValue}</div>
+  //       <div>lazyStoreValue: {this.lazyStoreValue}</div>
+  //     </div>
+  //   );
+  // }
   @asyncComputed
   lazyValue() {
     console.log("lazyValue");
     return delay(1000, this.props.value);
   }
-  @state
   @asyncComputed
   lazyStoreValue() {
     if (!this.props.store) console.error(this, this.props.store);
@@ -94,7 +94,7 @@ class MobxComponent3 extends MobxComponent2 {
 
   @render
   render() {
-    console.log("MobxComponent3 render");
+    console.log("MobxComponent3 render", Date.now());
 
     return (
       <div>
@@ -258,11 +258,16 @@ canceler();
 // console.log("#2");
 // console.log("x", x);
 
-interface Window {
-  x: X;
-  debug: any;
-}
-declare let window: Window;
+declare let window: any;
 
 window.x = x;
 window.debug = { computed };
+
+// const counter = observable({ count: 0 });
+
+// // Sets up the autorun and prints 0.
+// window.test = () => {
+//   for (let i = 0; i < 1000000; ++i) {
+//     createAtom("#" + i);
+//   }
+// };

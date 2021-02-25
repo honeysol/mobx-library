@@ -23,6 +23,7 @@ export const intercept = (
 
 // mobのinterceptは、computedには使えない。
 // computedにも使えるような独自実装。
+
 const interceptComputed = (
   handler: ({ newValue, oldValue }: { newValue?: any; oldValue?: any }) => any,
   closeHandler?: ({ oldValue }: { oldValue: any }) => void
@@ -62,16 +63,6 @@ interceptComputed.autoclose = (handler: (value: any) => void) => {
     return true;
   };
   return interceptComputed(wrappedHandler, wrappedHandler);
-};
-
-intercept.autoclose = (handler: (value: any) => void) => {
-  const wrappedHandler = ({ oldValue }: { oldValue?: any }) => {
-    if (oldValue) {
-      handler(oldValue);
-    }
-    return true;
-  };
-  return intercept(wrappedHandler, wrappedHandler);
 };
 
 intercept.computed = interceptComputed;

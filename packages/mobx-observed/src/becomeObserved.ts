@@ -2,10 +2,9 @@ import { computed, createAtom, IAtom, observable } from "mobx";
 import {
   combineMethodDecorator,
   combinePropertyDecorator,
+  evacuate,
   getDerivedPropertyKey,
 } from "ts-decorator-manipulator";
-
-import { evacuate } from "./util";
 
 type handlerType = string | (() => () => void);
 

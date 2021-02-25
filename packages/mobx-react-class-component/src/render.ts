@@ -1,4 +1,4 @@
-import { getDerivedPropertyString } from "ts-decorator-manipulator";
+import { evacuate } from "ts-decorator-manipulator";
 
 import { state } from "./state";
 
@@ -8,24 +8,27 @@ export const render = (
   descriptor: PropertyDescriptor
 ) => {
   if (propertyKey === "render") {
-    const fieldId = getDerivedPropertyString("render", "original");
-    state.computed(target, fieldId, {
-      get: descriptor.value,
-    });
+    const originalDescriptor = evacuate(state.computed, "original")(
+      target,
+      propertyKey,
+      {
+        get: descriptor.value,
+      }
+    );
     return {
-      configurable: true,
       value(this: any) {
-        return this[fieldId];
+        return originalDescriptor.get.call(this);
       },
     } as PropertyDescriptor;
   } else {
-    Object.defineProperty(target, "render", {
-      value() {
-        return this[propertyKey];
-      },
-    });
-    return state.computed(target, propertyKey, {
+    const originalDescriptor = state.computed(target, propertyKey, {
       get: descriptor.get || descriptor.value,
     }) as PropertyDescriptor;
+    Object.defineProperty(target, "render", {
+      value() {
+        return originalDescriptor.get?.call(this);
+      },
+    });
+    return originalDescriptor;
   }
 };

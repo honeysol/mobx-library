@@ -1,8 +1,8 @@
 Arguments: 
-  /Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin/node /Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin/yarn add mobx-react-class-component
+  /Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin/node /Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin/yarn add ts-decirator-manipulator
 
 PATH: 
-  /var/folders/44/0xb_xtz10sn4gx4sm03753vm0000gn/T/yarn--1614033254751-0.9338723478013684:/Users/ikedanorimasa/git-work/timecore/mobx-library/example/node_modules/.bin:/Users/ikedanorimasa/.config/yarn/link/node_modules/.bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/libexec/lib/node_modules/npm/bin/node-gyp-bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/lib/node_modules/npm/bin/node-gyp-bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin/node_modules/npm/bin/node-gyp-bin:/Users/ikedanorimasa/.goenv/shims:/Users/ikedanorimasa/.goenv/bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Library/Apple/usr/bin:/Users/ikedanorimasa/google-cloud-sdk/bin:/Users/ikedanorimasa/.goenv/shims:/Users/ikedanorimasa/.goenv/bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin:./node_modules/.bin/:../node_modules/.bin/:../../node_modules/.bin/:./node_modules/.bin/:../node_modules/.bin/:../../node_modules/.bin/
+  /var/folders/44/0xb_xtz10sn4gx4sm03753vm0000gn/T/yarn--1614258520051-0.24504765641116388:/Users/ikedanorimasa/git-work/timecore/mobx-library/example/node_modules/.bin:/Users/ikedanorimasa/.config/yarn/link/node_modules/.bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/libexec/lib/node_modules/npm/bin/node-gyp-bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/lib/node_modules/npm/bin/node-gyp-bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin/node_modules/npm/bin/node-gyp-bin:/Users/ikedanorimasa/.goenv/shims:/Users/ikedanorimasa/.goenv/bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Library/Apple/usr/bin:/Users/ikedanorimasa/google-cloud-sdk/bin:/Users/ikedanorimasa/.goenv/shims:/Users/ikedanorimasa/.goenv/bin:/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/bin:./node_modules/.bin/:../node_modules/.bin/:../../node_modules/.bin/:./node_modules/.bin/:../node_modules/.bin/:../../node_modules/.bin/
 
 Yarn version: 
   1.22.5
@@ -14,7 +14,7 @@ Platform:
   darwin x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/mobx-react-class-component: Not found
+  Error: https://registry.yarnpkg.com/ts-decirator-manipulator: Not found
       at Request.params.callback [as _callback] (/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/lib/node_modules/yarn/lib/cli.js:66988:18)
       at Request.self.callback (/Users/ikedanorimasa/.nvm/versions/node/v10.20.1/lib/node_modules/yarn/lib/cli.js:140662:22)
       at Request.emit (events.js:198:13)
