@@ -2,9 +2,15 @@ import { reaction } from "mobx";
 
 import { addInitializer } from "./component";
 
+export interface WatchOption {
+  fireImmediately?: boolean;
+  delay?: number;
+  scheduler?: (run: () => void) => void;
+}
+
 // Watch field during a component lifecycle
 
-export const watchFor = (watchKey: string) => (
+export const watchFor = (watchKey: string, options?: WatchOption) => (
   target: object,
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
@@ -16,12 +22,12 @@ export const watchFor = (watchKey: string) => (
       (newValue, oldValue) => {
         handler.call(this, { newValue, oldValue });
       },
-      { fireImmediately: true }
+      { fireImmediately: true, ...options }
     );
   });
 };
 
-export const watch = (handler: Function) => (
+export const watch = (handler: Function, options?: WatchOption) => (
   target: object,
   propertyKey: string | symbol,
   descriptor?: PropertyDescriptor
@@ -33,7 +39,7 @@ export const watch = (handler: Function) => (
       (newValue: any, oldValue: any) => {
         handler.call(this, { newValue, oldValue });
       },
-      { fireImmediately: true }
+      { fireImmediately: true, ...options }
     );
   });
 };

@@ -1,17 +1,18 @@
-import { getDerivedPropertyKey } from "ts-decorator-manipulator";
+import { getDerivedPropertyString } from "ts-decorator-manipulator";
 
 export const evacuate = (decorator: PropertyDecorator, debugString: string) => (
   target: object,
   propertyKey: string | symbol,
   descriptor?: PropertyDescriptor
 ) => {
-  const originalKey = getDerivedPropertyKey(propertyKey, debugString);
-  Object.defineProperty(
+  const evacuatedKey = getDerivedPropertyString(propertyKey, debugString);
+  const newDescriptor = (decorator as any)(
     target,
-    originalKey,
-    (decorator as any)(target, originalKey, descriptor) as any
-  );
-  return delegate(originalKey)();
+    evacuatedKey,
+    descriptor
+  ) as any;
+  Object.defineProperty(target, evacuatedKey, newDescriptor);
+  return newDescriptor;
 };
 
 export const delegate = (propertyKey: string | symbol) => () => {

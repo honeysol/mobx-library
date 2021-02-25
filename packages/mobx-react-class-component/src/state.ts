@@ -9,14 +9,17 @@ const _state = (
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  return watch(function(this: any) {
-    if (this[componentStatus] === "mounted") {
-      this.setState({ [propertyKey]: this[propertyKey] });
-    } else {
-      this.state = this.state || {};
-      this.state[propertyKey] = this[propertyKey];
-    }
-  })(target, propertyKey, descriptor);
+  return watch(
+    function(this: any) {
+      if (this[componentStatus] === "mounted") {
+        this.setState({ [propertyKey]: this[propertyKey] });
+      } else {
+        this.state = this.state || {};
+        this.state[propertyKey] = this[propertyKey];
+      }
+    },
+    { delay: 10, fireImmediately: false }
+  )(target, propertyKey, descriptor);
 };
 
 export const state = _state as typeof _state & {

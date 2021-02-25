@@ -14,4 +14,4 @@ export const getDerivedPropertyString = (
 ) =>
   `${
     typeof baseKey === "symbol" ? baseKey.description : baseKey
-  }${++counter}->${suffix}`;
+  }#${++counter}->${suffix}`;

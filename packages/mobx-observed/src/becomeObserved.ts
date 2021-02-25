@@ -1,6 +1,7 @@
 import { computed, createAtom, IAtom, observable } from "mobx";
 import {
   combineMethodDecorator,
+  combinePropertyDecorator,
   getDerivedPropertyKey,
 } from "ts-decorator-manipulator";
 
@@ -63,9 +64,9 @@ becomeObserved.observable = (
   handler: handlerType,
   cancelHandler?: handlerType
 ) => {
-  return combineMethodDecorator(
-    evacuate(observable.ref),
-    becomeObserved(handler, cancelHandler)
+  return combinePropertyDecorator(
+    evacuate(observable.ref, "original"),
+    (becomeObserved(handler, cancelHandler) as any) as PropertyDecorator
   );
 };
 becomeObserved.computed = (
@@ -73,7 +74,7 @@ becomeObserved.computed = (
   cancelHandler?: handlerType
 ) => {
   return combineMethodDecorator(
-    computed,
+    evacuate(computed, "original"),
     becomeObserved(handler, cancelHandler)
   );
 };

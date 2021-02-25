@@ -1,8 +1,4 @@
 import { action, computed, observable, reaction } from "mobx";
-import {
-  getDerivedPropertyKey,
-  getDerivedPropertyString,
-} from "ts-decorator-manipulator";
 
 import { becomeObserved } from "./becomeObserved";
 import { evacuate } from "./util";
@@ -91,22 +87,17 @@ observed.async = ({
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const resolvedKey = getDerivedPropertyKey(propertyKey, "resolved");
-  const originalKey = getDerivedPropertyString(propertyKey, "original");
-
-  const originalDescriptor = (computed(target, originalKey, {
-    get: descriptor.get || descriptor.value,
-  }) as any) as PropertyDescriptor;
-  Object.defineProperty(target, originalKey, originalDescriptor);
-
-  const resolvedDescriptor = (observable.ref(target, resolvedKey, {
-    configurable: true,
-    writable: true,
-    value: null,
-  }) as any) as PropertyDescriptor;
-
-  Object.defineProperty(target, resolvedKey, resolvedDescriptor);
-
+  const originalDescriptor = evacuate(computed, "original")(
+    target,
+    propertyKey,
+    {
+      get: descriptor.get || descriptor.value,
+    }
+  );
+  const resolvedDescriptor = evacuate(observable.ref, "resolved")(
+    target,
+    propertyKey
+  );
   return becomeObserved(function(this: any) {
     const setter = action((value: any) => {
       resolvedDescriptor.set?.call(this, value);

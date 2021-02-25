@@ -8,7 +8,7 @@ import {
   runInAction,
 } from "mobx";
 import { asyncComputed } from "mobx-async-computed";
-import { becomeObserved } from "mobx-observed";
+import { becomeObserved, evacuate } from "mobx-observed";
 import { component, prop, render, state } from "mobx-react-class-component";
 import * as React from "react";
 
@@ -223,16 +223,18 @@ export class X {
   //   return () => console.log("end observe");
   // }) as PropertyDecorator)
 
-  @becomeObserved.observable(() => {
-    console.log("start observe");
-    return () => console.log("end observe");
-  })
-  // @becomeObserved(() => {
+  // @becomeObserved.observable(() => {
   //   console.log("start observe");
   //   return () => console.log("end observe");
   // })
-  // @observable.ref
-  y = 100;
+  @(becomeObserved(() => {
+    console.log("start observe");
+    return () => console.log("end observe");
+  }) as any)
+  @evacuate(computed as any, "##")
+  get y() {
+    return Date.now();
+  }
 
   @observable
   z = { a: 100 };
@@ -258,7 +260,9 @@ canceler();
 
 interface Window {
   x: X;
+  debug: any;
 }
 declare let window: Window;
 
 window.x = x;
+window.debug = { computed };
