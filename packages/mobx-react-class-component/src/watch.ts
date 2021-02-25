@@ -15,7 +15,8 @@ export const watchFor = (watchKey: string) => (
       () => this[watchKey],
       (newValue, oldValue) => {
         handler.call(this, { newValue, oldValue });
-      }
+      },
+      { fireImmediately: true }
     );
   });
 };
@@ -31,7 +32,8 @@ export const watch = (handler: Function) => (
       () => getter.call(this),
       (newValue: any, oldValue: any) => {
         handler.call(this, { newValue, oldValue });
-      }
+      },
+      { fireImmediately: true }
     );
   });
 };

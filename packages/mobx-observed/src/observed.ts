@@ -164,7 +164,8 @@ observed.async = ({
       () => getter(),
       (newValue, oldValue) => {
         change?.({ newValue, oldValue, type: "change" }, setter);
-      }
+      },
+      { fireImmediately: true }
     );
     return () => {
       cancelObserve();
