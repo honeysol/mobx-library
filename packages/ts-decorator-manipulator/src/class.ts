@@ -3,7 +3,7 @@ export type ClassDecorator<T extends typeof Object> = (
   target: T
 ) => T | undefined;
 
-export const combineClassDecorator = <T>(
+export const combineClassDecorator = <T extends typeof Object>(
   ...decorators: ClassDecorator<T>[]
 ): ClassDecorator<T> => {
   return ((target: T) => {

@@ -5,6 +5,96 @@ import {
 } from "ts-decorator-manipulator";
 
 import { becomeObservedFor } from "./becomeObserved";
+const noopDecorator = (
+  target: object,
+  propertyKey: string | symbol,
+  descriptor: PropertyDescriptor
+) => descriptor;
+
+export const observedFor = (
+  observedKey: string | symbol,
+  {
+    change,
+    enter,
+    leave,
+  }: {
+    change?: ({
+      newValue,
+      oldValue,
+      type,
+    }: {
+      newValue?: any;
+      oldValue?: any;
+      type: "change";
+    }) => void;
+    enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
+    leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
+  }
+) => (target: object, propertyKey: string | symbol) => {
+  const descriptor = becomeObservedFor(
+    observedKey,
+    function(this: any) {
+      enter?.({ oldValue: descriptor.get?.call(this), type: "enter" });
+      return () => {};
+    },
+    function(this: any) {
+      leave?.({ oldValue: descriptor.get?.call(this), type: "leave" });
+      return () => {};
+    }
+  )(target, propertyKey);
+  return {
+    set(this: any, value: any) {
+      change?.({
+        newValue: value,
+        oldValue: descriptor.get?.call(this),
+        type: "change",
+      });
+      descriptor.set?.call(this, value);
+    },
+    get(this: any) {
+      return descriptor.get?.call(this);
+    },
+  };
+};
+
+export const observed = (
+  handlers: {
+    change?: ({
+      newValue,
+      oldValue,
+      type,
+    }: {
+      newValue?: any;
+      oldValue?: any;
+      type: "change";
+    }) => void;
+    enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
+    leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
+  },
+  decorator: MethodDecorator = noopDecorator
+) => (
+  target: object,
+  propertyKey: string | symbol,
+  descriptor?: PropertyDescriptor
+) => {
+  const originalKey = getDerivedPropertyString(
+    propertyKey,
+    "original(becomeObserved)"
+  );
+  Object.defineProperty(
+    target,
+    originalKey,
+    (decorator(
+      target,
+      originalKey,
+      descriptor as any
+    ) as unknown) as MethodDecorator
+  );
+  return (observedFor(originalKey, handlers)(
+    target,
+    propertyKey
+  ) as unknown) as void;
+};
 
 /**
  * 
@@ -20,7 +110,7 @@ import { becomeObservedFor } from "./becomeObserved";
     [propertyKey];
   }
  */
-export const observed = ({
+observed.async = ({
   change,
   enter,
   leave,
@@ -84,18 +174,10 @@ export const observed = ({
 };
 
 observed.autoclose = (_handler: (oldValue: any) => void) => {
-  const handler = (
-    {
-      oldValue,
-      newValue,
-      type,
-    }: { oldValue?: any; newValue?: any; type: "change" | "leave" },
-    setter: (value: any) => void
-  ) => {
+  const handler = ({ oldValue }: { oldValue?: any }) => {
     if (oldValue) {
       _handler(oldValue);
     }
-    setter(type === "leave" ? null : newValue);
   };
   return observed({ leave: handler, change: handler });
 };

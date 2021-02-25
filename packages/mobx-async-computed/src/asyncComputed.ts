@@ -12,7 +12,7 @@ export const asyncComputed = (
     propertyKey,
     "asyncCommitter"
   );
-  return observed({
+  return observed.async({
     async change(this: any, { newValue }, setter) {
       const asyncCommiter = (this[asyncCommitterKey] =
         this[asyncCommitterKey] || new AsyncCommitter());

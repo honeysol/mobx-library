@@ -8,10 +8,11 @@ type handlerType = string | (() => () => void);
 
 const callHandler = function(
   this: any,
-  handler?: handlerType
+  handler?: handlerType,
+  ...args: []
 ): (() => void) | null {
-  if (typeof handler === "function") return handler.apply(this);
-  if (typeof handler === "string") return this[handler]();
+  if (typeof handler === "function") return handler.apply(this, args);
+  if (typeof handler === "string") return this[handler](...args);
   return null;
 };
 
