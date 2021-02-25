@@ -29,25 +29,20 @@ const applyHandler = (
 ) => {
   const handlersKey = getKey(handlerName + "Handler");
   let shouldBeApplied = false;
-  // console.log("start", target);
   for (
     let current = target;
     current;
     current = Object.getPrototypeOf(current)
   ) {
-    // console.log(current, current === prototype, shouldBeApplied, target[key]);
-    if (current === prototype) {
-      shouldBeApplied = true;
-    } else if (
-      shouldBeApplied &&
-      Object.prototype.hasOwnProperty.call(current, key)
-    ) {
-      break;
-    }
     if (!shouldBeApplied) {
-      continue;
+      if (!Object.prototype.hasOwnProperty.call(current, key)) {
+        continue;
+      }
+      if (current !== prototype) {
+        break;
+      }
+      shouldBeApplied = true;
     }
-    // console.log("#");
     if (Object.prototype.hasOwnProperty.call(current, handlersKey)) {
       for (const handler of current[handlersKey] || []) {
         handler.apply(target, args);
@@ -82,9 +77,6 @@ export const addTerminator = (target: any, handler: any) => {
 export const componentStatus = Symbol("componentStatus");
 
 const baseComponent = (target: ReactComponentType): ReactComponentType => {
-  // if (target.prototype[isBaseComponentKey]) {
-  //   return target;
-  // }
   class BaseComponent extends target {
     [isBaseComponentKey]: boolean;
     [componentStatus]?: string;
