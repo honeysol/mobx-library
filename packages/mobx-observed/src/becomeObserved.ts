@@ -1,9 +1,4 @@
-import {
-  computed,
-  observable,
-  onBecomeObserved,
-  onBecomeUnobserved,
-} from "mobx";
+import { computed, createAtom, IAtom, observable } from "mobx";
 import {
   getDerivedPropertyKey,
   getDerivedPropertyString,
@@ -11,73 +6,52 @@ import {
 
 type handlerType = string | (() => () => void);
 
-const readValueAndCallHandlerIfBecomeObserved = (
-  target: object,
-  propertyKey: string | symbol,
-  handler: (this: any) => () => void
-) => {
-  const cancelOnBecomeObserved = onBecomeObserved(target, propertyKey, () => {
-    const cancelHandler = handler.apply(target);
-    const cancelOnBecomeUnobserved = onBecomeUnobserved(
-      target,
-      propertyKey,
-      () => {
-        cancelOnBecomeUnobserved();
-        cancelHandler();
-      }
-    );
-  });
-  const result = (target as any)[propertyKey];
-  cancelOnBecomeObserved();
-  return result;
+const callHandler = function(
+  this: any,
+  handler?: handlerType
+): (() => void) | null {
+  if (typeof handler === "function") return handler.apply(this);
+  if (typeof handler === "string") return this[handler]();
+  return null;
 };
 
 // observedKey のフィールドをproxyして、
 // handlerを呼ぶ
-const _becomeObservedFor = (
+export const becomeObservedFor = (
+  observedKey: string | symbol,
   handler: handlerType,
-  observedKey: string | symbol
+  cancelHandler?: handlerType
 ) => (target: object, propertyKey: string | symbol) => {
-  const isObservingKey = getDerivedPropertyKey(propertyKey, "isObserving");
+  const atomKey = getDerivedPropertyKey(propertyKey, "atom");
+  const getAtom = function(this: any) {
+    if (!this[atomKey]) {
+      this[atomKey] = (() => {
+        let canceler: (() => void) | null = null;
+        return createAtom(
+          atomKey.description || "",
+          () => {
+            canceler = callHandler.call(this, handler);
+          },
+          () => {
+            canceler?.();
+            callHandler.call(this, cancelHandler);
+          }
+        );
+      })();
+    }
+    return this[atomKey] as IAtom;
+  };
   return {
     configurable: true,
     get(this: any) {
-      if (!this[isObservingKey]) {
-        this[isObservingKey] = true;
-        return readValueAndCallHandlerIfBecomeObserved(
-          this,
-          observedKey,
-          () => {
-            // const cancelHandler = this[handler]();
-            const cancelHandler =
-              typeof handler === "function"
-                ? handler.apply(this)
-                : this[handler]();
-            return () => {
-              cancelHandler();
-              this[isObservingKey] = false;
-            };
-          }
-        );
-      } else {
-        return this[observedKey];
-      }
+      getAtom.call(this).reportObserved();
+      return this[observedKey];
     },
     set(this: any, value: any) {
       this[observedKey] = value;
+      getAtom.call(this).reportChanged();
     },
   };
-};
-
-export const becomeObservedFor = (
-  handler: handlerType,
-  observedKey: string | symbol
-) => (target: object, propertyKey: string | symbol) => {
-  return computed(
-    target,
-    propertyKey,
-    _becomeObservedFor(handler, observedKey)(target, propertyKey)
-  );
 };
 
 const noopDecorator = (
@@ -94,7 +68,9 @@ const noopDecorator = (
  * @becomObserved(handler, observable)
  * のようにする。
   InternalImplementation{
+    @[decorator]
     [originalKey];
+    descriptor
     @becomeObservedFor("originalKey")
     [propertyKey];
   }
@@ -120,7 +96,10 @@ export const becomeObserved = (
       descriptor as any
     ) as unknown) as MethodDecorator
   );
-  return becomeObservedFor(handler, originalKey)(target, propertyKey) as void;
+  return (becomeObservedFor(originalKey, handler)(
+    target,
+    propertyKey
+  ) as unknown) as void;
 };
 
 becomeObserved.observable = (handler: handlerType) => {

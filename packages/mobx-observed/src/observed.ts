@@ -1,4 +1,4 @@
-import { action, computed, observable, observe } from "mobx";
+import { action, computed, observable, reaction } from "mobx";
 import {
   getDerivedPropertyKey,
   getDerivedPropertyString,
@@ -14,9 +14,9 @@ import { becomeObservedFor } from "./becomeObserved";
     [originalKey];
     @observable
     [resolvedKey];
-    @becomeObservedFor(() => {
+    @becomeObservedFor("resolvedKey", () => {
       convert originalKey to resolvedKey
-    }, "resolvedKey")
+    })
     [propertyKey];
   }
  */
@@ -66,35 +66,36 @@ export const observed = ({
     }) as any
   );
 
-  return (becomeObservedFor(function(this: any) {
+  return (becomeObservedFor(resolvedKey, function(this: any) {
     const setter = action((value: any) => (this[resolvedKey] = value));
+    const getter = () => this[originalKey];
     enter?.({ oldValue: this[originalKey], type: "enter" }, setter);
-    const cancelObserve = observe(
-      this,
-      originalKey,
-      ({ newValue, oldValue }) => {
+    const cancelObserve = reaction(
+      () => getter(),
+      (newValue, oldValue) => {
         change?.({ newValue, oldValue, type: "change" }, setter);
-      },
-      true
+      }
     );
     return () => {
       cancelObserve();
       leave?.({ oldValue: this[originalKey], type: "leave" }, setter);
     };
-  }, resolvedKey) as any)(target, propertyKey);
+  }) as any)(target, propertyKey);
 };
 
 observed.autoclose = (_handler: (oldValue: any) => void) => {
   const handler = (
-    { oldValue, type }: { oldValue?: any; type: "change" | "leave" },
+    {
+      oldValue,
+      newValue,
+      type,
+    }: { oldValue?: any; newValue?: any; type: "change" | "leave" },
     setter: (value: any) => void
   ) => {
     if (oldValue) {
       _handler(oldValue);
     }
-    if (type === "leave") {
-      setter(null);
-    }
+    setter(type === "leave" ? null : newValue);
   };
   return observed({ leave: handler, change: handler });
 };

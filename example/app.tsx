@@ -51,6 +51,7 @@ class MobxComponent2 extends React.Component<{
   // store;
   @render
   render() {
+    console.log("MobxComponent2 render");
     return (
       <div>
         <div>value: {this.props.value}</div>
@@ -217,6 +218,11 @@ export class X {
   // get a() {
   //   return 10;
   // }
+  // @(becomeObserved.observable(() => {
+  //   console.log("start observe");
+  //   return () => console.log("end observe");
+  // }) as PropertyDecorator)
+
   @becomeObserved.observable(() => {
     console.log("start observe");
     return () => console.log("end observe");
@@ -234,20 +240,21 @@ export class X {
 
 const x = new X();
 const canceler = autorun(() => {
-  // console.log("x.z", x.z);
+  console.log("x.y", x.y);
   console.log("x.z.a", x.z?.a);
 });
 
-autorun(() => {
-  x.y = 200;
-  // console.log("x.z", x.z);
-  console.log("x.z.b", x.z?.b);
-});
+// autorun(() => {
+//   console.log("x.y", x.y);
+//   // console.log("x.z", x.z);
+//   console.log("x.z.b", x.z?.b);
+// });
 
 // console.log("#1");
-// canceler();
+console.log("should cancel");
+canceler();
 // console.log("#2");
-console.log("x", x);
+// console.log("x", x);
 
 interface Window {
   x: X;

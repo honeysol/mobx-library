@@ -1,4 +1,4 @@
-import { observe } from "mobx";
+import { reaction } from "mobx";
 
 import { addInitializer } from "./component";
 
@@ -11,15 +11,27 @@ export const watchFor = (watchKey: string) => (
 ) => {
   const handler = descriptor.value;
   addInitializer(target, function(this: any) {
-    return observe(this, watchKey, handler.bind(this), true);
+    return reaction(
+      () => this[watchKey],
+      (newValue, oldValue) => {
+        handler.call(this, { newValue, oldValue });
+      }
+    );
   });
 };
 
 export const watch = (handler: Function) => (
   target: object,
-  propertyKey: string | symbol
+  propertyKey: string | symbol,
+  descriptor?: PropertyDescriptor
 ) => {
+  const getter = descriptor?.get || descriptor?.value;
   addInitializer(target, function(this: any) {
-    return observe(this, propertyKey, handler.bind(this), true);
+    return reaction(
+      () => getter.call(this),
+      (newValue: any, oldValue: any) => {
+        handler.call(this, { newValue, oldValue });
+      }
+    );
   });
 };

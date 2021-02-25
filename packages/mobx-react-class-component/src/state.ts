@@ -4,7 +4,11 @@ import { combinePropertyDecorator } from "ts-decorator-manipulator";
 import { componentStatus } from "./component";
 import { watch } from "./watch";
 
-const _state = (target: object, propertyKey: string | symbol) => {
+const _state = (
+  target: object,
+  propertyKey: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
   return watch(function(this: any) {
     if (this[componentStatus] === "mounted") {
       this.setState({ [propertyKey]: this[propertyKey] });
@@ -12,7 +16,7 @@ const _state = (target: object, propertyKey: string | symbol) => {
       this.state = this.state || {};
       this.state[propertyKey] = this[propertyKey];
     }
-  })(target, propertyKey);
+  })(target, propertyKey, descriptor);
 };
 
 export const state = _state as typeof _state & {
