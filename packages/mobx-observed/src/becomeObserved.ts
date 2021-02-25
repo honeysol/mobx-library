@@ -1,8 +1,10 @@
 import { computed, createAtom, IAtom, observable } from "mobx";
 import {
+  combineMethodDecorator,
   getDerivedPropertyKey,
-  getDerivedPropertyString,
 } from "ts-decorator-manipulator";
+
+import { evacuate } from "./util";
 
 type handlerType = string | (() => () => void);
 
@@ -16,13 +18,14 @@ const callHandler = function(
   return null;
 };
 
-// observedKey のフィールドをproxyして、
-// handlerを呼ぶ
-export const becomeObservedFor = (
-  observedKey: string | symbol,
+export const becomeObserved = (
   handler: handlerType,
   cancelHandler?: handlerType
-) => (target: object, propertyKey: string | symbol) => {
+) => (
+  target: object,
+  propertyKey: string | symbol,
+  descriptor: PropertyDescriptor
+) => {
   const atomKey = getDerivedPropertyKey(propertyKey, "atom");
   const getAtom = function(this: any) {
     if (!this[atomKey]) {
@@ -42,70 +45,35 @@ export const becomeObservedFor = (
     }
     return this[atomKey] as IAtom;
   };
+  const getter = descriptor.get || descriptor.value;
+  const setter = descriptor.set;
   return {
     configurable: true,
     get(this: any) {
       getAtom.call(this).reportObserved();
-      return this[observedKey];
+      return getter?.call(this);
     },
     set(this: any, value: any) {
-      this[observedKey] = value;
-      getAtom.call(this).reportChanged();
+      setter?.call(this, value);
     },
   };
 };
 
-const noopDecorator = (
-  target: object,
-  propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
-) => descriptor;
-
-/**
- * @becomeObserved(handler) @computed などと使う
- * ただし、observableのようなPropertyDecoratorとは組み合わせられない
- * （PropertyDecoratorは、decorate呼び出し時点でフィールド名を確定させるため）
- * その場合、
- * @becomObserved(handler, observable)
- * のようにする。
-  InternalImplementation{
-    @[decorator]
-    [originalKey];
-    descriptor
-    @becomeObservedFor("originalKey")
-    [propertyKey];
-  }
- */
-export const becomeObserved = (
+becomeObserved.observable = (
   handler: handlerType,
-  decorator: MethodDecorator = noopDecorator
-) => (
-  target: object,
-  propertyKey: string | symbol,
-  descriptor?: PropertyDescriptor
+  cancelHandler?: handlerType
 ) => {
-  const originalKey = getDerivedPropertyString(
-    propertyKey,
-    "original(becomeObserved)"
+  return combineMethodDecorator(
+    evacuate(observable.ref),
+    becomeObserved(handler, cancelHandler)
   );
-  Object.defineProperty(
-    target,
-    originalKey,
-    (decorator(
-      target,
-      originalKey,
-      descriptor as any
-    ) as unknown) as MethodDecorator
+};
+becomeObserved.computed = (
+  handler: handlerType,
+  cancelHandler?: handlerType
+) => {
+  return combineMethodDecorator(
+    computed,
+    becomeObserved(handler, cancelHandler)
   );
-  return (becomeObservedFor(originalKey, handler)(
-    target,
-    propertyKey
-  ) as unknown) as void;
-};
-
-becomeObserved.observable = (handler: handlerType) => {
-  return becomeObserved(handler, observable.ref);
-};
-becomeObserved.computed = (handler: handlerType) => {
-  return becomeObserved(handler, computed);
 };
