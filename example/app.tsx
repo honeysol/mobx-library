@@ -10,7 +10,13 @@ import {
 } from "mobx";
 import { asyncComputed } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
-import { component, prop, render, state } from "mobx-react-class-component";
+import {
+  component,
+  effect,
+  prop,
+  render,
+  state,
+} from "mobx-react-class-component";
 import * as React from "react";
 import { evacuate } from "ts-decorator-manipulator";
 
@@ -90,13 +96,30 @@ class MobxComponent3 extends MobxComponent2 {
   // lazyInternalStore() {
   //   return delay(1000, this.internalStore. + 1);
   // }
+  ref = React.createRef<HTMLDivElement>();
+
+  @effect
+  debug1() {
+    console.log("effect none");
+  }
+  @effect
+  debug2() {
+    console.log("effect this.internalValue", this.internalValue);
+  }
+  @effect
+  debug3() {
+    const lazyInternalValue = this.lazyInternalValue;
+    console.log("effect this.lazyInternalValue", this.lazyInternalValue);
+    return () => {
+      console.log("effect cancel this.lazyInternalValue", lazyInternalValue);
+    };
+  }
 
   @render
   render() {
     console.log("MobxComponent3 render", Date.now());
-
     return (
-      <div>
+      <div ref={this.ref}>
         {/* <div>value: {this.props.value}</div> */}
         <div>lazyValue: {this.lazyValue}</div>
         <div>internalValue: {this.internalValue}</div>
@@ -143,6 +166,9 @@ class MobxComponent3 extends MobxComponent2 {
         </button>
       </div>
     );
+  }
+  componentDidUpdate() {
+    console.log(this.ref.current);
   }
 }
 

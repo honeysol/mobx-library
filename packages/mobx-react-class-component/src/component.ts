@@ -62,6 +62,13 @@ const addHandler = (target: any, handlerName: string, handler: any) => {
   target[handlersKey].push(handler);
 };
 
+const getHandlerAppliedMap = function(this: any) {
+  if (!this[handlerAppliedMapKey]) {
+    this[handlerAppliedMapKey] = new Set();
+  }
+  return this[handlerAppliedMapKey] as Set<string | symbol>;
+};
+
 export const addInitializer = (
   target: any,
   handler: any,
@@ -69,12 +76,7 @@ export const addInitializer = (
   trigger: "init" | "mounted" = "init"
 ) => {
   const cancelerKey = Symbol("canceler");
-  const getHandlerAppliedMap = function(this: any) {
-    if (!this[handlerAppliedMapKey]) {
-      this[handlerAppliedMapKey] = new Set();
-    }
-    return this[handlerAppliedMapKey] as Set<string | symbol>;
-  };
+
   addHandler(target, trigger, function(this: any) {
     const handlerAppliedMap = getHandlerAppliedMap.call(this);
     if (!handlerAppliedMap.has(propertyKey)) {
@@ -89,6 +91,17 @@ export const addInitializer = (
 
 export const addTerminator = (target: any, handler: any) => {
   addHandler(target, "release", handler);
+};
+
+export const addUpdator = (target: any, handler: any) => {
+  const cancelerKey = Symbol("canceler");
+  addHandler(target, "update", function(this: any) {
+    this[cancelerKey]?.();
+    this[cancelerKey] = handler.apply(this);
+  });
+  addHandler(target, "release", function(this: any) {
+    this[cancelerKey]?.();
+  });
 };
 
 export const componentStatus = Symbol("componentStatus");
@@ -116,11 +129,12 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
         isBaseComponentKey,
         "mounted"
       );
+      applyHandler(this, BaseComponent.prototype, isBaseComponentKey, "update");
     }
-    // componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
-    //   super.componentDidUpdate?.call(this, prevProps, prevState, snapshot);
-    //   applyHandler(this, BaseComponent.prototype, isBaseComponentKey, "update");
-    // }
+    componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
+      super.componentDidUpdate?.call(this, prevProps, prevState, snapshot);
+      applyHandler(this, BaseComponent.prototype, isBaseComponentKey, "update");
+    }
     componentWillUnmount() {
       super.componentWillUnmount?.call(this);
       applyHandler(
