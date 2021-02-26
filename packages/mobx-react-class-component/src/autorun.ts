@@ -7,7 +7,11 @@ export const autorun = (
   propertyKey: string | symbol,
   descriptor: any
 ) => {
-  addInitializer(target, function(this: any) {
-    return mobxAutorun(this[propertyKey].bind(this));
-  });
+  addInitializer(
+    target,
+    function(this: any) {
+      return mobxAutorun(this[propertyKey].bind(this));
+    },
+    propertyKey
+  );
 };

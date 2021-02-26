@@ -14,6 +14,10 @@ export const evacuate = (
     evacuatedKey,
     descriptor
   ) as any;
+  if (!newDescriptor) {
+    debugger;
+    (decorator as any)(target, evacuatedKey, descriptor) as any;
+  }
   Object.defineProperty(target, evacuatedKey, newDescriptor);
   return newDescriptor;
 };

@@ -11,7 +11,7 @@ export const combineMethodDecorator = (
     for (const decorator of decorators) {
       descriptor = decorator(target, propertyKey, descriptor) || descriptor;
     }
-    //return descriptor === _descriptor ? undefined : descriptor;
+    return descriptor === _descriptor ? undefined : descriptor;
   };
 };
 
@@ -26,7 +26,7 @@ export type MethodDecoratorOptionalGenerator<A> = MethodDecoratorGenerator<A> &
   MethodDecorator;
 
 export const parametrizeMethodDecorator = <T, S>(
-  decoratorFactory: MethodDecoratorGenerator<S>,
+  decoratorGenerator: MethodDecoratorGenerator<S>,
   defaultValue: (
     target: T,
     propertyKey: string,
@@ -41,7 +41,7 @@ export const parametrizeMethodDecorator = <T, S>(
         string,
         PropertyDescriptor
       ];
-      return decoratorFactory(defaultValue(target, propertyKey, descriptor))(
+      return decoratorGenerator(defaultValue(target, propertyKey, descriptor))(
         target,
         propertyKey,
         descriptor
@@ -49,7 +49,7 @@ export const parametrizeMethodDecorator = <T, S>(
     } else {
       // with parameter
       const [params] = args as [S];
-      return decoratorFactory(params);
+      return decoratorGenerator(params);
     }
   }) as unknown) as MethodDecoratorOptionalGenerator<S>;
 };

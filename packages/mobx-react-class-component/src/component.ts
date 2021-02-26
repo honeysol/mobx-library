@@ -5,7 +5,9 @@ import {
   ClassType,
   combineClassDecorator,
 } from "ts-decorator-manipulator";
-const isBaseComponentKey = Symbol("isBaseComponentKey");
+
+const isBaseComponentKey = Symbol("isBaseComponent");
+const handlerAppliedMapKey = Symbol("handlerAppliedMap");
 
 type ReactComponentType = ClassType<React.Component>;
 type ObjectComponentType = ClassType<object>;
@@ -60,10 +62,25 @@ const addHandler = (target: any, handlerName: string, handler: any) => {
   target[handlersKey].push(handler);
 };
 
-export const addInitializer = (target: any, handler: any) => {
+export const addInitializer = (
+  target: any,
+  handler: any,
+  propertyKey: string | symbol,
+  trigger: "init" | "mounted" = "init"
+) => {
   const cancelerKey = Symbol("canceler");
-  addHandler(target, "init", function(this: any) {
-    this[cancelerKey] = handler.apply(this);
+  const getHandlerAppliedMap = function(this: any) {
+    if (!this[handlerAppliedMapKey]) {
+      this[handlerAppliedMapKey] = new Set();
+    }
+    return this[handlerAppliedMapKey] as Set<string | symbol>;
+  };
+  addHandler(target, trigger, function(this: any) {
+    const handlerAppliedMap = getHandlerAppliedMap.call(this);
+    if (!handlerAppliedMap.has(propertyKey)) {
+      handlerAppliedMap.add(propertyKey);
+      this[cancelerKey] = handler.apply(this);
+    }
   });
   addHandler(target, "release", function(this: any) {
     this[cancelerKey]?.();
@@ -93,7 +110,17 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
     componentDidMount() {
       super.componentDidMount?.call(this);
       this[componentStatus] = "mounted";
+      applyHandler(
+        this,
+        BaseComponent.prototype,
+        isBaseComponentKey,
+        "mounted"
+      );
     }
+    // componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
+    //   super.componentDidUpdate?.call(this, prevProps, prevState, snapshot);
+    //   applyHandler(this, BaseComponent.prototype, isBaseComponentKey, "update");
+    // }
     componentWillUnmount() {
       super.componentWillUnmount?.call(this);
       applyHandler(
@@ -175,19 +202,19 @@ const _smartComponent = (target: ObjectComponentType): ObjectComponentType => {
 };
 
 export const component = combineClassDecorator(
-  baseComponent,
-  _legacyComponent
+  baseComponent as any,
+  _legacyComponent as any
 ) as ClassDecorator<any> & {
   pure: ClassDecorator<any>;
   smart: ClassDecorator<any>;
 };
 
 component.pure = combineClassDecorator(
-  baseComponent,
-  _pureComponent
+  baseComponent as any,
+  _pureComponent as any
 ) as ClassDecorator<any>;
 
 component.smart = combineClassDecorator(
-  baseComponent,
+  baseComponent as any,
   _smartComponent as ClassDecorator<any>
 ) as ClassDecorator<any>;

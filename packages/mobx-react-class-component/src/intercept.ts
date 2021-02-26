@@ -11,13 +11,17 @@ export const intercept = (
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  addInitializer(target, function(this: any) {
-    const canceler = mobxIntercept(this, propertyKey, handler.bind(this));
-    return () => {
-      canceler();
-      closeHandler?.({ oldValue: this[propertyKey] });
-    };
-  });
+  addInitializer(
+    target,
+    function(this: any) {
+      const canceler = mobxIntercept(this, propertyKey, handler.bind(this));
+      return () => {
+        canceler();
+        closeHandler?.({ oldValue: this[propertyKey] });
+      };
+    },
+    propertyKey
+  );
   return descriptor;
 };
 

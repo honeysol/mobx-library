@@ -51,20 +51,19 @@ class MobxComponent2 extends React.Component<{
   // value;
   // @prop
   // store;
-  // @render
-  // render() {
-  //   console.log("MobxComponent2 render");
-  //   return (
-  //     <div>
-  //       <div>value: {this.props.value}</div>
-  //       <div>lazyValue: {this.lazyValue}</div>
-  //       <div>lazyStoreValue: {this.lazyStoreValue}</div>
-  //     </div>
-  //   );
-  // }
+  @render
+  render() {
+    console.log("MobxComponent2 render");
+    return (
+      <div>
+        <div>value: {this.props.value}</div>
+        <div>lazyValue: {this.lazyValue}</div>
+        <div>lazyStoreValue: {this.lazyStoreValue}</div>
+      </div>
+    );
+  }
   @asyncComputed
   lazyValue() {
-    console.log("lazyValue");
     return delay(1000, this.props.value);
   }
   @asyncComputed

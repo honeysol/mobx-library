@@ -45,10 +45,9 @@ export const parametrizePropertyDecorator = <T, S>(
         string | symbol,
         PropertyDescriptor
       ];
-      return decoratorGenerator(defaultValue(target, propertyKey, descriptor))(
-        target,
-        propertyKey
-      );
+      return (decoratorGenerator as any)(
+        defaultValue(target, propertyKey, descriptor)
+      )(target, propertyKey, descriptor);
     } else {
       // with parameter
       const [params] = args as [S];

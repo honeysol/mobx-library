@@ -1,13 +1,17 @@
-import { computed, observable } from "mobx";
-import { combinePropertyDecorator } from "ts-decorator-manipulator";
+import { computed } from "mobx";
+import {
+  combineMethodDecorator,
+  MethodDecoratorOptionalGenerator,
+  parametrizeMethodDecorator,
+} from "ts-decorator-manipulator";
 
 import { componentStatus } from "./component";
-import { watch } from "./watch";
+import { watch, WatchOption } from "./watch";
 
-const _state = (
+const _stateWithOption = (options?: WatchOption) => (
   target: object,
   propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
+  descriptor?: PropertyDescriptor
 ) => {
   return watch(
     function(this: any) {
@@ -18,48 +22,32 @@ const _state = (
         this.state[propertyKey] = this[propertyKey];
       }
     },
-    { delay: 10, fireImmediately: false }
+    { delay: 10, ...options }
   )(target, propertyKey, descriptor);
 };
 
-export const state = _state as typeof _state & {
-  computed: MethodDecorator & {
-    struct: MethodDecorator;
-  };
-  observable: MethodDecorator;
-  deep: MethodDecorator;
-  shallow: MethodDecorator;
-  ref: MethodDecorator;
-  struct: MethodDecorator;
+const _state = parametrizeMethodDecorator(
+  _stateWithOption,
+  () => undefined as WatchOption | undefined
+);
+
+const generateStateDecorator = (decorator: PropertyDecorator) => {
+  return parametrizeMethodDecorator(
+    (options?: WatchOption) =>
+      combineMethodDecorator(decorator, _stateWithOption(options)),
+    () => undefined as WatchOption | undefined
+  );
 };
 
-state.computed = combinePropertyDecorator(
-  computed,
-  _state as PropertyDecorator
-) as PropertyDecorator & {
-  struct: PropertyDecorator;
+export const state = _state as typeof _state & {
+  computed: MethodDecoratorOptionalGenerator<WatchOption | undefined> & {
+    struct: MethodDecoratorOptionalGenerator<WatchOption | undefined>;
+  };
 };
-state.computed.struct = combinePropertyDecorator(
-  computed.struct,
-  _state as PropertyDecorator
-);
-state.observable = combinePropertyDecorator(
-  observable.ref,
-  _state as PropertyDecorator
-);
-state.deep = combinePropertyDecorator(
-  observable.deep,
-  _state as PropertyDecorator
-);
-state.shallow = combinePropertyDecorator(
-  observable.shallow,
-  _state as PropertyDecorator
-);
-state.ref = combinePropertyDecorator(
-  observable.ref,
-  _state as PropertyDecorator
-);
-state.struct = combinePropertyDecorator(
-  observable.struct,
-  _state as PropertyDecorator
-);
+
+state.computed = generateStateDecorator(
+  computed
+) as MethodDecoratorOptionalGenerator<WatchOption | undefined> & {
+  struct: MethodDecoratorOptionalGenerator<WatchOption | undefined>;
+};
+state.computed.struct = generateStateDecorator(computed.struct);
