@@ -84,6 +84,9 @@ class MobxComponent3 extends MobxComponent2 {
   constructor(props) {
     super(props);
   }
+  get isMobxComponent3() {
+    return true;
+  }
   @observable
   internalValue = 200;
   @asyncComputed

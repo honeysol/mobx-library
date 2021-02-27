@@ -1,16 +1,10 @@
 import { createAtom, observable, runInAction } from "mobx";
 import React from "react";
-import {
-  ClassDecorator,
-  ClassType,
-  combineClassDecorator,
-} from "ts-decorator-manipulator";
 
-const isBaseComponentKey = Symbol("isBaseComponent");
 const handlerAppliedMapKey = Symbol("handlerAppliedMap");
 
+type ClassType<T> = any;
 type ReactComponentType = ClassType<React.Component>;
-type ObjectComponentType = ClassType<object>;
 
 const keyMap = new Map<string, symbol>();
 
@@ -24,23 +18,24 @@ const getKey = (name: string) => {
 // targetはインスタンス
 const applyHandler = (
   target: any,
-  prototype: any,
-  key: symbol,
+  targetKey: any,
+  specieKey: symbol,
   handlerName: string,
   ...args: any
 ) => {
   const handlersKey = getKey(handlerName + "Handler");
   let shouldBeApplied = false;
   for (
-    let current = target;
+    let current = Object.getPrototypeOf(target);
     current;
     current = Object.getPrototypeOf(current)
   ) {
     if (!shouldBeApplied) {
-      if (!Object.prototype.hasOwnProperty.call(current, key)) {
+      // 継承されている場合、subclassでのみ初期化を行う。
+      if (!Object.prototype.hasOwnProperty.call(current, specieKey)) {
         continue;
       }
-      if (current !== prototype) {
+      if (!Object.prototype.hasOwnProperty.call(current, targetKey)) {
         break;
       }
       shouldBeApplied = true;
@@ -106,15 +101,55 @@ export const addUpdator = (target: any, handler: any) => {
 
 export const componentStatus = Symbol("componentStatus");
 
+// Mixin two classes in the similar way with class inheritance
+// dst: super class, src: sub class
+// subclass may have "init" method instead of constructor
+// This method is vulable for a change of MobX internal specification
+// because it uses descrption field of Symbol("mobx pending decorators")
+const mixinClass = <T, S>(
+  dst: new (...args: any[]) => T,
+  src: new (...args: any[]) => S
+): new (...args: []) => T & S => {
+  const constructor = function(this: T & S, ...args: any[]) {
+    dst.apply(this, args);
+    src.prototype.init?.apply(this, args);
+    return this;
+  };
+  for (const propertyKey of [
+    ...Object.getOwnPropertyNames(src.prototype),
+    ...Object.getOwnPropertySymbols(src.prototype),
+  ]) {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      src.prototype,
+      propertyKey
+    );
+    if ((propertyKey as any).description === "mobx pending decorators") {
+      dst.prototype[propertyKey] = {
+        ...dst.prototype[propertyKey],
+        ...src.prototype[propertyKey],
+      };
+    } else if (propertyKey === "constructor") {
+      continue;
+    } else if (descriptor) {
+      Object.defineProperty(dst.prototype, propertyKey, descriptor);
+    }
+  }
+  constructor.prototype = dst.prototype;
+  Object.defineProperty(constructor, "name", { value: dst.name });
+  return constructor as any;
+};
+
+const isBaseComponentKey = Symbol("isBaseComponent");
 const baseComponent = (target: ReactComponentType): ReactComponentType => {
-  class BaseComponent extends target {
+  const isCurrentBaseComponentKey = Symbol("isCurrentBaseComponent");
+  class BaseComponent extends React.Component {
     [isBaseComponentKey]: boolean;
+    [isCurrentBaseComponentKey]: boolean;
     [componentStatus]?: string;
-    constructor(props: any) {
-      super(props);
+    init(props: any) {
       applyHandler(
         this,
-        BaseComponent.prototype,
+        isCurrentBaseComponentKey,
         isBaseComponentKey,
         "init",
         props
@@ -125,42 +160,39 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
       this[componentStatus] = "mounted";
       applyHandler(
         this,
-        BaseComponent.prototype,
+        isCurrentBaseComponentKey,
         isBaseComponentKey,
         "mounted"
       );
-      applyHandler(this, BaseComponent.prototype, isBaseComponentKey, "update");
+      applyHandler(
+        this,
+        isCurrentBaseComponentKey,
+        isBaseComponentKey,
+        "update"
+      );
     }
     componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
       super.componentDidUpdate?.call(this, prevProps, prevState, snapshot);
-      applyHandler(this, BaseComponent.prototype, isBaseComponentKey, "update");
+      applyHandler(
+        this,
+        isCurrentBaseComponentKey,
+        isBaseComponentKey,
+        "update"
+      );
     }
     componentWillUnmount() {
       super.componentWillUnmount?.call(this);
       applyHandler(
         this,
-        BaseComponent.prototype,
+        isCurrentBaseComponentKey,
         isBaseComponentKey,
         "release"
       );
     }
   }
   BaseComponent.prototype[isBaseComponentKey] = true;
-  return BaseComponent;
-};
-
-// pure componentでは、propの変更があってもstateの変更がない限り、renderされない
-
-const _pureComponent = (target: ReactComponentType): ReactComponentType => {
-  class PureComponent extends target {
-    constructor(props: any) {
-      super(props);
-    }
-    shouldComponentUpdate(nextProps: any, nextState: any) {
-      return nextState !== this.state;
-    }
-  }
-  return PureComponent;
+  BaseComponent.prototype[isCurrentBaseComponentKey] = true;
+  return mixinClass(target, BaseComponent);
 };
 
 const copyProps = (dst: object, src: object) => {
@@ -172,22 +204,8 @@ const copyProps = (dst: object, src: object) => {
   Object.assign(dst, src);
 };
 
-const _legacyComponent = (target: ReactComponentType): ReactComponentType => {
-  class LegacyComponent extends target {
-    constructor(props: any) {
-      super(props);
-    }
-    @observable.ref
-    props: any;
-  }
-  return LegacyComponent;
-};
-
-const _smartComponent = (target: ObjectComponentType): ObjectComponentType => {
-  class SmartComponent extends target {
-    constructor(props: any) {
-      super(props);
-    }
+const smartComponent = (target: ReactComponentType): ReactComponentType => {
+  class SmartComponent extends Object {
     @observable
     mobxProps: any;
     originalProps: any;
@@ -212,23 +230,33 @@ const _smartComponent = (target: ObjectComponentType): ObjectComponentType => {
       return nextState !== this.state;
     }
   }
-  return SmartComponent;
+  return mixinClass(baseComponent(target), SmartComponent);
 };
 
-export const component = combineClassDecorator(
-  baseComponent as any,
-  _legacyComponent as any
-) as ClassDecorator<any> & {
-  pure: ClassDecorator<any>;
-  smart: ClassDecorator<any>;
+// pure componentでは、propの変更があってもstateの変更がない限り、renderされない
+const pureComponent = (target: ReactComponentType): ReactComponentType => {
+  class PureComponent extends React.Component {
+    constructor(props: any) {
+      super(props);
+    }
+    shouldComponentUpdate(nextProps: any, nextState: any) {
+      return nextState !== this.state;
+    }
+  }
+  return mixinClass(baseComponent(target), PureComponent);
 };
 
-component.pure = combineClassDecorator(
-  baseComponent as any,
-  _pureComponent as any
-) as ClassDecorator<any>;
+export const component = (target: ReactComponentType): ReactComponentType => {
+  class LegacyComponent extends React.Component {
+    constructor(props: any) {
+      super(props);
+    }
+    @observable.ref
+    props: any;
+  }
+  return mixinClass(baseComponent(target), LegacyComponent);
+};
 
-component.smart = combineClassDecorator(
-  baseComponent as any,
-  _smartComponent as ClassDecorator<any>
-) as ClassDecorator<any>;
+component.pure = pureComponent;
+
+component.smart = smartComponent;

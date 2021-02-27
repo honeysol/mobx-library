@@ -1,4 +1,3 @@
-export type ClassType<T> = new (...args: any[]) => T;
 export type ClassDecorator<T extends typeof Object> = (
   target: T
 ) => T | undefined;
