@@ -34,17 +34,22 @@ hook APIを使う場合は、公式のmobx-react-liteで十分です。
 class MyComponent extends React.Component {
   // Hook APIのeffectと似ているが、依存性が自動で解決される。
   @effect
-  showProps() {
-    console.log("every time", this.props.value);
+  showOnUpdate() {
+    console.log("value updated", this.props.value);
     return () => { console.log("disposed on next update or unmount"); }
   }
-  // 依存性がなければ、初回だけ実行され、最後に
+  // 依存性がなければ、初回だけ実行され、最後に破棄される
   @effect
   showOnce() {
-    console.log("one time");
+    console.log("one time", untracked(() => this.props.value););
     return () => { console.log("disposed on unmount"); }
   }
-  // 対象のプロパティに変化があると呼ばれる
+  // effectと似ているが、renderingと関係なく、変化があったらただちに呼ばれる
+  @autorun(() => {
+    console.log("value updated (immediate) ", this.props.value);
+    return () => { console.log("disposed on next update or unmount"); }
+  })
+  // 対象のプロパティに変化があるとただちに呼ばれる
   @watch(() => {
     console.log("this.internalValue change", this.internalValue)
   })

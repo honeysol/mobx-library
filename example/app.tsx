@@ -7,10 +7,12 @@ import {
   getObserverTree,
   observable,
   runInAction,
+  untracked,
 } from "mobx";
 import { asyncComputed } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
 import {
+  autorun as autorunDecorator,
   component,
   effect,
   prop,
@@ -102,20 +104,28 @@ class MobxComponent3 extends MobxComponent2 {
   ref = React.createRef<HTMLDivElement>();
 
   @effect
-  debug1() {
-    console.log("effect none");
+  effect1() {
+    const value = untracked(() => this.props.value);
+    console.log("effect once", value);
   }
   @effect
-  debug2() {
+  effect2() {
     console.log("effect this.internalValue", this.internalValue);
   }
   @effect
-  debug3() {
+  effect3() {
     const lazyInternalValue = this.lazyInternalValue;
     console.log("effect this.lazyInternalValue", this.lazyInternalValue);
     return () => {
-      console.log("effect cancel this.lazyInternalValue", lazyInternalValue);
+      console.log(
+        "effect cancel: this.lazyInternalValue (old)",
+        lazyInternalValue
+      );
     };
+  }
+  @autorunDecorator
+  effect4() {
+    console.log("autorun this.internalValue", this.internalValue);
   }
 
   @render
@@ -123,7 +133,7 @@ class MobxComponent3 extends MobxComponent2 {
     console.log("MobxComponent3 render", Date.now());
     return (
       <div ref={this.ref}>
-        {/* <div>value: {this.props.value}</div> */}
+        <div>value: {this.props.value}</div>
         <div>lazyValue: {this.lazyValue}</div>
         <div>internalValue: {this.internalValue}</div>
         <div>lazyInternalValue: {this.lazyInternalValue}</div>
