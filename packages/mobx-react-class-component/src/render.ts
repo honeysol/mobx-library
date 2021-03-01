@@ -18,7 +18,9 @@ export const render = (
     });
     return {
       value(this: any) {
-        return originalDescriptor.get.call(this);
+        const children = originalDescriptor.get?.call(this);
+        this.notifyRender?.(children);
+        return children;
       },
     } as PropertyDescriptor;
   } else {
@@ -29,7 +31,9 @@ export const render = (
     }) as PropertyDescriptor;
     Object.defineProperty(target, "render", {
       value() {
-        return originalDescriptor.get?.call(this);
+        const children = originalDescriptor.get?.call(this);
+        this.notifyRender?.(children);
+        return children;
       },
     });
     return originalDescriptor;

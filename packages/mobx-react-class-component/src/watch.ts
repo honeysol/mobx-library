@@ -27,7 +27,11 @@ export const watchFor = (watchKey: string, options?: WatchOption) => (
       return reaction(
         () => this[watchKey],
         (newValue, oldValue) => {
-          handler.call(this, { newValue, oldValue });
+          try {
+            handler.call(this, { newValue, oldValue });
+          } catch (e) {
+            console.error(e);
+          }
         },
         { fireImmediately: true, ...options }
       );

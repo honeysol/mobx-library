@@ -196,12 +196,16 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
 };
 
 const copyProps = (dst: object, src: object) => {
-  for (const key of Object.getOwnPropertyNames(dst)) {
-    if (!Object.prototype.hasOwnProperty.call(src, key)) {
-      delete (dst as any)[key];
+  try {
+    for (const key of Object.getOwnPropertyNames(dst)) {
+      if (!Object.prototype.hasOwnProperty.call(src, key)) {
+        delete (dst as any)[key];
+      }
     }
+    Object.assign(dst, src);
+  } catch (e) {
+    console.error(e);
   }
-  Object.assign(dst, src);
 };
 
 const smartComponent = (target: ReactComponentType): ReactComponentType => {
@@ -210,24 +214,65 @@ const smartComponent = (target: ReactComponentType): ReactComponentType => {
     mobxProps: any;
     originalProps: any;
     propsAtom: any;
+    calculatedOriginalProps: any;
+    nonIntrinsticRender?: boolean;
+    currentChildren?: JSX.Element;
+    nextChildren?: JSX.Element;
     state: any;
     set props(props: any) {
       this.originalProps = props;
-      runInAction(() => {
-        this.mobxProps = this.mobxProps || {};
-        copyProps(this.mobxProps, props);
-      });
+      this.updateMobxProps();
     }
     get props() {
       this.propsAtom = this.propsAtom || createAtom("props");
       if (this.propsAtom.reportObserved()) {
-        return this.mobxProps;
+        if (this.calculatedOriginalProps !== this.originalProps) {
+          console.error(
+            "Incompatible props. React might change props after shouldComponentUpdate. This error happens because of consistency between React and this library.",
+            this.calculatedOriginalProps,
+            this.originalProps
+          );
+        }
+        const result = this.mobxProps;
+        return result;
       } else {
         return this.originalProps;
       }
     }
+    updateMobxProps() {
+      if (this.calculatedOriginalProps !== this.originalProps) {
+        this.calculatedOriginalProps = this.originalProps;
+        runInAction(() => {
+          if (!this.mobxProps) {
+            this.mobxProps = {};
+          }
+          copyProps(this.mobxProps, this.originalProps);
+        });
+      }
+      return this.mobxProps;
+    }
+    notifyRender(children: JSX.Element) {
+      if (!this.nonIntrinsticRender) {
+        console.log("intrinsic render");
+        this.currentChildren = children;
+      }
+    }
     shouldComponentUpdate(nextProps: any, nextState: any) {
-      return nextState !== this.state;
+      const savedProps = this.originalProps;
+      const savedState = this.state;
+      this.nonIntrinsticRender = true;
+      this.state = nextState;
+      this.originalProps = nextProps;
+      this.updateMobxProps();
+      this.nextChildren = (this as any).render();
+      const result = this.nextChildren !== this.currentChildren;
+      this.nonIntrinsticRender = false;
+      this.originalProps = savedProps;
+      this.state = savedState;
+      if (!result) {
+        console.log("render skipped by shouldComponentUpdate");
+      }
+      return result;
     }
   }
   return mixinClass(baseComponent(target), SmartComponent);

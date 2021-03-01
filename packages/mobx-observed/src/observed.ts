@@ -107,7 +107,11 @@ observed.async = ({
     const cancelObserve = reaction(
       () => getter(),
       (newValue, oldValue) => {
-        change?.({ newValue, oldValue, type: "change" }, setter);
+        try {
+          change?.({ newValue, oldValue, type: "change" }, setter);
+        } catch (e) {
+          console.error(e);
+        }
       },
       { fireImmediately: true }
     );
