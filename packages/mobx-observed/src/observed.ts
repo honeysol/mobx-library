@@ -122,11 +122,17 @@ observed.async = ({
   })(target, propertyKey, resolvedDescriptor);
 };
 
-observed.autoclose = (_handler: (oldValue: any) => void) => {
-  const handler = ({ oldValue }: { oldValue?: any }) => {
-    if (oldValue) {
-      _handler(oldValue);
+observed.autoclose = (handler: (oldValue: any) => void) => {
+  const wrappedHandler = ({
+    oldValue,
+    newValue,
+  }: {
+    oldValue?: any;
+    newValue?: any;
+  }) => {
+    if (oldValue && oldValue !== newValue) {
+      handler(oldValue);
     }
   };
-  return observed({ leave: handler, change: handler });
+  return observed({ leave: wrappedHandler, change: wrappedHandler });
 };

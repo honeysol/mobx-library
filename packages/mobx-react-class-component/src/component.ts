@@ -88,14 +88,13 @@ export const addTerminator = (target: any, handler: any) => {
   addHandler(target, "release", handler);
 };
 
-export const addUpdator = (target: any, handler: any) => {
-  const cancelerKey = Symbol("canceler");
+export const addUpdator = (
+  target: any,
+  handler: any,
+  propertyKey: string | symbol
+) => {
   addHandler(target, "update", function(this: any) {
-    this[cancelerKey]?.();
-    this[cancelerKey] = handler.apply(this);
-  });
-  addHandler(target, "release", function(this: any) {
-    this[cancelerKey]?.();
+    handler.apply(this);
   });
 };
 

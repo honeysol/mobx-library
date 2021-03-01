@@ -43,7 +43,7 @@ const interceptComputed = (
       closeHandler?.({ oldValue: this[oldValueKey] });
     });
   }
-  return computed(target, propertyKey, {
+  return computed({ keepAlive: true })(target, propertyKey, {
     get(this: any) {
       const newValue = descriptor.get?.apply(this);
       const oldValue = this[oldValueKey];
@@ -60,8 +60,14 @@ const interceptComputed = (
 // は、React.componentが破棄されるタイミングで呼ばれる
 // 値の更新ではいずれでも呼ばれる
 interceptComputed.autoclose = (handler: (value: any) => void) => {
-  const wrappedHandler = ({ oldValue }: { oldValue?: any }) => {
-    if (oldValue) {
+  const wrappedHandler = ({
+    oldValue,
+    newValue,
+  }: {
+    oldValue?: any;
+    newValue?: any;
+  }) => {
+    if (oldValue && oldValue !== newValue) {
       handler(oldValue);
     }
     return true;
