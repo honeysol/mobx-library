@@ -9,6 +9,7 @@ import {
   runInAction,
   untracked,
 } from "mobx";
+import * as mobx from "mobx";
 import { asyncComputed } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
 import {
@@ -44,18 +45,19 @@ class MobxStore {
 
 const store = new MobxStore(300);
 
-@component.smart
+@component
 class MobxComponent2 extends React.Component<{
   value: number;
   store: MobxStore;
+  valueObj: { value: number };
 }> {
   state = {};
   get isMobxComponent2() {
     return true;
   }
   static isMobxComponent2Constructor = true;
-
-  // @prop
+  @prop.deep("valueObj")
+  valueObj2;
   // value;
   // @prop
   // store;
@@ -81,7 +83,7 @@ class MobxComponent2 extends React.Component<{
   }
 }
 
-@component.smart
+@component
 class MobxComponent3 extends MobxComponent2 {
   constructor(props) {
     super(props);
@@ -101,7 +103,7 @@ class MobxComponent3 extends MobxComponent2 {
   // lazyInternalStore() {
   //   return delay(1000, this.internalStore. + 1);
   // }
-  ref = React.createRef<HTMLDivElement>();
+  ref = observable(React.createRef<HTMLDivElement>());
 
   @effect
   effect1() {
@@ -123,18 +125,25 @@ class MobxComponent3 extends MobxComponent2 {
       );
     };
   }
+  @effect
+  effectRef() {
+    console.log("effect ref", this.ref.current);
+  }
   @autorunDecorator
   effect4() {
     console.log("autorun this.internalValue", this.internalValue);
   }
+  @observable.ref
+  showRef = false;
 
   @render
   render() {
     console.log("MobxComponent3 render", Date.now());
     return (
-      <div ref={this.ref}>
+      <div>
         <div>value: {this.props.value}</div>
         <div>lazyValue: {this.lazyValue}</div>
+        <div>valueObj: {this.props.valueObj.value}</div>
         <div>internalValue: {this.internalValue}</div>
         <div>lazyInternalValue: {this.lazyInternalValue}</div>
         {/* <div>storeValue: {this.store?.value}</div> */}
@@ -177,6 +186,16 @@ class MobxComponent3 extends MobxComponent2 {
         >
           replace internalStore by mobx
         </button>
+        <button
+          onClick={() => {
+            runInAction(() => {
+              this.showRef = !this.showRef;
+            });
+          }}
+        >
+          toggle ref
+        </button>
+        {this.showRef && <span ref={this.ref}>show</span>}
       </div>
     );
   }
@@ -186,7 +205,7 @@ class MobxComponent3 extends MobxComponent2 {
 }
 
 export class App extends React.Component {
-  state = { value: 300, store };
+  state = { value: 300, valueObj: { value: 400 }, store };
   onUpdateValue = () => {};
   render() {
     console.log("App.render");
@@ -195,6 +214,7 @@ export class App extends React.Component {
         <MobxComponent3
           value={this.state.value}
           store={this.state.store}
+          valueObj={this.state.valueObj}
         ></MobxComponent3>
         <button
           onClick={() => {
@@ -202,6 +222,15 @@ export class App extends React.Component {
           }}
         >
           increment value by external props
+        </button>
+        <button
+          onClick={() => {
+            this.setState({
+              valueObj: { value: this.state.valueObj.value },
+            });
+          }}
+        >
+          increment valueObj by external props
         </button>
 
         <button
@@ -299,7 +328,7 @@ canceler();
 declare let window: any;
 
 window.x = x;
-window.debug = { computed };
+window.mobx = mobx;
 
 // const counter = observable({ count: 0 });
 

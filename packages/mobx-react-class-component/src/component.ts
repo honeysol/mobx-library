@@ -1,4 +1,4 @@
-import { createAtom, observable, runInAction } from "mobx";
+import { createAtom, extendObservable, observable, runInAction } from "mobx";
 import React from "react";
 
 const handlerAppliedMapKey = Symbol("handlerAppliedMap");
@@ -153,6 +153,7 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
         "init",
         props
       );
+      console.log("this", this);
     }
     componentDidMount() {
       super.componentDidMount?.call(this);
@@ -194,22 +195,40 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
   return mixinClass(target, BaseComponent);
 };
 
-const copyProps = (dst: object, src: object) => {
+const copyProps = function(this: any, dst: any, src: any) {
   try {
     for (const key of Object.getOwnPropertyNames(dst)) {
       if (!Object.prototype.hasOwnProperty.call(src, key)) {
-        delete (dst as any)[key];
+        dst[key] = undefined;
       }
     }
-    Object.assign(dst, src);
+    const extendObj = {} as Record<string, any>;
+    const directExtendObj = {} as Record<string, any>;
+    const annotationObj = {} as Record<string, any>;
+    for (const key of Object.getOwnPropertyNames(src)) {
+      if (!Object.prototype.hasOwnProperty.call(dst, key)) {
+        const annotation = this.annotations?.[key];
+        if (annotation !== false) {
+          extendObj[key] = src[key];
+          annotationObj[key] = annotation || observable.ref;
+        } else {
+          directExtendObj[key] = src[key];
+        }
+      } else {
+        if (dst[key] !== src[key]) {
+          dst[key] = src[key];
+        }
+      }
+    }
+    extendObservable(dst, extendObj, annotationObj);
+    Object.assign(dst, directExtendObj);
   } catch (e) {
     console.error(e);
   }
 };
 
-const smartComponent = (target: ReactComponentType): ReactComponentType => {
+export const component = (target: ReactComponentType): ReactComponentType => {
   class SmartComponent extends Object {
-    @observable
     mobxProps: any;
     originalProps: any;
     propsAtom: any;
@@ -245,7 +264,7 @@ const smartComponent = (target: ReactComponentType): ReactComponentType => {
           if (!this.mobxProps) {
             this.mobxProps = {};
           }
-          copyProps(this.mobxProps, this.originalProps);
+          copyProps.call(this, this.mobxProps, this.originalProps);
         });
       }
       return this.mobxProps;
@@ -277,30 +296,4 @@ const smartComponent = (target: ReactComponentType): ReactComponentType => {
   return mixinClass(baseComponent(target), SmartComponent);
 };
 
-// pure componentでは、propの変更があってもstateの変更がない限り、renderされない
-const pureComponent = (target: ReactComponentType): ReactComponentType => {
-  class PureComponent extends React.Component {
-    constructor(props: any) {
-      super(props);
-    }
-    shouldComponentUpdate(nextProps: any, nextState: any) {
-      return nextState !== this.state;
-    }
-  }
-  return mixinClass(baseComponent(target), PureComponent);
-};
-
-export const component = (target: ReactComponentType): ReactComponentType => {
-  class LegacyComponent extends React.Component {
-    constructor(props: any) {
-      super(props);
-    }
-    @observable.ref
-    props: any;
-  }
-  return mixinClass(baseComponent(target), LegacyComponent);
-};
-
-component.pure = pureComponent;
-
-component.smart = smartComponent;
+component.pure = component;

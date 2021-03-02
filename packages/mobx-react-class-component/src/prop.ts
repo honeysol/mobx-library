@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { observable } from "mobx";
 import {
   parametrizePropertyDecorator,
   PropertyDecoratorOptionalGenerator,
@@ -14,38 +14,31 @@ const fieldIdentifierToFunc = (fieldIdentifier: string) => {
   return eval(`(function(a){return ${exp};})`);
 };
 
-const createPropDecorator = (baseDecorator: MethodDecorator) => {
+const createPropDecorator = (baseDecorator?: any) => {
   return parametrizePropertyDecorator(
-    (propName: string) => (target, propertyKey) => {
-      const getter = fieldIdentifierToFunc(propName);
-      return baseDecorator(target, propertyKey, {
+    (propName: string) => (target: any, propertyKey) => {
+      const propKey = propName || (propertyKey as string);
+      if (baseDecorator || baseDecorator === false) {
+        target.annotations = target.annotations || {};
+        target.annotations[propKey] = baseDecorator;
+      }
+      const getter = fieldIdentifierToFunc(propKey);
+      return {
         get: function(this: any) {
           return getter(this.props);
         },
-      });
+      };
     },
     (_target: unknown, propertyKey: string | symbol) => propertyKey as string
   );
 };
-export const prop = createPropDecorator(
-  computed
-) as PropertyDecoratorOptionalGenerator<string> & {
+export const prop = createPropDecorator() as PropertyDecoratorOptionalGenerator<
+  string
+> & {
   deep: PropertyDecoratorOptionalGenerator<string>;
-  delegate: PropertyDecoratorOptionalGenerator<string>;
+  struct: PropertyDecoratorOptionalGenerator<string>;
+  static: PropertyDecoratorOptionalGenerator<string>;
 };
 
-prop.deep = createPropDecorator(computed.struct);
-
-// 値ではなく、props中の関数の結果を評価する
-prop.delegate = parametrizePropertyDecorator(
-  (propName: string) => (target: object, propertyKey: string | symbol) => {
-    return {
-      get(this: any) {
-        return (...args: any) => {
-          this.props[propName](...args);
-        };
-      },
-    } as PropertyDescriptor;
-  },
-  (_target: unknown, propertyKey: string | symbol) => propertyKey as string
-);
+prop.struct = prop.deep = createPropDecorator(observable.struct);
+prop.static = createPropDecorator(false);
