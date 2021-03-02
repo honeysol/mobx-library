@@ -122,11 +122,26 @@ const mixinClass = <T, S>(
       src.prototype,
       propertyKey
     );
-    if ((propertyKey as any).description === "mobx pending decorators") {
-      dst.prototype[propertyKey] = {
-        ...dst.prototype[propertyKey],
-        ...src.prototype[propertyKey],
-      };
+    if (dst.prototype[propertyKey] && src.prototype[propertyKey]) {
+      if (
+        typeof dst.prototype[propertyKey] === typeof src.prototype[propertyKey]
+      ) {
+        const type = dst.prototype[propertyKey];
+        if (type === "function") {
+          dst.prototype[propertyKey] = function(this: any, ...args: any[]) {
+            dst.prototype[propertyKey].call(this, ...args);
+            src.prototype[propertyKey].call(this, ...args);
+          };
+          continue;
+        } else if (type === "object") {
+          dst.prototype[propertyKey] = {
+            ...dst.prototype[propertyKey],
+            ...src.prototype[propertyKey],
+          };
+          continue;
+        }
+      }
+      dst.prototype[propertyKey] = src.prototype[propertyKey];
     } else if (propertyKey === "constructor") {
       continue;
     } else if (descriptor) {
@@ -153,10 +168,8 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
         "init",
         props
       );
-      console.log("this", this);
     }
     componentDidMount() {
-      super.componentDidMount?.call(this);
       this[componentStatus] = "mounted";
       applyHandler(
         this,
@@ -172,7 +185,6 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
       );
     }
     componentDidUpdate(prevProps: any, prevState: any, snapshot: any) {
-      super.componentDidUpdate?.call(this, prevProps, prevState, snapshot);
       applyHandler(
         this,
         isCurrentBaseComponentKey,
@@ -181,7 +193,6 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
       );
     }
     componentWillUnmount() {
-      super.componentWillUnmount?.call(this);
       applyHandler(
         this,
         isCurrentBaseComponentKey,
