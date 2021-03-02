@@ -15,8 +15,15 @@ export const evacuate = (
     descriptor
   ) as any;
   if (!newDescriptor) {
-    debugger;
-    (decorator as any)(target, evacuatedKey, descriptor) as any;
+    console.error("decorator return no description");
+    return {
+      get(this: any) {
+        return this[evacuatedKey];
+      },
+      set(this: any, value: any) {
+        this[evacuatedKey] = value;
+      },
+    };
   }
   Object.defineProperty(target, evacuatedKey, newDescriptor);
   return newDescriptor;
