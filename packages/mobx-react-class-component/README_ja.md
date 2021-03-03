@@ -15,11 +15,11 @@ MobXのReact.Componentへのbindingです。
 
 ### hook APIとの比較
 
-ReactでMobXを使うメリットは、react-hooks/exhaustive-depsで得られるようなパフォーマンス向上のテクニックを、MobXを使うだけで簡単に得られることです。MobXでは、分岐や繰り返しにも対応しているため、より複雑なケースにも対応できます。もちろん、MobXを使うことそのものによるオーバーヘッドとのトレードオフではありますが、多くの場合再レンダリング(Virtual DOMの生成)の抑制のメリットは、MobXのオーバーヘッドを上回ります。このため、mobx-react-class-comoponentは、useEffect, useMemoの、より直感的でスマートな代替となります。
+ReactでMobXを使うメリットは、react-hooks/exhaustive-depsで得られるようなパフォーマンス向上のテクニックを、MobXを使うだけで簡単に得られることです。MobXでは、hook APIと異なり、分岐や繰り返しに伴うmemo化にも対応しているため、より複雑なケースにも対応できますし、コードも簡潔で直感的になります。もちろん、MobXを使うことそのものによるオーバーヘッドとのトレードオフではありますが、多くの場合、再レンダリング(Virtual DOMの生成)の抑制とコードの簡潔さのメリットは、MobXのオーバーヘッドを上回るでしょう。
 
-これに加えて、mobx-react-class-comoponentでは、propsの変化に伴う再レンダリング(Virtual DOMの生成)を抑制できます。また、propsのフィールドごとに再レンダリングの条件を詳細にコントロールすることができます。
+MobXは、mobx-react-liteを通してhook APIと組み合わせることができますが、hook APIには、`shouldComopnentUpdate`に相当する仕組みがなく、propsの変化に伴うrenderの抑制ができないため、MobXの能力を最大限発揮させることができません。これに対して、mobx-react-class-comoponentでは、useEffect, useMemoを、より直感的でスマートに代替できるだけでなく、propsの変化に伴う再レンダリング(Virtual DOMの生成)を抑制できます。また、propsのフィールドごとに再レンダリングの条件を詳細にコントロールすることができます。
 
-ただし、hook APIには、`shouldComopnentUpdate`に相当する仕組みがなく、renderの抑制ができないため、このライブラリは、hook APIには対応していません。hook APIを使う場合は、公式の[mobx-react-lite](https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite)をおすすめします。
+ただし、このライブラリは、hook APIには対応していません。hook APIを使う場合、MobX公式の[mobx-react-lite](https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite)をおすすめします。このライブラリの@propや、@effectに相当する機能を使うことはできませんが、ReactとMobXとシンプルなバインディングを実現することはできます。
 
 | hook API | mobx-react-class-component | アドバンテージ |
 | ---- | ---- | ---- |
@@ -109,7 +109,7 @@ class MyComponent extends React.Component {
 ## API
 
 ### @component
-React ComponentをMobXで初期化します。
+React Componentを初期化します。
 
 ### @render
 render関数を定義します。
