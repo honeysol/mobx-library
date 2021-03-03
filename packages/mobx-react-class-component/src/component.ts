@@ -130,7 +130,7 @@ const mixinClass = <T, S>(
         if (type === "function") {
           dst.prototype[propertyKey] = function(this: any, ...args: any[]) {
             dst.prototype[propertyKey].call(this, ...args);
-            src.prototype[propertyKey].call(this, ...args);
+            return src.prototype[propertyKey].call(this, ...args);
           };
           continue;
         } else if (type === "object") {

@@ -15,7 +15,10 @@ export const evacuate = (
     descriptor
   ) as any;
   if (!newDescriptor) {
-    console.error("decorator return no description");
+    console.error(
+      "Decorator return no description. MobX version might mismatch",
+      decorator
+    );
     return {
       get(this: any) {
         return this[evacuatedKey];
