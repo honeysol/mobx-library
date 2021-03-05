@@ -218,7 +218,6 @@ export const component = (target: ReactComponentType): ReactComponentType => {
     stateAdmin?: GhostValue;
     nonIntrinsticRender?: boolean;
     currentChildren?: JSX.Element;
-    nextChildren?: JSX.Element;
     initializeProps() {
       if (!this.propsAdmin) {
         this.propsAdmin = new GhostValue(this.propsAnnotation);
@@ -257,8 +256,7 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       this.nonIntrinsticRender = true;
       this.state = nextState;
       this.props = nextProps;
-      this.nextChildren = (this as any).render();
-      const result = this.nextChildren !== this.currentChildren;
+      const result = (this as any).render() !== this.currentChildren;
       this.nonIntrinsticRender = false;
       this.propsAdmin?.setTemporaryValue(savedProps);
       this.stateAdmin?.setTemporaryValue(savedState);

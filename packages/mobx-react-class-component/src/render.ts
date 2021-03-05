@@ -12,6 +12,9 @@ export const render = (
       state.computed({
         propertyKey: "render",
         annotation: false,
+        canceler: function(this: any, rendered: JSX.Element) {
+          return this.currentChildren === rendered;
+        },
       } as WatchOption),
       "original"
     )(target, propertyKey, {
@@ -28,6 +31,9 @@ export const render = (
     const originalDescriptor = state.computed({
       propertyKey: "render",
       annotation: false,
+      canceler: function(this: any, rendered: JSX.Element) {
+        return this.currentChildren === rendered;
+      },
     } as WatchOption)(target, propertyKey, {
       get: descriptor.get || descriptor.value,
     }) as PropertyDescriptor;

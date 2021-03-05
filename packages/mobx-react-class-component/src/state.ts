@@ -10,6 +10,7 @@ import { watch, WatchOption } from "./watch";
 
 interface StateOption extends WatchOption {
   annotation?: any;
+  canceler?: (value: any) => boolean;
 }
 
 const _stateWithOption = (options?: StateOption) => (
@@ -23,6 +24,9 @@ const _stateWithOption = (options?: StateOption) => (
   }
   return watch(
     function(this: any) {
+      if (options?.canceler?.call(this, this[propertyKey])) {
+        return;
+      }
       if (this[componentStatus] === "mounted") {
         this.setState({ [propertyKey]: this[propertyKey] });
       } else {
