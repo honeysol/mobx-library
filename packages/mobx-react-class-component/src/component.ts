@@ -215,10 +215,10 @@ export const component = (target: ReactComponentType): ReactComponentType => {
   class SmartComponent extends Object {
     propsAdmin?: GhostValue;
     propsAnnotation: any;
+    stateAdmin?: GhostValue;
     nonIntrinsticRender?: boolean;
     currentChildren?: JSX.Element;
     nextChildren?: JSX.Element;
-    state: any;
     initializeProps() {
       if (!this.propsAdmin) {
         this.propsAdmin = new GhostValue(this.propsAnnotation);
@@ -231,6 +231,19 @@ export const component = (target: ReactComponentType): ReactComponentType => {
     get props() {
       this.initializeProps();
       return this.propsAdmin!.value;
+    }
+    initializeState() {
+      if (!this.stateAdmin) {
+        this.stateAdmin = new GhostValue();
+      }
+    }
+    set state(state: any) {
+      this.initializeState();
+      this.stateAdmin!.value = state;
+    }
+    get state() {
+      this.initializeState();
+      return this.stateAdmin!.value;
     }
     notifyRender(children: JSX.Element) {
       if (!this.nonIntrinsticRender) {
@@ -248,7 +261,7 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       const result = this.nextChildren !== this.currentChildren;
       this.nonIntrinsticRender = false;
       this.propsAdmin?.setTemporaryValue(savedProps);
-      this.state = savedState;
+      this.stateAdmin?.setTemporaryValue(savedState);
       if (!result) {
         console.log("render skipped by shouldComponentUpdate");
       }

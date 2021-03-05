@@ -11,6 +11,7 @@ export const render = (
     const originalDescriptor = evacuate(
       state.computed({
         propertyKey: "render",
+        annotation: false,
       } as WatchOption),
       "original"
     )(target, propertyKey, {
@@ -26,6 +27,7 @@ export const render = (
   } else {
     const originalDescriptor = state.computed({
       propertyKey: "render",
+      annotation: false,
     } as WatchOption)(target, propertyKey, {
       get: descriptor.get || descriptor.value,
     }) as PropertyDescriptor;

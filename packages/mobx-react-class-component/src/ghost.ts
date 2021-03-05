@@ -41,11 +41,11 @@ export class GhostValue {
   atom: any;
   annotations: any;
   calculatedOriginalValue: any;
+  constructor(annotations: any = {}) {
+    this.annotations = annotations;
+  }
   setTemporaryValue(value: any) {
     this.originalValue = value;
-  }
-  constructor(annotations: any) {
-    this.annotations = annotations;
   }
   set value(value: any) {
     this.originalValue = value;
@@ -64,7 +64,7 @@ export class GhostValue {
     if (this.atom.reportObserved()) {
       if (this.calculatedOriginalValue !== this.originalValue) {
         console.error(
-          "Internal incompatibility. React didn't update props adequately before shouldComponentUpdate.",
+          "Internal incompatibility. React didn't update props or state adequately before shouldComponentUpdate.",
           this.calculatedOriginalValue,
           this.originalValue
         );

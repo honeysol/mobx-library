@@ -8,11 +8,19 @@ import {
 import { componentStatus } from "./component";
 import { watch, WatchOption } from "./watch";
 
-const _stateWithOption = (options?: WatchOption) => (
+interface StateOption extends WatchOption {
+  annotation?: any;
+}
+
+const _stateWithOption = (options?: StateOption) => (
   target: object,
   propertyKey: string | symbol,
   descriptor?: PropertyDescriptor
 ) => {
+  if (options?.annotation) {
+    (target as any).stateAnnotation = (target as any).stateAnnotation = {};
+    (target as any).stateAnnotation[propertyKey] = options.annotation;
+  }
   return watch(
     function(this: any) {
       if (this[componentStatus] === "mounted") {
@@ -28,26 +36,26 @@ const _stateWithOption = (options?: WatchOption) => (
 
 const _state = parametrizeMethodDecorator(
   _stateWithOption,
-  () => undefined as WatchOption | undefined
+  () => undefined as StateOption | undefined
 );
 
 const generateStateDecorator = (decorator: PropertyDecorator) => {
   return parametrizeMethodDecorator(
-    (options?: WatchOption) =>
+    (options?: StateOption) =>
       combineMethodDecorator(decorator, _stateWithOption(options)),
-    () => undefined as WatchOption | undefined
+    () => undefined as StateOption | undefined
   );
 };
 
 export const state = _state as typeof _state & {
-  computed: MethodDecoratorOptionalGenerator<WatchOption | undefined> & {
-    struct: MethodDecoratorOptionalGenerator<WatchOption | undefined>;
+  computed: MethodDecoratorOptionalGenerator<StateOption | undefined> & {
+    struct: MethodDecoratorOptionalGenerator<StateOption | undefined>;
   };
 };
 
 state.computed = generateStateDecorator(
   computed
-) as MethodDecoratorOptionalGenerator<WatchOption | undefined> & {
-  struct: MethodDecoratorOptionalGenerator<WatchOption | undefined>;
+) as MethodDecoratorOptionalGenerator<StateOption | undefined> & {
+  struct: MethodDecoratorOptionalGenerator<StateOption | undefined>;
 };
 state.computed.struct = generateStateDecorator(computed.struct);

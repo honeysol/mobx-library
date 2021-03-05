@@ -46,12 +46,15 @@ class MobxStore {
 const store = new MobxStore(300);
 
 @component
-class MobxComponent2 extends React.Component<{
-  value: number;
-  store: MobxStore;
-  valueObj: { value: number };
-}> {
-  state = {};
+class MobxComponent2 extends React.Component<
+  {
+    value: number;
+    store: MobxStore;
+    valueObj: { value: number };
+  },
+  { stateValue?: number }
+> {
+  state = { stateValue: 0 };
   get isMobxComponent2() {
     return true;
   }
@@ -138,10 +141,10 @@ class MobxComponent3 extends MobxComponent2 {
 
   @render
   render() {
-    console.log("MobxComponent3 render", Date.now());
+    console.log("MobxComponent3 render", Date.now(), this);
     return (
       <div>
-        <div>value: {this.props.value}</div>
+        {/* <div>value: {this.props.value}</div> */}
         <div>lazyValue: {this.lazyValue}</div>
         <div>valueObj: {this.props.valueObj.value}</div>
         <div>internalValue: {this.internalValue}</div>
@@ -150,6 +153,7 @@ class MobxComponent3 extends MobxComponent2 {
         <div>lazyStoreValue: {this.lazyStoreValue}</div>
         <div>internalStoreValue: {this.internalStore?.value}</div>
         <div>lazyInternalStoreValue: {this.internalStore?.lazyValue}</div>
+        <div>stateValue: {this.state.stateValue}</div>
         <button
           onClick={() => {
             runInAction(() => {
@@ -176,7 +180,7 @@ class MobxComponent3 extends MobxComponent2 {
           }}
         >
           increment internalStore by mobx
-        </button>{" "}
+        </button>
         <button
           onClick={() => {
             runInAction(() => {
@@ -185,6 +189,15 @@ class MobxComponent3 extends MobxComponent2 {
           }}
         >
           replace internalStore by mobx
+        </button>
+        <button
+          onClick={() => {
+            this.setState({
+              stateValue: (this.state.stateValue || 0) + 1,
+            });
+          }}
+        >
+          increment via state
         </button>
         <button
           onClick={() => {
