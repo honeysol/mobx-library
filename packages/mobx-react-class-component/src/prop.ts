@@ -19,8 +19,8 @@ const createPropDecorator = (baseDecorator?: any) => {
     (propName: string) => (target: any, propertyKey) => {
       const propKey = propName || (propertyKey as string);
       if (baseDecorator || baseDecorator === false) {
-        target.annotations = target.annotations || {};
-        target.annotations[propKey] = baseDecorator;
+        target.propAnnotations = target.propAnnotations || {};
+        target.propAnnotations[propKey] = baseDecorator;
       }
       const getter = fieldIdentifierToFunc(propKey);
       return {

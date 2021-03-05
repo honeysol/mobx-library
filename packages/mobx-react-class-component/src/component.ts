@@ -1,5 +1,6 @@
-import { createAtom, extendObservable, observable, runInAction } from "mobx";
 import React from "react";
+
+import { GhostValue } from "./ghost";
 
 const handlerAppliedMapKey = Symbol("handlerAppliedMap");
 
@@ -122,7 +123,11 @@ const mixinClass = <T, S>(
       src.prototype,
       propertyKey
     );
-    if (dst.prototype[propertyKey] && src.prototype[propertyKey]) {
+    const dstDescriptor = Object.getOwnPropertyDescriptor(
+      dst.prototype,
+      propertyKey
+    );
+    if (descriptor?.value && dstDescriptor?.value) {
       if (
         typeof dst.prototype[propertyKey] === typeof src.prototype[propertyKey]
       ) {
@@ -206,79 +211,26 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
   return mixinClass(target, BaseComponent);
 };
 
-const copyProps = function(this: any, dst: any, src: any) {
-  try {
-    for (const key of Object.getOwnPropertyNames(dst)) {
-      if (!Object.prototype.hasOwnProperty.call(src, key)) {
-        dst[key] = undefined;
-      }
-    }
-    const extendObj = {} as Record<string, any>;
-    const directExtendObj = {} as Record<string, any>;
-    const annotationObj = {} as Record<string, any>;
-    for (const key of Object.getOwnPropertyNames(src)) {
-      if (!Object.prototype.hasOwnProperty.call(dst, key)) {
-        const annotation = this.annotations?.[key];
-        if (annotation !== false) {
-          extendObj[key] = src[key];
-          annotationObj[key] = annotation || observable.ref;
-        } else {
-          directExtendObj[key] = src[key];
-        }
-      } else {
-        if (dst[key] !== src[key]) {
-          dst[key] = src[key];
-        }
-      }
-    }
-    extendObservable(dst, extendObj, annotationObj);
-    Object.assign(dst, directExtendObj);
-  } catch (e) {
-    console.error(e);
-  }
-};
-
 export const component = (target: ReactComponentType): ReactComponentType => {
   class SmartComponent extends Object {
-    mobxProps: any;
-    originalProps: any;
-    propsAtom: any;
-    calculatedOriginalProps: any;
+    propsAdmin?: GhostValue;
+    propsAnnotation: any;
     nonIntrinsticRender?: boolean;
     currentChildren?: JSX.Element;
     nextChildren?: JSX.Element;
     state: any;
+    initializeProps() {
+      if (!this.propsAdmin) {
+        this.propsAdmin = new GhostValue(this.propsAnnotation);
+      }
+    }
     set props(props: any) {
-      this.originalProps = props;
-      this.updateMobxProps();
+      this.initializeProps();
+      this.propsAdmin!.value = props;
     }
     get props() {
-      this.propsAtom = this.propsAtom || createAtom("props");
-      if (this.propsAtom.reportObserved()) {
-        if (this.calculatedOriginalProps !== this.originalProps) {
-          console.error(
-            "Incompatible props. React might change props after shouldComponentUpdate. This error happens because of consistency between React and this library.",
-            this.calculatedOriginalProps,
-            this.originalProps
-          );
-        }
-        const result = this.mobxProps;
-        return result;
-      } else {
-        return this.originalProps;
-      }
-    }
-    updateMobxProps() {
-      if (this.calculatedOriginalProps !== this.originalProps) {
-        this.calculatedOriginalProps = this.originalProps;
-        runInAction(() => {
-          if (!this.mobxProps) {
-            this.mobxProps = {};
-          }
-          copyProps.call(this, this.mobxProps, this.originalProps);
-        });
-      }
-      return this.mobxProps;
+      this.initializeProps();
+      return this.propsAdmin!.value;
     }
     notifyRender(children: JSX.Element) {
       if (!this.nonIntrinsticRender) {
@@ -287,16 +239,15 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       }
     }
     shouldComponentUpdate(nextProps: any, nextState: any) {
-      const savedProps = this.originalProps;
+      const savedProps = this.props;
       const savedState = this.state;
       this.nonIntrinsticRender = true;
       this.state = nextState;
-      this.originalProps = nextProps;
-      this.updateMobxProps();
+      this.props = nextProps;
       this.nextChildren = (this as any).render();
       const result = this.nextChildren !== this.currentChildren;
       this.nonIntrinsticRender = false;
-      this.originalProps = savedProps;
+      this.propsAdmin?.setTemporaryValue(savedProps);
       this.state = savedState;
       if (!result) {
         console.log("render skipped by shouldComponentUpdate");
