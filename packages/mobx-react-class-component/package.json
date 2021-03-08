@@ -1,6 +1,6 @@
 {
   "name": "mobx-react-class-component",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "MobX binding to React.Component.",
   "author": "norami",
   "repository": {
@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "mobx": "^5.13.0",
-    "ts-decorator-manipulator": "^1.0.0-alpha.4"
+    "ts-decorator-manipulator": "^1.0.0-alpha.5"
   },
   "publishConfig": {
     "access": "public"
