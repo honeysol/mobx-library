@@ -5,23 +5,30 @@ Resolve MobX fields asynchronously. Resolves asynchronous ordering disruptions a
 This library does not require a special caller for initialization and termination. Asynchronous resolution starts when it is first referenced and ends when it is no longer referenced. Instead, it won't work without some observing source (observe, autorun, watch, etc.).
 
 ```js
-class {
+class Sample{
   // Usage1: Use the both of resolved value and unresolved promise.
-  @asyncComputeTo ("resolvedValue1")
-  get promise1 () {
-    return resolveType (delay (100, 10));
+  @asyncComputeTo ("resolved1")
+  get promise1 (): Promise<number> {
+    return delay(100, 10);
   }
-  @ observable.ref
-  resolvedValue1;
-  // Usage2: Simple case
-  @asyncComputed
-  get resolvedValue2 (): number {
-    return delay (100, 10) as any;
+  @observable.ref
+  resolved1: number;
+  // Usage2: Use the both of resolved value and unresolved promise.
+  @computed
+  get promise2 (): Promise<number> {
+    return delay(100, 10);
   }
-  // Usage3: Resolve type mismatch
+  @asyncComputedFrom ("promise2")
+  resolved2: number;
+  // Usage3: Simple case
   @asyncComputed
-  get resolvedValue3 () {
-    return resolveType (delay (100, 10));
+  get resolved3 (): number {
+    return delay(100, 10) as any;
+  }
+  // Usage4: Resolve type mismatch
+  @asyncComputed
+  get resolved4 (): number {
+    return resolveType(delay(100, 10));
   }
 }
 ```
