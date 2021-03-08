@@ -11,27 +11,31 @@ MobXのReact.Componentへのbindingです。
 * 内部的な変化だけではなく、propsの変化に伴う再レンダリング(Virtual DOMの生成)をMobXを通して抑制できます。また、propsのフィールドごとに再レンダリングの条件を詳細にコントロールすることができます。これによってパフォーマンスを向上させ、パフォーマンスチューニングに必要な、管理コストの増加を防ぎます。
 * @effectでは、useEffectに似たクリーンナップを行えます。また、依存関係をMobXで自動で解決することで、より簡潔な記述を可能にします。
 * @autorun, @watchなど、Reactのライフサイクルと独立に処理を行うための機能を提供します。
+* 後方互換性のため、setStateを通したstateの変更も、MobXの管理対象となり、Virtual DOMへの影響がない場合は生成がスキップされます。このため、従来のコードからの段階的な移行が可能です。
 * useContextと似た@contextを提供します（予定）
 
 ### hook APIとの比較
 
-ReactでMobXを使うメリットは、react-hooks/exhaustive-depsで得られるようなパフォーマンス向上のテクニックを、MobXを使うだけで簡単に得られることです。MobXでは、hook APIと異なり、分岐や繰り返しに伴うmemo化にも対応しているため、より複雑なケースにも対応できますし、コードも簡潔で直感的になります。もちろん、MobXを使うことそのものによるオーバーヘッドとのトレードオフではありますが、多くの場合、再レンダリング(Virtual DOMの生成)の抑制とコードの簡潔さのメリットは、MobXのオーバーヘッドを上回るでしょう。
+ReactでMobXを使うメリットは、react-hooks/exhaustive-depsで得られるようなパフォーマンス向上のテクニックを、MobXを使うだけで簡単に得られることです。MobXでは、hook APIと異なり、分岐や繰り返しに伴うmemo化にも対応しているため、より複雑なケースにも対応でき、コードも簡潔で直感的になります。もちろん、MobXを使うことそのものによるオーバーヘッドとのトレードオフではありますが、多くの場合、再レンダリング(Virtual DOMの生成)の抑制とコードの簡潔さのメリットは、MobXのオーバーヘッドを上回るでしょう。これは、Vue.jsで取り入れられ、広く受け入れられている考え方ですが、この考え方をReactに取り入れることができます。
 
-MobXは、mobx-react-liteを通してhook APIと組み合わせることができますが、hook APIには、`shouldComopnentUpdate`に相当する仕組みがなく、propsの変化に伴うrenderの抑制ができないため、MobXの能力を最大限発揮させることができません。これに対して、mobx-react-class-comoponentでは、useEffect, useMemoを、より直感的でスマートに代替できるだけでなく、propsの変化に伴う再レンダリング(Virtual DOMの生成)を抑制できます。また、propsのフィールドごとに再レンダリングの条件を詳細にコントロールすることができます。
+mobx-react-class-comoponentでは、これに加えて、useEffectを直感的でスマートに代替できるだけでなく、propsの変化に伴う再レンダリング(Virtual DOMの生成)を`shouldComopnentUpdate`のフェーズで抑制できます。また、propsのフィールドごとに再レンダリングの条件を詳細にコントロールすることができます。
 
-ただし、このライブラリは、hook APIには対応していません。hook APIを使う場合、MobX公式の[mobx-react-lite](https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite)をおすすめします。このライブラリの@propや、@effectに相当する機能を使うことはできませんが、ReactとMobXとシンプルなバインディングを実現することはできます。
+ただし、このライブラリは、hook APIには対応していません。hook APIを使う場合、MobX公式の[mobx-react-lite](https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite)をおすすめします。
 
 | hook API | mobx-react-class-component | アドバンテージ |
 | ---- | ---- | ---- |
-| useState | 通常のmobxプロパティ | 依存性が自動解決される |
+| useState | 通常のmobxプロパティ | 依存性が自動解決される。自動でメモ化される。 |
 | useMemo | 通常のmobxプロパティ | 依存性が自動解決される |
 | useLayoutEffect | @effect | 依存性が自動解決される |
 | useEffect | @effectで代用 | 依存性が自動解決される |
-| useCallback | callback = () => {} (React) | パフォーマンス・可読性 |
-| useRef | createRef (React) | |
-| useContext | 未対応（対応予定） | |
+| useCallback(依存性なし) | callback = () => {} | 簡潔 |
+| useCallback(依存性あり) | @computed get() {dependencies; return () => {}} | なし。むしろ複雑 |
+| useRef | ref = observable.shallow(createRef) | refの変更を監視することが可能 |
+| useContext | 未対応（対応予定） | 特になし |
 | useImperativeHandle | 未対応 | |
 | useDebugValue | 未対応 | |
+
+## Cenceptual Example
 
 ### Core APIs
 
@@ -51,7 +55,7 @@ class MyComponent extends React.Component {
     return () => { console.log("disposed on unmount"); }
   }
   // 特定のDOMが変化したときだけ呼び出すためのテクニック
-  ref = observable(React.createRef());
+  ref = observable.shallow(React.createRef());
   @effect
   effectRef() {
     console.log("ref", this.ref.current);
@@ -66,6 +70,10 @@ class MyComponent extends React.Component {
   // 該当するpropsをリアクティブにしない
   @prop.static
   repository;
+
+  // 該当するフィールドの変更を監視して、setStateする（後方互換性のため）
+  @state
+  stateValue;
 
   // 依存関係に変化があったときのみ、再実行される
   @render
@@ -115,22 +123,24 @@ React Componentを初期化します。
 render関数を定義します。
 
 ### @prop, @prop("propName")
-this.prop.propNameに変化があればMobXに通知されます（デフォルト）。また、this.props.propNameのエイリアスとして、this.fieldNameを設定します。
+this.prop.propNameに変化があればMobXに通知されます（デフォルト）。また、this.props.propNameのエイリアスとして、this.propNameが使えるようになります。
 
 ### @prop.struct, @prop.struct("propName")
 propを深い階層まで比較して、同一であれば無視します。
-this.props.propName != untracked(() => this.props.propName)となる場合があります。
+
+> 注意
+> MobXのコンテクストとそうではない場合で、取得する値が変わります。this.props.propName != untracked(() => this.props.propName)となる場合があるので注意してください。
 
 ### @prop.deep, @prop.deep("propName")
 Alias of @prop.struct
 
 ### @prop.static, @prop("propName")
-propの変化を常に無視するように設定します。
-MobXで無視されるだけで、最新のデータは、this.props.propNameでアクセスすることができます。
+propの変化をMobXの監視対象としないように指示します。
+Mobの監視対象にならないだけで、最新のデータは、通常と同じように、this.props.propNameでアクセスすることができます。
 
 ### @effect fieldName() => () => void;
 renderの完了後に呼ばれます。
-初回は、必ず呼ばれ、
+ハンドラは、最初は必ず呼ばれ、
 二度目以降は、依存関係に変化があったときのみに呼ばれます。
 戻り値は、クリーンナップに使われ、次のeffectの実行または、unmount時に呼ばれます。
 
