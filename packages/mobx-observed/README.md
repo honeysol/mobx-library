@@ -30,7 +30,7 @@ This library provides a decorator version of MobX onBecomeObserved and a decorat
 ### observed.async
 
 ```js
-@observed(
+@observed.async(
   changed: ({newValue, oldValue}, setter) => {})
   enter: ({oldValue}, setter) => {})
   leave: ({oldValue}, setter) => {})

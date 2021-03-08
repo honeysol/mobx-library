@@ -7,18 +7,18 @@ MobXのフィールドを非同期に解決します。非同期の順序処理�
 ```js
 class Sample{
   // Usage1: Use the both of resolved value and unresolved promise.
-  @asyncComputeTo ("resolved1")
+  @computed
   get promise1 (): Promise<number> {
     return delay(100, 10);
   }
-  @observable.ref
+  @asyncComputedFrom ("promise1")
   resolved1: number;
   // Usage2: Use the both of resolved value and unresolved promise.
-  @computed
+  @asyncComputeTo ("resolved2")
   get promise2 (): Promise<number> {
     return delay(100, 10);
   }
-  @asyncComputedFrom ("promise2")
+  @observable.ref
   resolved2: number;
   // Usage3: Simple case
   @asyncComputed
@@ -35,6 +35,9 @@ class Sample{
 
 ## APIs
 
+### @asyncComputedFrom(propertyName: string)
+指定されたpropertyのPromiseを解決した値をこのフィールドに代入します。propertyには通常、@computedを指定します。
+
 ### @asyncComputeTo(propertyName: string)
 Promiseを解決した値を、指定されたpropertyに代入します。propertyには通常、@observable.refを指定します。
 
@@ -46,4 +49,4 @@ Promiseを解決した値を取得します。ただし、Typescriptでは、デ
 ### resolveType(value: T): ResolvedType<T>
 _Typescriptでは非推奨_
 
-与えられたPromiseを、そのまま返します。ただし、型だけは解決された型に偽装します。実際の型と表現上の型が一致しなくなるため、Typescriptでは推奨しません。
+与えられたPromiseを、そのまま返します。ただし、型だけは解決された型に偽装します。asyncComputedとともに使います。

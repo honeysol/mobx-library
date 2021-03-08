@@ -7,18 +7,18 @@ This library does not require a special caller for initialization and terminatio
 ```js
 class Sample{
   // Usage1: Use the both of resolved value and unresolved promise.
-  @asyncComputeTo ("resolved1")
+  @computed
   get promise1 (): Promise<number> {
     return delay(100, 10);
   }
-  @observable.ref
+  @asyncComputedFrom ("promise1")
   resolved1: number;
   // Usage2: Use the both of resolved value and unresolved promise.
-  @computed
+  @asyncComputeTo ("resolved2")
   get promise2 (): Promise<number> {
     return delay(100, 10);
   }
-  @asyncComputedFrom ("promise2")
+  @observable.ref
   resolved2: number;
   // Usage3: Simple case
   @asyncComputed
@@ -35,6 +35,9 @@ class Sample{
 
 ## APIs
 
+### @asyncComputedFrom(propertyName: string)
+Assign the resolved value of Promise in specified field to this field. Property is usually @computed.
+
 ### @asyncComputeTo (propertyName: string)
 Assigns the resolved value of the Promise to the specified property. Property is usually @observable.ref.
 
@@ -46,4 +49,4 @@ Gets the value that resolved the promise. However, Typescript doesn't support ch
 ### resolveType (value: T): ResolvedType <T>
 _Deprecated for Typescript_
 
-Returns the given Promise as it is. However, only the type is disguised as a resolved type. It is not recommended in Typescript as the actual type and the expression type will not match.
+Returns the given Promise as it is. However, only the type is disguised as a resolved type. This is designed to be used with asyncComputed.
