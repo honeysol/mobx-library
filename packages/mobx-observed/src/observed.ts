@@ -3,6 +3,17 @@ import { evacuate } from "ts-decorator-manipulator";
 
 import { becomeObserved } from "./becomeObserved";
 
+const getDescriptor = (propertyKey: string) => {
+  return {
+    get(this: any): any {
+      return this[propertyKey];
+    },
+    set(this: any, value: any) {
+      this[propertyKey] = value;
+    },
+  };
+};
+
 export const observed = ({
   change,
   enter,
@@ -65,6 +76,8 @@ observed.async = ({
   change,
   enter,
   leave,
+  originalKey,
+  resolvedKey,
 }: {
   change?: (
     {
@@ -82,22 +95,21 @@ observed.async = ({
     { oldValue, type }: { oldValue?: any; type: "leave" },
     setter: (value: any) => void
   ) => void;
+  originalKey?: string;
+  resolvedKey?: string;
 }) => (
   target: object,
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) => {
-  const originalDescriptor = evacuate(computed, "original")(
-    target,
-    propertyKey,
-    {
-      get: descriptor.get || descriptor.value,
-    }
-  );
-  const resolvedDescriptor = evacuate(observable.ref, "resolved")(
-    target,
-    propertyKey
-  );
+  const originalDescriptor = originalKey
+    ? getDescriptor(originalKey)
+    : evacuate(computed, "original")(target, propertyKey, {
+        get: descriptor.get || descriptor.value,
+      });
+  const resolvedDescriptor = resolvedKey
+    ? getDescriptor(resolvedKey)
+    : evacuate(observable.ref, "resolved")(target, propertyKey);
   return becomeObserved(function(this: any) {
     const setter = action((value: any) => {
       resolvedDescriptor.set?.call(this, value);

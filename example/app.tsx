@@ -10,7 +10,12 @@ import {
   untracked,
 } from "mobx";
 import * as mobx from "mobx";
-import { asyncComputed, resolveType } from "mobx-async-computed";
+import {
+  asyncComputed,
+  asyncComputedFrom,
+  asyncComputeTo,
+  resolveType,
+} from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
 import {
   autorun as autorunDecorator,
@@ -37,10 +42,22 @@ class MobxStore {
   }
   @observable
   value: number;
-  @asyncComputed
-  lazyValue() {
+
+  @observable.ref
+  lazyValue: number;
+
+  @asyncComputeTo("lazyValue")
+  get lazyValuePromise() {
     return resolveType(delay(1000, this.value));
   }
+
+  // @asyncComputedFrom("lazyValuePromise")
+  // lazyValue: number;
+
+  // @computed
+  // get lazyValuePromise() {
+  //   return resolveType(delay(1000, this.value));
+  // }
 }
 
 const store = new MobxStore(300);
