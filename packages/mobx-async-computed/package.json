@@ -1,7 +1,7 @@
 {
   "name": "mobx-async-computed",
   "version": "1.0.0-alpha.4",
-  "description": "Decorators to rsolve MobX fields asynchronously.",
+  "description": "Decorators to resolve MobX fields asynchronously.",
   "author": "norami",
   "repository": {
     "type": "git",
