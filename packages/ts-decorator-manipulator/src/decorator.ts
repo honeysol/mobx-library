@@ -16,7 +16,7 @@ export const evacuate = (
   ) as any;
   if (!newDescriptor) {
     console.error(
-      "Decorator return no description. MobX version might mismatch",
+      "Decorator return no description. Library versions may not match",
       decorator
     );
     return {

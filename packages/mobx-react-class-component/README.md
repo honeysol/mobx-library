@@ -20,7 +20,7 @@ The advantage of using MobX with React is that you can easily get the performanc
 
 In addition to this, mobx-react-class-comoponent can replace useEffect intuitively and smartly, as well as suppress re-rendering (Virtual DOM generation) due to changes in props during the `shouldComopnentUpdate` phase. You also have more control over the re-rendering conditions for each props field.
 
-However, this library does not support the hook API. When using the hook API, we recommend the official MobX [mobx-react-lite] (https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite).
+However, this library does not support the hook API. When using the hook API, we recommend the official MobX [mobx-react-lite](https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite).
 
 hook API | mobx-react-class-component | Advantages |
 | ---- | ---- | ---- |
@@ -39,7 +39,7 @@ hook API | mobx-react-class-component | Advantages |
 
 ### Core APIs
 
-`` `js
+```js
 @component
 class MyComponent extends React.Component {
   // Similar to the Hook API useEffect, but the dependencies are resolved automatically.
@@ -64,11 +64,11 @@ class MyComponent extends React.Component {
 
   // Compare the corresponding props to a deeper level and ignore them if they are the same
   // Also available as this.props.routeParams
-  @ prop.struct
+  @prop.struct
   routeParams;
 
   // Do not make the corresponding props reactive.
-  @ prop.static
+  @prop.static
   repository;
 
   // Monitor the change of the corresponding field and run setState (for backward compatibility)
@@ -85,11 +85,11 @@ class MyComponent extends React.Component {
     </ div>
   }
 }
-`` ```
+```
 
 ### low-level APIs
 
-`` `js
+```js
 @component
 class MyComponent extends React.Component {
   // Similar to effect, but unlike effect, it is called immediately if there is a change without waiting for rendering
@@ -112,7 +112,7 @@ class MyComponent extends React.Component {
     </ div>
   }
 }
-`` ```
+```
 
 ## API
 
@@ -125,16 +125,16 @@ Define the render function.
 ### @prop, @prop ("propName")
 MobX will be notified that there is a change in this.prop.propName (default). Also, this.propName can be used as an alias for this.props.propName.
 
-### @ prop.struct, @ prop.struct ("propName")
+### @prop.struct, @prop.struct ("propName")
 Compare props deeper and ignore them if they are the same.
 
-> Attention
-> Depending on the MobX context and not, the value you get will vary. Note that this.props.propName! = Untracked (() => this.props.propName) can occur.
+> Attention: 
+> Depending on whether you call in the MobX context or not, the value you get will vary. Note that `props.propName! = Untracked (() => this.props.propName)` can occur.
 
-### @ prop.deep, @ prop.deep ("propName")
-Alias ​​of @ prop.struct
+### @prop.deep, @prop.deep ("propName")
+Alias ​​of @prop.struct
 
-### @ prop.static, @prop ("propName")
+### @prop.static, @prop ("propName")
 Instructs MobX not to monitor changes in prop.
 The latest data can be accessed with this.props.propName as usual.
 
