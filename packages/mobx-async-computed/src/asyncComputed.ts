@@ -23,3 +23,11 @@ export const asyncComputed = (
     },
   })(target, propertyKey, descriptor);
 };
+
+type ResolvedType<T extends Promise<any>> = T extends Promise<infer P>
+  ? P
+  : never;
+
+export const resolveType = <T extends Promise<any>>(value: T) => {
+  return (value as unknown) as ResolvedType<T>;
+};

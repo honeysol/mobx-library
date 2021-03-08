@@ -1,1 +1,1 @@
-export { asyncComputed } from "./asyncComputed";
+export { asyncComputed, resolveType } from "./asyncComputed";

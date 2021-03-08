@@ -10,7 +10,7 @@ import {
   untracked,
 } from "mobx";
 import * as mobx from "mobx";
-import { asyncComputed } from "mobx-async-computed";
+import { asyncComputed, resolveType } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
 import {
   autorun as autorunDecorator,
@@ -36,10 +36,10 @@ class MobxStore {
     this.value = value;
   }
   @observable
-  value: any;
+  value: number;
   @asyncComputed
   lazyValue() {
-    return delay(1000, this.value);
+    return resolveType(delay(1000, this.value));
   }
 }
 
@@ -77,12 +77,12 @@ class MobxComponent2 extends React.Component<
   }
   @asyncComputed
   lazyValue() {
-    return delay(1000, this.props.value);
+    return resolveType(delay(1000, this.props.value));
   }
   @asyncComputed
   lazyStoreValue() {
     if (!this.props.store) console.error(this, this.props.store);
-    return delay(1000, this.props.store?.value);
+    return resolveType(delay(1000, this.props.store?.value));
   }
 }
 
@@ -98,7 +98,7 @@ class MobxComponent3 extends MobxComponent2 {
   internalValue = 200;
   @asyncComputed
   lazyInternalValue() {
-    return delay(1000, this.internalValue + 1);
+    return resolveType(delay(1000, this.internalValue + 1));
   }
   @observable
   internalStore = new MobxStore(0);
@@ -144,7 +144,7 @@ class MobxComponent3 extends MobxComponent2 {
     console.log("MobxComponent3 render", Date.now(), this);
     return (
       <div>
-        {/* <div>value: {this.props.value}</div> */}
+        <div>value: {this.props.value}</div>
         <div>lazyValue: {this.lazyValue}</div>
         <div>valueObj: {this.props.valueObj.value}</div>
         <div>internalValue: {this.internalValue}</div>
