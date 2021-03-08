@@ -1,7 +1,7 @@
 {
   "name": "mobx-async-computed",
   "version": "1.0.0-alpha.2",
-  "description": "Official React library for @thefakeorg",
+  "description": "Decorators to rsolve MobX fields asynchronously.",
   "author": "norami",
   "repository": {
     "type": "git",

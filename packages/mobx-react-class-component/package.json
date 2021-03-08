@@ -1,7 +1,7 @@
 {
   "name": "mobx-react-class-component",
   "version": "1.0.0-alpha.2",
-  "description": "Official React library for @thefakeorg",
+  "description": "MobX binding to React.Component.",
   "author": "norami",
   "repository": {
     "type": "git",

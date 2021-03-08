@@ -1,7 +1,7 @@
 {
   "name": "mobx-observed",
   "version": "1.0.0-alpha.2",
-  "description": "Official React library for @thefakeorg",
+  "description": "This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.",
   "author": "norami",
   "repository": {
     "type": "git",

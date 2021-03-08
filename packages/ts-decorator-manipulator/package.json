@@ -1,7 +1,7 @@
 {
   "name": "ts-decorator-manipulator",
   "version": "1.0.0-alpha.2",
-  "description": "Official React library for @thefakeorg",
+  "description": "A utility for using Decorators with TypeScript.",
   "author": "norami",
   "repository": {
     "type": "git",
