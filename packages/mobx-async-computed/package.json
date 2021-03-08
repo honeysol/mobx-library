@@ -1,6 +1,6 @@
 {
   "name": "mobx-async-computed",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Official React library for @thefakeorg",
   "author": "norami",
   "repository": {
@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "mobx": "^5.13.0",
-    "mobx-observed": "^1.0.0-alpha.1"
+    "mobx-observed": "^1.0.0-alpha.2"
   },
   "publishConfig": {
     "access": "public"

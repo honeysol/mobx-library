@@ -1,6 +1,6 @@
 {
   "name": "mobx-observed",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Official React library for @thefakeorg",
   "author": "norami",
   "repository": {
@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "mobx": "^5.13.0",
-    "ts-decorator-manipulator": "^1.0.0-alpha.1"
+    "ts-decorator-manipulator": "^1.0.0-alpha.2"
   },
   "publishConfig": {
     "access": "public"
