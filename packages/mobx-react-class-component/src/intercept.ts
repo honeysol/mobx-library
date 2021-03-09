@@ -1,5 +1,5 @@
 import { computed, intercept as mobxIntercept } from "mobx";
-import { getDerivedPropertyKey } from "ts-decorator-manipulator";
+import { evacuate, getDerivedPropertyKey } from "ts-decorator-manipulator";
 
 import { addInitializer, addTerminator } from "./component";
 
@@ -43,6 +43,12 @@ const interceptComputed = (
       closeHandler?.({ oldValue: this[oldValueKey] });
     });
   }
+  const computedDescriptor = evacuate(computed)(
+    target,
+    propertyKey,
+    descriptor
+  );
+
   return computed({ keepAlive: true })(target, propertyKey, {
     get(this: any) {
       const newValue = descriptor.get?.apply(this);
