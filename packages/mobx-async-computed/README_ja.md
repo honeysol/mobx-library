@@ -29,7 +29,7 @@ class Sample{
 ## APIs
 
 ### @asyncComputedFrom(propertyName: string)
-指定されたpropertyのPromiseを解決した値をこのフィールドに代入します。propertyには通常、@computedを指定します。
+指定されたpropertyのPromiseを解決した値をこのフィールドに代入します。外部のproperty(this[propertyName])には通常、@computedを指定します。
 
 ### @asyncComputed
 _Typescriptでは非推奨_

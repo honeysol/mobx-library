@@ -1,6 +1,6 @@
 ## Overview
 
-Resolve MobX fields asynchronously. Resolves asynchronous ordering disruptions and returns only the results corresponding to the latest promises.
+Resolve MobX5/MobX6 fields asynchronously. Resolves asynchronous ordering disruptions and returns only the results corresponding to the latest promises.
 
 This library does not require a special caller for initialization and termination. Asynchronous resolution starts when it is first referenced and ends when it is no longer referenced. Instead, it won't work without some observing source (observe, autorun, watch, etc.).
 
@@ -29,7 +29,7 @@ class Sample{
 ## APIs
 
 ### @asyncComputedFrom(propertyName: string)
-Assign the resolved value of Promise in specified field to this field. Property is usually @computed.
+Assign the resolved value of Promise in specified field to this field. The external property(this[propertyName]) is usually @computed.
 
 ### @asyncComputed
 _Deprecated for Typescript_

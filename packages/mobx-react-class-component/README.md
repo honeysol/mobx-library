@@ -1,6 +1,6 @@
 ## Overview
 
-MobX binding to React.Component.
+MobX5/MobX6 binding to React.Component.
 
 It provides improved performance and simplicity compared to similar libraries and hook APIs.
 
