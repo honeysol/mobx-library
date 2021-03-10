@@ -42,11 +42,6 @@ export const asyncComputedFrom = (propertyKey: string) =>
     originalKey: propertyKey,
   });
 
-export const asyncComputeTo = (propertyKey: string) =>
-  _asyncComputed({
-    resolvedKey: propertyKey,
-  });
-
 type ResolvedType<T extends Promise<any>> = T extends Promise<infer P>
   ? P
   : never;

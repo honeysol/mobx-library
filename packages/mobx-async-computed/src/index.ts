@@ -1,6 +1,1 @@
-export {
-  asyncComputed,
-  resolveType,
-  asyncComputedFrom,
-  asyncComputeTo,
-} from "./asyncComputed";
+export { asyncComputed, resolveType, asyncComputedFrom } from "./asyncComputed";

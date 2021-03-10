@@ -14,7 +14,6 @@ import * as mobx from "mobx";
 import {
   asyncComputed,
   asyncComputedFrom,
-  asyncComputeTo,
   resolveType,
 } from "mobx-async-computed";
 import { becomeObserved } from "mobx-observed";
@@ -50,14 +49,6 @@ class MobxStore {
   // @asyncComputed
   // lazyValue() {
   //   return delay(1000, this.value);
-  // }
-
-  // @observable.ref
-  // lazyValue: number;
-
-  // @asyncComputeTo("lazyValue")
-  // get lazyValuePromise() {
-  //   return resolveType(delay(1000, this.value));
   // }
 
   @asyncComputedFrom("lazyValuePromise")
@@ -234,7 +225,7 @@ class MobxComponent3 extends React.Component<
   @render
   render() {
     window.mobxComponent3 = this;
-    console.error("MobxComponent3 render", Date.now(), this);
+    console.log("MobxComponent3 render", Date.now(), this);
     return (
       <div>
         <div>value: {this.props.value}</div>
