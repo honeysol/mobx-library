@@ -17,7 +17,7 @@ const copyValue = function(dst: any, src: any, annotations: any) {
     const directExtendObj = {} as Record<string, any>;
     const annotationObj = {} as Record<string, any>;
     for (const key of Object.getOwnPropertyNames(src)) {
-      if (key === "ref") {
+      if (key === "ref" || key === "key") {
         continue;
       }
       if (!Object.prototype.hasOwnProperty.call(dst, key)) {
