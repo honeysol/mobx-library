@@ -115,12 +115,12 @@ observed.async = ({
       resolvedDescriptor.set?.call(this, value);
     });
     const getter = () => originalDescriptor.get?.call(this);
-    enter?.({ oldValue: getter(), type: "enter" }, setter);
+    enter?.call(this, { oldValue: getter(), type: "enter" }, setter);
     const cancelObserve = reaction(
       () => getter(),
       (newValue, oldValue) => {
         try {
-          change?.({ newValue, oldValue, type: "change" }, setter);
+          change?.call(this, { newValue, oldValue, type: "change" }, setter);
         } catch (e) {
           console.error(e);
         }
@@ -129,7 +129,7 @@ observed.async = ({
     );
     return () => {
       cancelObserve();
-      leave?.({ oldValue: getter(), type: "leave" }, setter);
+      leave?.call(this, { oldValue: getter(), type: "leave" }, setter);
     };
   })(target, propertyKey, resolvedDescriptor);
 };

@@ -28,6 +28,8 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       if (storedAnnotation && Object.keys(storedAnnotation).length > 0) {
         console.error("makeObservable failed ", storedAnnotation);
       }
+      const savedProps = this.props;
+      this.props = props;
       applyHandler(
         this,
         isCurrentBaseComponentKey,
@@ -35,6 +37,7 @@ export const component = (target: ReactComponentType): ReactComponentType => {
         "init",
         props
       );
+      this.propsAdmin?.setTemporaryValue(savedProps);
     }
     componentDidMount() {
       this[componentStatus] = "mounted";
