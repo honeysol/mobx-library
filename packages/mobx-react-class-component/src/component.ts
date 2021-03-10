@@ -20,9 +20,11 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
     [isCurrentBaseComponentKey]: boolean;
     [componentStatus]?: string;
     init(props: any) {
-      makeObservable(this);
+      if (typeof makeObservable === "function") {
+        makeObservable(this);
+      }
       const storedAnnotation = getStoredAnnotation.call(this);
-      if (Object.keys(storedAnnotation).length > 0) {
+      if (storedAnnotation && Object.keys(storedAnnotation).length > 0) {
         console.error("makeObservable failed ", storedAnnotation);
       }
       applyHandler(
@@ -110,6 +112,11 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       }
     }
     shouldComponentUpdate(nextProps: any, nextState: any) {
+      console.log(
+        "shouldComponentUpdate start",
+        this.props !== nextProps,
+        this.state !== nextState
+      );
       const savedProps = this.props;
       const savedState = this.state;
       this.nonIntrinsticRender = true;

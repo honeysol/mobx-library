@@ -40,8 +40,9 @@ configure({
 class MobxStore {
   constructor(value) {
     this.value = value;
-    // this.lazyValue = 0;
-    makeObservable(this);
+    if (typeof makeObservable === "function") {
+      makeObservable(this);
+    }
   }
   @observable
   value: number;
@@ -121,22 +122,22 @@ class MobxComponent3 extends React.Component<
   //   return resolveType(delay(1000, this.props.value));
   // }
 
-  // @asyncComputeTo("lazyValue")
-  // get lazyValuePromise() {
-  //   return delay(1000, this.props.value);
-  // }
-  // @observable
-  // lazyValue = 10;
-
   @computed
   get lazyValuePromise() {
-    return (async () => {
-      const value = await delay(1000, this.props.value);
-      return value;
-    })();
+    return delay(1000, this.props.value);
   }
   @asyncComputedFrom("lazyValuePromise")
   lazyValue;
+
+  // @computed
+  // get lazyValuePromise() {
+  //   return (async () => {
+  //     const value = await delay(1000, this.props.value);
+  //     return value;
+  //   })();
+  // }
+  // @asyncComputedFrom("lazyValuePromise")
+  // lazyValue;
 
   @observable
   temp = 200;
@@ -233,7 +234,7 @@ class MobxComponent3 extends React.Component<
   @render
   render() {
     window.mobxComponent3 = this;
-    console.log("MobxComponent3 render", Date.now(), this);
+    console.error("MobxComponent3 render", Date.now(), this);
     return (
       <div>
         <div>value: {this.props.value}</div>

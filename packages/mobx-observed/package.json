@@ -22,8 +22,13 @@
     "README.md",
     "dist"
   ],
+  "peerDependencies": {
+    "mobx": ">=5"
+  },
+  "devDependencies": {
+    "mobx": "^6.1.8"
+  },  
   "dependencies": {
-    "mobx": "^6.1.8",
     "ts-decorator-manipulator": "^1.0.0-alpha.5"
   },
   "publishConfig": {
