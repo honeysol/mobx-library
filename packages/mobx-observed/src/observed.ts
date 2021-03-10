@@ -104,12 +104,12 @@ observed.async = ({
 ) => {
   const originalDescriptor = originalKey
     ? getDescriptor(originalKey)
-    : evacuate(computed, "original")(target, propertyKey, {
+    : evacuate(computed, "observed-original")(target, propertyKey, {
         get: descriptor.get || descriptor.value,
       });
   const resolvedDescriptor = resolvedKey
     ? getDescriptor(resolvedKey)
-    : evacuate(observable.ref, "resolved")(target, propertyKey);
+    : evacuate(observable.ref, "observed-resolved")(target, propertyKey);
   return becomeObserved(function(this: any) {
     const setter = action((value: any) => {
       resolvedDescriptor.set?.call(this, value);

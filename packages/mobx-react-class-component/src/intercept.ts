@@ -43,7 +43,7 @@ const interceptComputed = (
       closeHandler?.({ oldValue: this[oldValueKey] });
     });
   }
-  return evacuate(computed({ keepAlive: true }), "original")(
+  return evacuate(computed({ keepAlive: true }), "intercept")(
     target,
     propertyKey,
     {

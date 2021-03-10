@@ -48,7 +48,7 @@ const generateStateDecorator = (decorator: PropertyDecorator) => {
   return parametrizeMethodDecorator(
     (options?: StateOption) =>
       combineMethodDecorator(
-        evacuate(decorator, "original"),
+        evacuate(decorator, "state"),
         _stateWithOption(options)
       ),
     () => undefined as StateOption | undefined

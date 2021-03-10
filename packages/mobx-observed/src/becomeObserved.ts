@@ -64,7 +64,7 @@ becomeObserved.observable = (
   cancelHandler?: handlerType
 ) => {
   return combinePropertyDecorator(
-    evacuate(observable.ref, "original"),
+    evacuate(observable.ref, "becomeObserved.observable"),
     (becomeObserved(handler, cancelHandler) as any) as PropertyDecorator
   );
 };
@@ -73,7 +73,7 @@ becomeObserved.computed = (
   cancelHandler?: handlerType
 ) => {
   return combineMethodDecorator(
-    evacuate(computed, "original"),
+    evacuate(computed, "becomeObserved.computed"),
     becomeObserved(handler, cancelHandler)
   );
 };

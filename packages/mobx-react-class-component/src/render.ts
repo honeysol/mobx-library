@@ -16,7 +16,7 @@ export const render = (
           return this.currentChildren === rendered;
         },
       } as WatchOption),
-      "original"
+      "render"
     )(target, propertyKey, {
       get: descriptor.value,
     });
