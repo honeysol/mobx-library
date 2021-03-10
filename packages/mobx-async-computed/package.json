@@ -1,6 +1,6 @@
 {
   "name": "mobx-async-computed",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.7",
   "description": "Decorators to resolve MobX fields asynchronously.",
   "author": "norami",
   "repository": {
@@ -29,7 +29,7 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "mobx-observed": "^1.0.0-alpha.6"
+    "mobx-observed": "^1.0.0-alpha.7"
   },
   "publishConfig": {
     "access": "public"
