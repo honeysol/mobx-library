@@ -4,7 +4,6 @@ import React from "react";
 import { GhostValue } from "./ghost";
 import { logger } from "./logger";
 import { applyHandler } from "./utils/handler";
-import { mixinClass } from "./utils/mixin";
 import { getStoredAnnotation } from "./utils/mobx";
 
 export { addInitializer, addTerminator, addUpdator } from "./utils/handler";
@@ -14,13 +13,14 @@ type ClassType<T> = any;
 type ReactComponentType = ClassType<React.Component>;
 
 const isBaseComponentKey = Symbol("isBaseComponent");
-const baseComponent = (target: ReactComponentType): ReactComponentType => {
+export const component = (target: ReactComponentType): ReactComponentType => {
   const isCurrentBaseComponentKey = Symbol("isCurrentBaseComponent");
-  class BaseComponent extends React.Component {
+  class BaseComponent extends target {
     [isBaseComponentKey]: boolean;
     [isCurrentBaseComponentKey]: boolean;
     [componentStatus]?: string;
-    init(props: any) {
+    constructor(props: any) {
+      super(props);
       if (typeof makeObservable === "function") {
         makeObservable(this);
       }
@@ -67,14 +67,6 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
         "release"
       );
     }
-  }
-  BaseComponent.prototype[isBaseComponentKey] = true;
-  BaseComponent.prototype[isCurrentBaseComponentKey] = true;
-  return mixinClass(target, BaseComponent);
-};
-
-export const component = (target: ReactComponentType): ReactComponentType => {
-  class SmartComponent extends Object {
     propsAdmin?: GhostValue;
     propsAnnotations: any;
     stateAdmin?: GhostValue;
@@ -135,7 +127,9 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       return result;
     }
   }
-  return mixinClass(baseComponent(target), SmartComponent);
+  BaseComponent.prototype[isBaseComponentKey] = true;
+  BaseComponent.prototype[isCurrentBaseComponentKey] = true;
+  return BaseComponent;
 };
 
 component.pure = component;
