@@ -20,6 +20,7 @@ import { becomeObserved } from "mobx-observed";
 import {
   autorun as autorunDecorator,
   component,
+  configure as configureMobXComponent,
   effect,
   prop,
   render,
@@ -32,6 +33,9 @@ import { delay } from "./delay";
 
 configure({
   enforceActions: "observed",
+});
+configureMobXComponent({
+  verbose: true,
 });
 
 /* eslint-disable no-console */

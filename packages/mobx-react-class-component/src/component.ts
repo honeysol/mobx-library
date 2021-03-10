@@ -2,6 +2,7 @@ import { makeObservable } from "mobx";
 import React from "react";
 
 import { GhostValue } from "./ghost";
+import { logger } from "./logger";
 import { applyHandler } from "./utils/handler";
 import { mixinClass } from "./utils/mixin";
 import { getStoredAnnotation } from "./utils/mobx";
@@ -107,12 +108,12 @@ export const component = (target: ReactComponentType): ReactComponentType => {
     }
     notifyRender(children: JSX.Element) {
       if (!this.nonIntrinsticRender) {
-        console.log("intrinsic render");
+        logger.log("intrinsic render");
         this.currentChildren = children;
       }
     }
     shouldComponentUpdate(nextProps: any, nextState: any) {
-      console.log(
+      logger.log(
         "shouldComponentUpdate start",
         this.props !== nextProps,
         this.state !== nextState
@@ -127,9 +128,9 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       this.propsAdmin?.setTemporaryValue(savedProps);
       this.stateAdmin?.setTemporaryValue(savedState);
       if (!result) {
-        console.log("shouldComponentUpdate skip render");
+        logger.log("shouldComponentUpdate skip render");
       } else {
-        console.log("shouldComponentUpdate accept render");
+        logger.log("shouldComponentUpdate accept render");
       }
       return result;
     }

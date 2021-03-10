@@ -1,3 +1,5 @@
+import { logger } from "../logger";
+
 // Mixin two classes in the similar way with class inheritance
 // dst: super class, src: sub class
 // subclass may have "init" method instead of constructor
@@ -30,7 +32,7 @@ export const mixinClass = <T, S>(
       if (typeof dstDescriptor?.value === typeof descriptor?.value) {
         const type = typeof dstDescriptor?.value;
         if (type === "function") {
-          console.log("###function merge", propertyKey);
+          logger.log("###function merge", propertyKey);
           dst.prototype[propertyKey] = function(this: any, ...args: any[]) {
             dstDescriptor?.value.call(this, ...args);
             return descriptor?.value.call(this, ...args);
@@ -41,17 +43,17 @@ export const mixinClass = <T, S>(
             ...dstDescriptor?.value,
             ...descriptor?.value,
           };
-          console.log("###object merge", propertyKey);
+          logger.log("###object merge", propertyKey);
           continue;
         } else {
-          console.log("cannot merge", propertyKey);
+          logger.log("cannot merge", propertyKey);
           dst.prototype[propertyKey] = descriptor?.value;
         }
       } else if (descriptor?.value) {
-        console.log("####copy", propertyKey);
+        logger.log("####copy", propertyKey);
         dst.prototype[propertyKey] = descriptor?.value;
       } else {
-        console.log("####ignore", propertyKey);
+        logger.log("####ignore", propertyKey);
       }
     } else if (descriptor) {
       Object.defineProperty(dst.prototype, propertyKey, descriptor);
