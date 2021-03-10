@@ -1,6 +1,6 @@
 {
   "name": "mobx-observed",
-  "version": "1.0.0-alpha.7",
+  "version": "1.0.0-alpha.8",
   "description": "This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.",
   "author": "norami",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "ts-decorator-manipulator": "^1.0.0-alpha.7"
+    "ts-decorator-manipulator": "^1.0.0-alpha.8"
   },
   "publishConfig": {
     "access": "public"
