@@ -12,7 +12,6 @@ export interface WatchOptionInternal extends WatchOption {
   propertyKey?: string;
   lazy?: boolean; // true: mountedで開始, false(default): constructorで開始
 }
-
 // Watch field during a component lifecycle
 
 export const watchFor = (watchKey: string, options?: WatchOption) => (

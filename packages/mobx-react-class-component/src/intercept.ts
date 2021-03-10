@@ -43,22 +43,20 @@ const interceptComputed = (
       closeHandler?.({ oldValue: this[oldValueKey] });
     });
   }
-  const computedDescriptor = evacuate(computed)(
+  return evacuate(computed({ keepAlive: true }), "original")(
     target,
     propertyKey,
-    descriptor
+    {
+      get(this: any) {
+        const newValue = descriptor.get?.apply(this);
+        const oldValue = this[oldValueKey];
+        if (handler.call(this, { newValue, oldValue })) {
+          this[oldValueKey] = newValue;
+        }
+        return this[oldValueKey];
+      },
+    }
   );
-
-  return computed({ keepAlive: true })(target, propertyKey, {
-    get(this: any) {
-      const newValue = descriptor.get?.apply(this);
-      const oldValue = this[oldValueKey];
-      if (handler.call(this, { newValue, oldValue })) {
-        this[oldValueKey] = newValue;
-      }
-      return this[oldValueKey];
-    },
-  });
 };
 
 // observed.autocloseが、unobservedで呼ばれるのと異なり、

@@ -4,6 +4,7 @@ import {
   MethodDecoratorOptionalGenerator,
   parametrizeMethodDecorator,
 } from "ts-decorator-manipulator";
+import { evacuate } from "ts-decorator-manipulator";
 
 import { componentStatus } from "./component";
 import { watch, WatchOption } from "./watch";
@@ -46,7 +47,10 @@ const _state = parametrizeMethodDecorator(
 const generateStateDecorator = (decorator: PropertyDecorator) => {
   return parametrizeMethodDecorator(
     (options?: StateOption) =>
-      combineMethodDecorator(decorator, _stateWithOption(options)),
+      combineMethodDecorator(
+        evacuate(decorator, "original"),
+        _stateWithOption(options)
+      ),
     () => undefined as StateOption | undefined
   );
 };

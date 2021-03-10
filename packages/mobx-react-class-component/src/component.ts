@@ -1,3 +1,4 @@
+import { makeObservable } from "mobx";
 import React from "react";
 
 import { GhostValue } from "./ghost";
@@ -101,6 +102,13 @@ export const addUpdator = (
 
 export const componentStatus = Symbol("componentStatus");
 
+const getStoredAnnotation = function(this: any) {
+  const storedAnnotationsKey = Object.getOwnPropertySymbols(
+    Object.getPrototypeOf(this)
+  ).find(key => key.description === "mobx-stored-annotations") as symbol;
+  return this[storedAnnotationsKey];
+};
+
 // Mixin two classes in the similar way with class inheritance
 // dst: super class, src: sub class
 // subclass may have "init" method instead of constructor
@@ -127,28 +135,35 @@ const mixinClass = <T, S>(
       dst.prototype,
       propertyKey
     );
-    if (descriptor?.value && dstDescriptor?.value) {
-      if (
-        typeof dst.prototype[propertyKey] === typeof src.prototype[propertyKey]
-      ) {
-        const type = dst.prototype[propertyKey];
+    if (propertyKey === "constructor") {
+      continue;
+    } else if (descriptor?.value && dstDescriptor?.value) {
+      if (typeof dstDescriptor?.value === typeof descriptor?.value) {
+        const type = typeof dstDescriptor?.value;
         if (type === "function") {
+          console.log("###function merge", propertyKey);
           dst.prototype[propertyKey] = function(this: any, ...args: any[]) {
-            dst.prototype[propertyKey].call(this, ...args);
-            return src.prototype[propertyKey].call(this, ...args);
+            dstDescriptor?.value.call(this, ...args);
+            return descriptor?.value.call(this, ...args);
           };
           continue;
         } else if (type === "object") {
           dst.prototype[propertyKey] = {
-            ...dst.prototype[propertyKey],
-            ...src.prototype[propertyKey],
+            ...dstDescriptor?.value,
+            ...descriptor?.value,
           };
+          console.log("###object merge", propertyKey);
           continue;
+        } else {
+          console.log("cannot merge", propertyKey);
+          dst.prototype[propertyKey] = descriptor?.value;
         }
+      } else if (descriptor?.value) {
+        console.log("####copy", propertyKey);
+        dst.prototype[propertyKey] = descriptor?.value;
+      } else {
+        console.log("####ignore", propertyKey);
       }
-      dst.prototype[propertyKey] = src.prototype[propertyKey];
-    } else if (propertyKey === "constructor") {
-      continue;
     } else if (descriptor) {
       Object.defineProperty(dst.prototype, propertyKey, descriptor);
     }
@@ -166,6 +181,11 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
     [isCurrentBaseComponentKey]: boolean;
     [componentStatus]?: string;
     init(props: any) {
+      makeObservable(this);
+      const storedAnnotation = getStoredAnnotation.call(this);
+      if (Object.keys(storedAnnotation).length > 0) {
+        console.error("makeObservable not finished ", storedAnnotation);
+      }
       applyHandler(
         this,
         isCurrentBaseComponentKey,
@@ -214,13 +234,13 @@ const baseComponent = (target: ReactComponentType): ReactComponentType => {
 export const component = (target: ReactComponentType): ReactComponentType => {
   class SmartComponent extends Object {
     propsAdmin?: GhostValue;
-    propsAnnotation: any;
+    propsAnnotations: any;
     stateAdmin?: GhostValue;
     nonIntrinsticRender?: boolean;
     currentChildren?: JSX.Element;
     initializeProps() {
       if (!this.propsAdmin) {
-        this.propsAdmin = new GhostValue(this.propsAnnotation);
+        this.propsAdmin = new GhostValue(this.propsAnnotations);
       }
     }
     set props(props: any) {
@@ -261,7 +281,9 @@ export const component = (target: ReactComponentType): ReactComponentType => {
       this.propsAdmin?.setTemporaryValue(savedProps);
       this.stateAdmin?.setTemporaryValue(savedState);
       if (!result) {
-        console.log("render skipped by shouldComponentUpdate");
+        console.log("shouldComponentUpdate skip render");
+      } else {
+        console.log("shouldComponentUpdate accept render");
       }
       return result;
     }

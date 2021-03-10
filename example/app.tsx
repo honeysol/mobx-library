@@ -5,6 +5,7 @@ import {
   configure,
   createAtom,
   getObserverTree,
+  makeObservable,
   observable,
   runInAction,
   untracked,
@@ -39,31 +40,68 @@ configure({
 class MobxStore {
   constructor(value) {
     this.value = value;
+    // this.lazyValue = 0;
+    makeObservable(this);
   }
   @observable
   value: number;
 
-  @observable.ref
-  lazyValue: number;
+  // @asyncComputed
+  // lazyValue() {
+  //   return delay(1000, this.value);
+  // }
 
-  @asyncComputeTo("lazyValue")
-  get lazyValuePromise() {
-    return resolveType(delay(1000, this.value));
-  }
-
-  // @asyncComputedFrom("lazyValuePromise")
+  // @observable.ref
   // lazyValue: number;
 
-  // @computed
+  // @asyncComputeTo("lazyValue")
   // get lazyValuePromise() {
   //   return resolveType(delay(1000, this.value));
   // }
+
+  @asyncComputedFrom("lazyValuePromise")
+  lazyValue: number;
+
+  @computed
+  get lazyValuePromise() {
+    return resolveType(delay(1000, this.value));
+  }
 }
+// Object.defineProperty(MobxStore.prototype, "value", {
+//   writable: true,
+//   value: 0,
+// });
 
 const store = new MobxStore(300);
 
-@component
+// @component
 class MobxComponent2 extends React.Component<
+  {
+    value: number;
+    store: MobxStore;
+    valueObj: { value: number };
+  },
+  { stateValue?: number }
+> {
+  state = { stateValue: 0 };
+  // value;
+  // @prop
+  // store;
+  @render
+  render() {
+    console.log("MobxComponent2 render");
+    return (
+      <div>
+        {/* <div>value: {this.props.value}</div>
+        <div>lazyValue: {this.lazyValue}</div>
+        <div>lazyStoreValue: {this.lazyStoreValue}</div> */}
+      </div>
+    );
+  }
+}
+
+@component
+class MobxComponent3 extends React.Component<
   {
     value: number;
     store: MobxStore;
@@ -75,48 +113,84 @@ class MobxComponent2 extends React.Component<
   get isMobxComponent2() {
     return true;
   }
-  static isMobxComponent2Constructor = true;
   @prop.deep("valueObj")
-  valueObj2;
-  // value;
-  // @prop
-  // store;
-  @render
-  render() {
-    console.log("MobxComponent2 render");
-    return (
-      <div>
-        <div>value: {this.props.value}</div>
-        <div>lazyValue: {this.lazyValue}</div>
-        <div>lazyStoreValue: {this.lazyStoreValue}</div>
-      </div>
-    );
+  valueObj;
+
+  // @asyncComputed
+  // lazyValue() {
+  //   return resolveType(delay(1000, this.props.value));
+  // }
+
+  // @asyncComputeTo("lazyValue")
+  // get lazyValuePromise() {
+  //   return delay(1000, this.props.value);
+  // }
+  // @observable
+  // lazyValue = 10;
+
+  @computed
+  get lazyValuePromise() {
+    return (async () => {
+      const value = await delay(1000, this.props.value);
+      return value;
+    })();
   }
-  @asyncComputed
-  lazyValue() {
-    return resolveType(delay(1000, this.props.value));
+  @asyncComputedFrom("lazyValuePromise")
+  lazyValue;
+
+  @observable
+  temp = 200;
+
+  @computed
+  get computed() {
+    return 10;
   }
+
+  // @asyncComputed
+  // lazyValue() {
+  //   return resolveType(delay(1000, this.props.value));
+  // }
+  // @computed
+  // get lazyValuePromise() {
+  //   return delay(1000, this.props.value);
+  // }
+  // @asyncComputedFrom("lazyValuePromise")
+  // lazyValue() {
+  //   return resolveType(delay(1000, this.props.value));
+  // }
+
   @asyncComputed
   lazyStoreValue() {
     if (!this.props.store) console.error(this, this.props.store);
     return resolveType(delay(1000, this.props.store?.value));
   }
-}
 
-@component
-class MobxComponent3 extends MobxComponent2 {
   constructor(props) {
     super(props);
+    this.internalValue = 0;
+    // Object.defineProperty(this, "lazyValue", { writable: true, value: -1 });
+    // this.lazyValue = 0;
   }
   get isMobxComponent3() {
     return true;
   }
-  @observable
-  internalValue = 200;
+
+  @observable.ref
+  internalValue;
+
   @asyncComputed
-  lazyInternalValue() {
-    return resolveType(delay(1000, this.internalValue + 1));
+  get lazyInternalValue() {
+    return delay(1000, this.internalValue);
   }
+
+  // @computed
+  // get lazyInternalValuePromise() {
+  //   console.log("lazyInternalValuePromise called");
+  //   return delay(1000, this.internalValue);
+  // }
+  // @asyncComputedFrom("lazyInternalValuePromise")
+  // lazyInternalValue;
+
   @observable
   internalStore = new MobxStore(0);
   // @asyncComputed
@@ -158,19 +232,20 @@ class MobxComponent3 extends MobxComponent2 {
 
   @render
   render() {
+    window.mobxComponent3 = this;
     console.log("MobxComponent3 render", Date.now(), this);
     return (
       <div>
         <div>value: {this.props.value}</div>
         <div>lazyValue: {this.lazyValue}</div>
-        <div>valueObj: {this.props.valueObj.value}</div>
+        <div>props.valueObj.value: {this.props.valueObj.value}</div>
         <div>internalValue: {this.internalValue}</div>
         <div>lazyInternalValue: {this.lazyInternalValue}</div>
-        {/* <div>storeValue: {this.store?.value}</div> */}
+        <div>props.store: {this.props.store.value}</div>
         <div>lazyStoreValue: {this.lazyStoreValue}</div>
-        <div>internalStoreValue: {this.internalStore?.value}</div>
-        <div>lazyInternalStoreValue: {this.internalStore?.lazyValue}</div>
-        <div>stateValue: {this.state.stateValue}</div>
+        <div>internalStore?.value: {this.internalStore?.value}</div>
+        <div>internalStore?.lazyValue: {this.internalStore?.lazyValue}</div>
+        <div>state.stateValue: {this.state.stateValue}</div>
         <button
           onClick={() => {
             runInAction(() => {
@@ -187,7 +262,7 @@ class MobxComponent3 extends MobxComponent2 {
             });
           }}
         >
-          increment store by mobx#
+          increment props.store by mobx
         </button>
         <button
           onClick={() => {
@@ -233,6 +308,14 @@ class MobxComponent3 extends MobxComponent2 {
     console.log(this.ref.current);
   }
 }
+// Object.defineProperty(MobxComponent3.prototype, "lazyValue", {
+//   value: 10,
+//   writable: true,
+// });
+Object.defineProperty(MobxStore.prototype, "internalValue", {
+  writable: true,
+  value: 200,
+});
 
 export class App extends React.Component {
   state = { value: 300, valueObj: { value: 400 }, store };
@@ -260,7 +343,7 @@ export class App extends React.Component {
             });
           }}
         >
-          increment valueObj by external props
+          replace valueObj without structural change by external props
         </button>
 
         <button
