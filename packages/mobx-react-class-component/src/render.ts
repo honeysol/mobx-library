@@ -18,7 +18,7 @@ export const render = (
       } as WatchOption),
       "render"
     )(target, propertyKey, {
-      get: descriptor.value,
+      get: descriptor.value || descriptor.get,
     });
     return {
       value(this: any) {
