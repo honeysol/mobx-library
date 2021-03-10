@@ -1,6 +1,6 @@
 {
   "name": "mobx-library",
-  "private": true,
+  "license": "MIT",
   "devDependencies": {
     "@changesets/changelog-github": "^0.2.7",
     "@changesets/cli": "^2.10.3",

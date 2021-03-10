@@ -3,6 +3,7 @@
   "version": "1.0.0-alpha.7",
   "description": "This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.",
   "author": "norami",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/honeysol/mobx-library.git",
