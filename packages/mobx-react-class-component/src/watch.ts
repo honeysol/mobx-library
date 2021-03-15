@@ -45,6 +45,9 @@ export const watch = (handler: Function, options?: WatchOption) => (
   propertyKey: string | symbol,
   descriptor?: PropertyDescriptor
 ) => {
+  if (typeof handler !== "function") {
+    console.error("handler not specified");
+  }
   const getter = descriptor?.get || descriptor?.value;
   addInitializer(
     target,
