@@ -14,8 +14,7 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:prettier/recommended",
     "plugin:import/recommended",
-    "plugin:import/typescript",
-    "prettier/@typescript-eslint"
+    "plugin:import/typescript"
   ],
   "env": {
     "es6": true,

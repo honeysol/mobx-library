@@ -11,11 +11,13 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "tsdx": "^0.14.0",
-    "typescript": "^3.9.7"
+    "typescript": "4.2.3",
+    "eslint-plugin-simple-import-sort": "^7.0.0"
   },
   "workspaces": [
     "packages/*"
   ],
+  "private": true,
   "scripts": {
     "lerna": "lerna",
     "start": "lerna run start --stream --parallel",
@@ -31,7 +33,20 @@
     "version:canary": "changeset version --snapshot canary",
     "release:canary": "changeset publish --tag canary"
   },
-  "dependencies": {
-    "eslint-plugin-simple-import-sort": "^7.0.0"
+  "resolutions": {
+    "eslint-plugin-prettier": "^3.3.1",
+    "tslib": "^2.1.0",
+    "prettier": "^2.2.1",
+    "typescript": "^4.2.3",
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
+    "eslint": "7.22.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-plugin-flowtype": "^5.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.20.3",
+    "eslint-plugin-react-hooks": "^4.0.8"
   }
 }
