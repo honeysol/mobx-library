@@ -103,7 +103,7 @@ export const component = (target: ReactComponentType): ReactComponentType => {
     }
     notifyRender(children: JSX.Element) {
       if (!this.nonIntrinsticRender) {
-        logger.log("intrinsic render");
+        logger.log("intrinsic render", children);
         this.currentChildren = children;
       }
     }

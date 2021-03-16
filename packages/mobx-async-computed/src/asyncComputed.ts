@@ -1,51 +1,76 @@
-import { observed } from "mobx-observed";
-import { getDerivedPropertyKey } from "ts-decorator-manipulator";
+import { computed } from "mobx";
+import {
+  createAnnotation,
+  ExtendedAnnotation,
+  observed,
+  PropertyAccessor,
+} from "mobx-observed";
 
 import { AsyncCommitter } from "./asyncCommitter";
 
-const getDescriptor = (propertyKey: string | symbol) => {
-  return {
-    get(this: any): any {
-      return this[propertyKey];
-    },
-    set(this: any, value: any) {
-      this[propertyKey] = value;
-    },
-  };
-};
-export const _asyncComputed = (options?: any) => (
-  target: object,
-  propertyKey: string | symbol,
-  descriptor?: PropertyDescriptor
-) => {
-  descriptor = descriptor || getDescriptor(propertyKey);
-  const asyncCommitterKey = getDerivedPropertyKey(
-    propertyKey,
-    "asyncCommitter"
-  );
-  return (observed.async({
+const asyncComputedPrimitive = <T>(options?: any) => (
+  accessor?: PropertyAccessor<Promise<T> | undefined>,
+  context?: any
+): PropertyAccessor<T | undefined> => {
+  if (!accessor?.get) {
+    throw new Error("Accessor doesn't have get property");
+  }
+  const asyncCommiter = new AsyncCommitter<T>();
+  return observed.async<Promise<T> | undefined, T | undefined>({
     ...options,
-    async change(this: any, { newValue }, setter) {
-      const asyncCommiter = (this[asyncCommitterKey] =
-        this[asyncCommitterKey] || new AsyncCommitter());
+    async change({ newValue }, setter) {
       const { successed, value } = await asyncCommiter.resolve(newValue);
       if (successed) {
         setter(value);
       }
     },
-  })(target, propertyKey, descriptor) as any) as void;
+  })(accessor, context) as PropertyAccessor<T>;
 };
 
-export const asyncComputed = _asyncComputed();
-export const asyncComputedFrom = (propertyKey: string) =>
-  _asyncComputed({
-    originalKey: propertyKey,
+export const asyncComputedObject = <T>(options?: any) => (
+  accessor?: PropertyAccessor<Promise<T> | undefined>
+): PropertyAccessor<T | undefined> => {
+  if (!accessor?.get) {
+    throw new Error("Accessor doesn't have get property");
+  }
+  return asyncComputedPrimitive<T>(options)(computed(accessor.get));
+};
+
+export const asyncComputedFromObject = <T>(
+  propertyKey: string | symbol,
+  options?: any
+) => (
+  accessor?: PropertyAccessor<Promise<T> | undefined>,
+  context?: any
+): PropertyAccessor<T | undefined> => {
+  if (accessor?.get) {
+    console.error("Accessor have get property", accessor);
+  }
+  return asyncComputedPrimitive<T>(options)({
+    get(this: any): Promise<T> | undefined {
+      return context?.[propertyKey];
+    },
   });
+};
+
+export const asyncComputedFrom = <T>(
+  propertyKey: symbol | string,
+  options?: any
+): ExtendedAnnotation<Promise<T> | undefined, T | undefined> =>
+  createAnnotation(asyncComputedFromObject<T>(propertyKey, options), {
+    annotationType: "asyncComputedFrom",
+  });
+
+export const asyncComputed = createAnnotation(asyncComputedObject(), {
+  annotationType: "asyncComputed",
+});
 
 type ResolvedType<T extends Promise<any>> = T extends Promise<infer P>
   ? P
   : never;
 
-export const resolveType = <T extends Promise<any>>(value: T) => {
-  return (value as unknown) as ResolvedType<T>;
+export const resolveType = <T extends Promise<any>>(
+  value: T
+): ResolvedType<T> => {
+  return value as any;
 };

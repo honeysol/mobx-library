@@ -316,7 +316,7 @@ Object.defineProperty(MobxStore.prototype, "internalValue", {
 export class App extends React.Component {
   state = { value: 300, valueObj: { value: 400 }, store };
   onUpdateValue = () => {};
-  render() {
+  render(): JSX.Element {
     console.log("App.render");
     return (
       <div>
@@ -357,7 +357,7 @@ export class App extends React.Component {
 }
 
 const methodDecorator: any = (
-  target: object,
+  target: any,
   propertyKey: string,
   desciptor: PropertyDescriptor
 ) => {
@@ -371,7 +371,7 @@ const methodDecorator: any = (
 };
 
 const propertyDecorator: PropertyDecorator = (
-  target: object,
+  target: any,
   propertyKey: string
 ) => {
   console.log("propertyDecorator", propertyKey);
@@ -403,12 +403,11 @@ export class X {
   //   console.log("start observe");
   //   return () => console.log("end observe");
   // })
-  @(becomeObserved(() => {
-    console.log("start observe");
+  @becomeObserved.computed(function () {
+    console.log("start observe", this);
     return () => console.log("end observe");
-  }) as any)
-  @evacuate(computed as any, "##")
-  get y() {
+  })
+  get y(): number {
     return Date.now();
   }
 

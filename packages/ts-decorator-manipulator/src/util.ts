@@ -1,5 +1,5 @@
 export const getDerivedPropertyKey = (
-  baseKey: string | symbol,
+  baseKey: string | symbol | number,
   suffix: string
 ) =>
   Symbol(
@@ -9,7 +9,7 @@ export const getDerivedPropertyKey = (
 let counter = 0;
 
 export const getDerivedPropertyString = (
-  baseKey: string | symbol,
+  baseKey: string | symbol | number,
   suffix: string
 ) =>
   `${

@@ -1,20 +1,28 @@
 import { action, computed, observable, reaction } from "mobx";
-import { evacuate } from "ts-decorator-manipulator";
 
 import { becomeObserved } from "./becomeObserved";
+import { PropertyAccessor } from "./util";
 
-const getDescriptor = (propertyKey: string) => {
-  return {
-    get(this: any): any {
-      return this[propertyKey];
-    },
-    set(this: any, value: any) {
-      this[propertyKey] = value;
-    },
-  };
-};
+interface ObservAsyncParams<T, S> {
+  change?: (
+    {
+      newValue,
+      oldValue,
+      type,
+    }: { newValue?: T; oldValue?: T; type: "change" },
+    setter: (value: S) => void
+  ) => void;
+  enter?: (
+    { oldValue, type }: { oldValue?: T; type: "enter" },
+    setter: (value: S) => void
+  ) => void;
+  leave?: (
+    { oldValue, type }: { oldValue?: T; type: "leave" },
+    setter: (value: S) => void
+  ) => void;
+}
 
-export const observed = ({
+export const observed = <T>({
   change,
   enter,
   leave,
@@ -30,91 +38,53 @@ export const observed = ({
   }) => void;
   enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
   leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
-}) => (
-  target: object,
-  propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
-) => {
-  const newDescriptor = becomeObserved(
-    function(this: any) {
-      enter?.({ oldValue: descriptor.get?.call(this), type: "enter" });
+}) => (accessor: PropertyAccessor<T>, context: any): PropertyAccessor<T> => {
+  const getter = () => accessor.get();
+  const newDescriptor = becomeObserved<T>(
+    function (this: any) {
+      enter?.({ oldValue: getter(), type: "enter" });
       return () => {};
     },
-    function(this: any) {
-      leave?.({ oldValue: descriptor.get?.call(this), type: "leave" });
+    function (this: any) {
+      leave?.({ oldValue: getter(), type: "leave" });
       return () => {};
     }
-  )(target, propertyKey, descriptor);
+  )(accessor, context);
   return {
     set(this: any, value: any) {
       change?.({
         newValue: value,
-        oldValue: newDescriptor.get?.call(this),
+        oldValue: newDescriptor.get?.(),
         type: "change",
       });
-      newDescriptor.set?.call(this, value);
+      newDescriptor.set?.(value);
     },
     get(this: any) {
-      return newDescriptor.get?.call(this);
+      return newDescriptor.get?.();
     },
   };
 };
 
-/**
- * 
- * 
-  class InternalImplementation{
-    @computed
-    [originalKey];
-    @observable
-    [resolvedKey];
-    @becomeObserved(handlers)
-    [propertyKey];
-  }
- */
-observed.async = ({
+const observedAsync = <T, S>({
   change,
   enter,
   leave,
-  originalKey,
-  resolvedKey,
-}: {
-  change?: (
-    {
-      newValue,
-      oldValue,
-      type,
-    }: { newValue?: any; oldValue?: any; type: "change" },
-    setter: (value: any) => void
-  ) => void;
-  enter?: (
-    { oldValue, type }: { oldValue?: any; type: "enter" },
-    setter: (value: any) => void
-  ) => void;
-  leave?: (
-    { oldValue, type }: { oldValue?: any; type: "leave" },
-    setter: (value: any) => void
-  ) => void;
-  originalKey?: string;
-  resolvedKey?: string;
-}) => (
-  target: object,
-  propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
-) => {
-  const originalDescriptor = originalKey
-    ? getDescriptor(originalKey)
-    : evacuate(computed, "observed-original")(target, propertyKey, {
-        get: descriptor.get || descriptor.value,
-      });
-  const resolvedDescriptor = resolvedKey
-    ? getDescriptor(resolvedKey)
-    : evacuate(observable.ref, "observed-resolved")(target, propertyKey);
-  return becomeObserved(function(this: any) {
-    const setter = action((value: any) => {
-      resolvedDescriptor.set?.call(this, value);
+}: ObservAsyncParams<T, S>) => (
+  accessor: PropertyAccessor<T>,
+  context: any
+): PropertyAccessor<S> => {
+  if (!accessor.get) {
+    console.error(accessor);
+    throw new Error("accessor doesn't have get property");
+  }
+  const resolvedAccessor = observable.box(undefined as S | undefined, {
+    deep: false,
+  });
+  return becomeObserved<S>(function (this: any) {
+    const setter = action((value: S) => {
+      resolvedAccessor.set?.(value);
     });
-    const getter = () => originalDescriptor.get?.call(this);
+    const getter = () => accessor.get();
     enter?.call(this, { oldValue: getter(), type: "enter" }, setter);
     const cancelObserve = reaction(
       () => getter(),
@@ -131,8 +101,25 @@ observed.async = ({
       cancelObserve();
       leave?.call(this, { oldValue: getter(), type: "leave" }, setter);
     };
-  })(target, propertyKey, resolvedDescriptor);
+  })(resolvedAccessor, context);
 };
+
+observedAsync.computed = <T, S>({
+  change,
+  enter,
+  leave,
+}: ObservAsyncParams<T, S>) => (
+  accessor: PropertyAccessor<T>,
+  context: any
+): PropertyAccessor<S> => {
+  return observedAsync<T, S>({
+    change,
+    enter,
+    leave,
+  })(computed(accessor.get), context);
+};
+
+observed.async = observedAsync;
 
 observed.autoclose = (handler: (oldValue: any) => void) => {
   const wrappedHandler = ({

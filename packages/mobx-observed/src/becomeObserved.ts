@@ -1,79 +1,83 @@
-import { computed, createAtom, IAtom, observable } from "mobx";
-import {
-  combineMethodDecorator,
-  combinePropertyDecorator,
-  evacuate,
-  getDerivedPropertyKey,
-} from "ts-decorator-manipulator";
+import { computed, createAtom, observable } from "mobx";
 
-type handlerType = string | (() => () => void);
+import { createAnnotation, ExtendedAnnotation, PropertyAccessor } from "./util";
 
-const callHandler = function(
-  this: any,
-  handler?: handlerType,
-  ...args: []
-): (() => void) | null {
-  if (typeof handler === "function") return handler.apply(this, args);
-  if (typeof handler === "string") return this[handler](...args);
-  return null;
-};
-
-export const becomeObserved = (
-  handler: handlerType,
-  cancelHandler?: handlerType
-) => (
-  target: object,
-  propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
-) => {
-  const atomKey = getDerivedPropertyKey(propertyKey, "atom");
-  const getAtom = function(this: any) {
-    if (!this[atomKey]) {
-      this[atomKey] = (() => {
-        let canceler: (() => void) | null = null;
-        return createAtom(
-          atomKey.description || "",
-          () => {
-            canceler = callHandler.call(this, handler);
-          },
-          () => {
-            canceler?.();
-            callHandler.call(this, cancelHandler);
-          }
-        );
-      })();
+export const becomeObservedObject = <T>(
+  handler: () => () => void | null,
+  cancelHandler?: () => void
+) => (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
+  if (!accessor?.get) {
+    console.error(accessor);
+    throw new Error("accessor doesn't have get property");
+  }
+  if (typeof handler !== "function") {
+    console.error(handler);
+    throw new Error("handler not specified");
+  }
+  let canceler: (() => void) | null = null;
+  const atom = createAtom(
+    accessor.debugName?.toString() || "",
+    () => {
+      canceler = handler.call(context);
+    },
+    () => {
+      canceler?.();
+      cancelHandler?.call(context);
     }
-    return this[atomKey] as IAtom;
-  };
-  const getter = descriptor.get || descriptor.value;
-  const setter = descriptor.set;
+  );
   return {
-    configurable: true,
-    get(this: any) {
-      getAtom.call(this).reportObserved();
-      return getter?.call(this);
+    get(this: any): T {
+      atom.reportObserved();
+      return accessor.get();
     },
-    set(this: any, value: any) {
-      setter?.call(this, value);
+    set(this: any, value: T) {
+      accessor.set?.(value);
     },
   };
 };
 
-becomeObserved.observable = (
-  handler: handlerType,
-  cancelHandler?: handlerType
+export const becomeObserved = <T>(
+  handler: () => () => void | null,
+  cancelHandler?: () => void
+): ExtendedAnnotation<T, T> => {
+  return createAnnotation<T, T>(becomeObservedObject(handler, cancelHandler), {
+    annotationType: "becomeObserved",
+  });
+};
+
+becomeObserved.observable = <T>(
+  handler: () => () => void | null,
+  cancelHandler?: () => void
 ) => {
-  return combinePropertyDecorator(
-    evacuate(observable.ref, "becomeObserved.observable"),
-    (becomeObserved(handler, cancelHandler) as any) as PropertyDecorator
+  return createAnnotation<T, T>(
+    (
+      _accessor?: PropertyAccessor<unknown>,
+      context?: any
+    ): PropertyAccessor<T> => {
+      const accessor = observable.box(undefined as T | undefined, {
+        deep: false,
+      });
+      return becomeObservedObject<T>(handler, cancelHandler)(accessor, context);
+    },
+    {
+      annotationType: "becomeObserved",
+    }
   );
 };
-becomeObserved.computed = (
-  handler: handlerType,
-  cancelHandler?: handlerType
+becomeObserved.computed = <T>(
+  handler: () => () => void | null,
+  cancelHandler?: () => void
 ) => {
-  return combineMethodDecorator(
-    evacuate(computed, "becomeObserved.computed"),
-    becomeObserved(handler, cancelHandler)
+  return createAnnotation<T, T>(
+    (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
+      const computedAccessor = computed(accessor!.get);
+      return becomeObservedObject<T>(handler, cancelHandler)(
+        computedAccessor,
+        context
+      );
+    },
+    {
+      annotationType: "becomeObserved",
+    }
   );
 };
