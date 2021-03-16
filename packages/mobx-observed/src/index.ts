@@ -3,6 +3,6 @@ export { observed } from "./observed";
 export {
   PropertyAccessor,
   createAnnotation,
-  ObjectAnnotation,
   ExtendedAnnotation,
+  assert,
 } from "./util";

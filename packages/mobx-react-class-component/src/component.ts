@@ -1,4 +1,3 @@
-import { makeObservable } from "mobx";
 import React from "react";
 
 import { GhostValue } from "./ghost";
@@ -8,6 +7,9 @@ import { getStoredAnnotation } from "./utils/mobx";
 
 export { addInitializer, addTerminator, addUpdator } from "./utils/handler";
 export const componentStatus = Symbol("componentStatus");
+
+// enabled in MobX6 only
+const { makeObservable } = require("mobx");
 
 type ClassType<T> = any;
 type ReactComponentType = ClassType<React.Component>;
@@ -75,31 +77,29 @@ export const component = (target: ReactComponentType): ReactComponentType => {
     stateAdmin?: GhostValue;
     nonIntrinsticRender?: boolean;
     currentChildren?: JSX.Element;
-    initializeProps() {
+    getPropsAdmin() {
       if (!this.propsAdmin) {
         this.propsAdmin = new GhostValue(this.propsAnnotations);
       }
+      return this.propsAdmin;
     }
     set props(props: any) {
-      this.initializeProps();
-      this.propsAdmin!.value = props;
+      this.getPropsAdmin().value = props;
     }
     get props() {
-      this.initializeProps();
-      return this.propsAdmin!.value;
+      return this.getPropsAdmin().value;
     }
-    initializeState() {
+    getStateAdmin() {
       if (!this.stateAdmin) {
         this.stateAdmin = new GhostValue();
       }
+      return this.stateAdmin;
     }
     set state(state: any) {
-      this.initializeState();
-      this.stateAdmin!.value = state;
+      this.getStateAdmin().value = state;
     }
     get state() {
-      this.initializeState();
-      return this.stateAdmin!.value;
+      return this.getStateAdmin().value;
     }
     notifyRender(children: JSX.Element) {
       if (!this.nonIntrinsticRender) {

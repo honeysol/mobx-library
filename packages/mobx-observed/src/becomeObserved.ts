@@ -1,19 +1,18 @@
 import { computed, createAtom, observable } from "mobx";
 
-import { createAnnotation, ExtendedAnnotation, PropertyAccessor } from "./util";
+import {
+  assert,
+  createAnnotation,
+  ExtendedAnnotation,
+  PropertyAccessor,
+} from "./util";
 
 export const becomeObservedObject = <T>(
   handler: () => () => void | null,
   cancelHandler?: () => void
 ) => (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
-  if (!accessor?.get) {
-    console.error(accessor);
-    throw new Error("accessor doesn't have get property");
-  }
-  if (typeof handler !== "function") {
-    console.error(handler);
-    throw new Error("handler not specified");
-  }
+  assert(accessor?.get, "accessor doesn't have get property", accessor);
+  assert(typeof handler === "function", "handler not specified");
   let canceler: (() => void) | null = null;
   const atom = createAtom(
     accessor.debugName?.toString() || "",
@@ -26,11 +25,11 @@ export const becomeObservedObject = <T>(
     }
   );
   return {
-    get(this: any): T {
+    get(): T {
       atom.reportObserved();
       return accessor.get();
     },
-    set(this: any, value: T) {
+    set(value: T) {
       accessor.set?.(value);
     },
   };
@@ -54,6 +53,7 @@ becomeObserved.observable = <T>(
       _accessor?: PropertyAccessor<unknown>,
       context?: any
     ): PropertyAccessor<T> => {
+      assert(!_accessor?.get, "accessor have get property", _accessor);
       const accessor = observable.box(undefined as T | undefined, {
         deep: false,
       });
@@ -70,7 +70,8 @@ becomeObserved.computed = <T>(
 ) => {
   return createAnnotation<T, T>(
     (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
-      const computedAccessor = computed(accessor!.get);
+      assert(accessor?.get, "accessor doesn't have get property", accessor);
+      const computedAccessor = computed(accessor?.get);
       return becomeObservedObject<T>(handler, cancelHandler)(
         computedAccessor,
         context

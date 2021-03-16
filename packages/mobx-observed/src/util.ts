@@ -3,13 +3,19 @@ import type {
   ObservableObjectAdministration,
 } from "mobx/dist/internal.d";
 
+import {
+  recordAnnotationApplied,
+  storeAnnotation,
+  storedAnnotationEnabled,
+} from "./storedAnnotation";
+
 export interface PropertyAccessor<T> {
   get(): T;
   set?(value: T): void;
   debugName?: PropertyKey;
 }
 
-export interface ObjectAnnotation<T, R> {
+interface ObjectAnnotation<T, R> {
   (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
 }
 
@@ -26,6 +32,21 @@ export interface AnnotationFunction<T, R> extends Annotation {
   ): void | PropertyDescriptor;
 }
 
+export const assert: (
+  condition: any,
+  message: string,
+  object?: any
+) => asserts condition = (
+  condition: any,
+  message: string,
+  object?: any
+): asserts condition => {
+  if (!condition) {
+    console.error(message, object);
+    throw new Error(message);
+  }
+};
+
 const getPropertyWithDefault = <R>(
   target: any,
   key: PropertyKey,
@@ -38,7 +59,6 @@ const getPropertyWithDefault = <R>(
 };
 
 const objectAnnotationsKey = Symbol("mobxObjectAnnotation");
-const localStoredAnnotationsKey = Symbol("mobxStoredAnnotation");
 
 const bindAccessor = <T>(
   target: any,
@@ -55,69 +75,47 @@ const bindAccessor = <T>(
   };
 };
 
-export const getStoredAnnotation = function (
-  this: any
-): Record<PropertyKey, Annotation> {
-  const storedAnnotationsKey = Object.getOwnPropertySymbols(
-    Object.getPrototypeOf(this)
-  ).find((key) => key.description === "mobx-stored-annotations") as symbol;
-  return this[storedAnnotationsKey];
-};
-export const makeLocalObservable = (target: any) => {
-  const storedAnnotations = localStoredAnnotationsKey;
-  for (const [key, annotation] of Object.entries(storedAnnotations)) {
-    annotation.make_({ target_: target }, key);
-  }
-};
-
 export function createAnnotation<T, R>(
   objectAnnotation: ObjectAnnotation<T, R>,
-  { annotationType, lazy }: { annotationType: string; lazy?: boolean }
+  { annotationType }: { annotationType: string }
 ): AnnotationFunction<T, R> {
   const annotate = (
     source: any,
     key: PropertyKey,
     descriptor: PropertyAccessor<T>
   ) => {
-    const definePropertyOutcome = objectAnnotation(
+    const accessor = objectAnnotation(
       bindAccessor(source, descriptor, key),
       source
     );
     Object.defineProperty(source, key, {
       configurable: true,
-      get: definePropertyOutcome.get,
-      set: definePropertyOutcome.set,
+      get: accessor.get,
+      set: accessor.set,
     });
-    return definePropertyOutcome;
+    return !!accessor;
   };
   const annotation = Object.assign(
     ((target: any, key: string | symbol, descriptor: PropertyDescriptor) => {
       if (typeof key !== "string" && typeof key !== "symbol") {
         // delegate original objectAnnotation
         return objectAnnotation(target, key);
-      } else if (lazy) {
-        // simulate MobX6 decorator (initialized with makeLocalObservable)
-        const localStoredAnnotations = getPropertyWithDefault(
-          target,
-          localStoredAnnotationsKey,
-          () => ({} as Record<string | symbol, Annotation>)
-        );
-        localStoredAnnotations[key as string] = annotation;
+      } else if (storedAnnotationEnabled) {
+        // simulate MobX6 decorator (initialized with mobx.makeObservable or mobx.makeAutoObservable)
+        storeAnnotation.call(target, key, annotation);
       } else {
         // simulate MobX5 decorator (initialized in first access)
         const getObjectAnnotation = function (this: any) {
-          return getPropertyWithDefault(
-            getPropertyWithDefault(
-              this,
-              objectAnnotationsKey,
-              () => ({} as Record<string | symbol, ObjectAnnotation<T, R>>)
-            ),
-            key,
-            () =>
-              objectAnnotation(
-                bindAccessor(this, descriptor as PropertyAccessor<T>, key),
-                this
-              )
+          const objectAnnotations = getPropertyWithDefault(
+            this,
+            objectAnnotationsKey,
+            () => ({})
+          );
+          return getPropertyWithDefault(objectAnnotations, key, () =>
+            objectAnnotation(
+              bindAccessor(this, descriptor as PropertyAccessor<T>, key),
+              this
+            )
           );
         };
         return {
@@ -134,7 +132,7 @@ export function createAnnotation<T, R>(
       }
     }) as AnnotationFunction<T, R>,
     {
-      // MobX6 annotation
+      // MobX6 new annotation
       annotationType_: annotationType,
       make_(adm: ObservableObjectAdministration, key: PropertyKey): void {
         const source = adm.target_;
@@ -142,17 +140,11 @@ export function createAnnotation<T, R>(
           source,
           key
         ) as PropertyAccessor<T>;
-        const storedAnnotation = getStoredAnnotation.call(adm.target_);
-        if (descriptor) {
-          if (annotate(source, key, descriptor)) {
-            delete storedAnnotation?.[key as any];
-          }
-        }
-        if (!storedAnnotation?.[key as any]) {
+        if (annotate(source, key, descriptor)) {
+          recordAnnotationApplied(adm, annotation, key);
+        } else {
           throw Error(
-            `Annotation ${
-              annotation.annotationType_
-            } cannot apply to ${key.toString()}.${key.toString()}`
+            `Annotation ${annotationType} cannot apply to ${key.toString()}`
           );
         }
       },
@@ -162,7 +154,7 @@ export function createAnnotation<T, R>(
         descriptor: PropertyDescriptor
       ): boolean | null {
         const source = adm.target_;
-        return !!annotate(source, key, descriptor as PropertyAccessor<T>);
+        return annotate(source, key, descriptor as PropertyAccessor<T>);
       },
     }
   );

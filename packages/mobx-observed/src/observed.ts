@@ -1,7 +1,26 @@
 import { action, computed, observable, reaction } from "mobx";
 
 import { becomeObserved } from "./becomeObserved";
-import { PropertyAccessor } from "./util";
+import {
+  AnnotationFunction,
+  assert,
+  createAnnotation,
+  PropertyAccessor,
+} from "./util";
+
+interface ObserveParams {
+  change?: ({
+    newValue,
+    oldValue,
+    type,
+  }: {
+    newValue?: any;
+    oldValue?: any;
+    type: "change";
+  }) => void;
+  enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
+  leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
+}
 
 interface ObservAsyncParams<T, S> {
   change?: (
@@ -22,7 +41,7 @@ interface ObservAsyncParams<T, S> {
   ) => void;
 }
 
-export const observed = <T>({
+const observedObject = <T>({
   change,
   enter,
   leave,
@@ -38,20 +57,21 @@ export const observed = <T>({
   }) => void;
   enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
   leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
-}) => (accessor: PropertyAccessor<T>, context: any): PropertyAccessor<T> => {
+}) => (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
+  assert(accessor?.get, "accessor doesn't have get property", accessor);
   const getter = () => accessor.get();
   const newDescriptor = becomeObserved<T>(
-    function (this: any) {
+    function () {
       enter?.({ oldValue: getter(), type: "enter" });
       return () => {};
     },
-    function (this: any) {
+    function () {
       leave?.({ oldValue: getter(), type: "leave" });
       return () => {};
     }
   )(accessor, context);
   return {
-    set(this: any, value: any) {
+    set(value: any) {
       change?.({
         newValue: value,
         oldValue: newDescriptor.get?.(),
@@ -59,24 +79,21 @@ export const observed = <T>({
       });
       newDescriptor.set?.(value);
     },
-    get(this: any) {
+    get() {
       return newDescriptor.get?.();
     },
   };
 };
 
-const observedAsync = <T, S>({
+const observedObjectAsync = <T, S>({
   change,
   enter,
   leave,
 }: ObservAsyncParams<T, S>) => (
-  accessor: PropertyAccessor<T>,
-  context: any
+  accessor?: PropertyAccessor<T>,
+  context?: any
 ): PropertyAccessor<S> => {
-  if (!accessor.get) {
-    console.error(accessor);
-    throw new Error("accessor doesn't have get property");
-  }
+  assert(accessor?.get, "accessor doesn't have get property", accessor);
   const resolvedAccessor = observable.box(undefined as S | undefined, {
     deep: false,
   });
@@ -104,24 +121,23 @@ const observedAsync = <T, S>({
   })(resolvedAccessor, context);
 };
 
-observedAsync.computed = <T, S>({
+const observedObjectAsyncComputed = <T, S>({
   change,
   enter,
   leave,
 }: ObservAsyncParams<T, S>) => (
-  accessor: PropertyAccessor<T>,
-  context: any
+  accessor?: PropertyAccessor<T>,
+  context?: any
 ): PropertyAccessor<S> => {
-  return observedAsync<T, S>({
+  assert(accessor?.get, "accessor doesn't have get property", accessor);
+  return observedObjectAsync<T, S>({
     change,
     enter,
     leave,
   })(computed(accessor.get), context);
 };
 
-observed.async = observedAsync;
-
-observed.autoclose = (handler: (oldValue: any) => void) => {
+const observedAutoclose = <T>(handler: (oldValue: T) => void) => {
   const wrappedHandler = ({
     oldValue,
     newValue,
@@ -133,5 +149,37 @@ observed.autoclose = (handler: (oldValue: any) => void) => {
       handler(oldValue);
     }
   };
-  return observed({ leave: wrappedHandler, change: wrappedHandler });
+  return observed<T>({ leave: wrappedHandler, change: wrappedHandler });
+};
+
+export const observed = <T>(param: ObserveParams): AnnotationFunction<T, T> => {
+  return createAnnotation<T, T>(observedObject(param), {
+    annotationType: "observed",
+  });
+};
+
+const observedAsync = <T, S>(
+  param: ObservAsyncParams<T, S>
+): AnnotationFunction<T, S> => {
+  return createAnnotation<T, S>(observedObjectAsync(param), {
+    annotationType: "observed",
+  });
+};
+
+observedAsync.computed = <T, S>(
+  param: ObservAsyncParams<T, S>
+): AnnotationFunction<T, S> => {
+  return createAnnotation<T, S>(observedObjectAsyncComputed(param), {
+    annotationType: "observed.async.computed",
+  });
+};
+
+observed.async = observedAsync;
+
+observed.computed = <T>(
+  param: (oldValue: T) => void
+): AnnotationFunction<T, T> => {
+  return createAnnotation<T, T>(observedAutoclose(param), {
+    annotationType: "observed.computed",
+  });
 };

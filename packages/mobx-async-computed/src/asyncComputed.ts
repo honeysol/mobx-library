@@ -1,5 +1,6 @@
 import { computed } from "mobx";
 import {
+  assert,
   createAnnotation,
   ExtendedAnnotation,
   observed,
@@ -8,16 +9,13 @@ import {
 
 import { AsyncCommitter } from "./asyncCommitter";
 
-const asyncComputedPrimitive = <T>(options?: any) => (
+const asyncComputedPrimitive = <T>() => (
   accessor?: PropertyAccessor<Promise<T> | undefined>,
   context?: any
 ): PropertyAccessor<T | undefined> => {
-  if (!accessor?.get) {
-    throw new Error("Accessor doesn't have get property");
-  }
+  assert(accessor?.get, "Accessor doesn't have get property");
   const asyncCommiter = new AsyncCommitter<T>();
   return observed.async<Promise<T> | undefined, T | undefined>({
-    ...options,
     async change({ newValue }, setter) {
       const { successed, value } = await asyncCommiter.resolve(newValue);
       if (successed) {
@@ -27,37 +25,29 @@ const asyncComputedPrimitive = <T>(options?: any) => (
   })(accessor, context) as PropertyAccessor<T>;
 };
 
-export const asyncComputedObject = <T>(options?: any) => (
+const asyncComputedObject = <T>() => (
   accessor?: PropertyAccessor<Promise<T> | undefined>
 ): PropertyAccessor<T | undefined> => {
-  if (!accessor?.get) {
-    throw new Error("Accessor doesn't have get property");
-  }
-  return asyncComputedPrimitive<T>(options)(computed(accessor.get));
+  assert(accessor?.get, "Accessor doesn't have get property");
+  return asyncComputedPrimitive<T>()(computed(accessor.get));
 };
 
-export const asyncComputedFromObject = <T>(
-  propertyKey: string | symbol,
-  options?: any
-) => (
+const asyncComputedFromObject = <T>(propertyKey: string | symbol) => (
   accessor?: PropertyAccessor<Promise<T> | undefined>,
   context?: any
 ): PropertyAccessor<T | undefined> => {
-  if (accessor?.get) {
-    console.error("Accessor have get property", accessor);
-  }
-  return asyncComputedPrimitive<T>(options)({
-    get(this: any): Promise<T> | undefined {
+  assert(!accessor?.get, "Accessor have get property");
+  return asyncComputedPrimitive<T>()({
+    get(): Promise<T> | undefined {
       return context?.[propertyKey];
     },
   });
 };
 
 export const asyncComputedFrom = <T>(
-  propertyKey: symbol | string,
-  options?: any
+  propertyKey: symbol | string
 ): ExtendedAnnotation<Promise<T> | undefined, T | undefined> =>
-  createAnnotation(asyncComputedFromObject<T>(propertyKey, options), {
+  createAnnotation(asyncComputedFromObject<T>(propertyKey), {
     annotationType: "asyncComputedFrom",
   });
 
