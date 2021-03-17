@@ -1,6 +1,6 @@
 {
   "name": "ts-decorator-manipulator",
-  "version": "1.0.0-alpha.10",
+  "version": "1.0.0-alpha.11",
   "description": "A utility for using Decorators with TypeScript.",
   "author": "norami",
   "license": "MIT",
