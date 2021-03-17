@@ -4,6 +4,10 @@ Resolve MobX5/MobX6 fields asynchronously. Resolves asynchronous ordering disrup
 
 This library does not require a special caller for initialization and termination. Asynchronous resolution starts when it is first referenced and ends when it is no longer referenced. Instead, it won't work without some observing source (observe, autorun, watch, etc.).
 
+## compatibility
+
+Supports MobX5 decorator, MobX6 decorator, and MobX6 annotation. MobX6 decorator requires initialization with makeObservable / makeAutoObservable.
+
 ```js
 class Sample{
   // Usage1: Use the both of resolved value and unresolved promise.(Recommended)

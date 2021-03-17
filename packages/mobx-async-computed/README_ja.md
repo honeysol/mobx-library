@@ -4,6 +4,10 @@ MobXのフィールドを非同期に解決します。非同期の順序処理�
 
 このライブラリは、初期化および終了のための特別な呼び出し元を必要としません。最初に参照された時点で、非同期の解決を開始し、参照がなくなった時点で非同期解決を終了します。代わりに、何らかのobserving source(observe, autorun, watch等)がなければ動作しません。
 
+## 互換性
+
+MobX5 decorator, MobX6 decorator, MobX6 annotationのいずれにも対応します。MobX6 decoratorでは、makeObservable / makeObservableによる初期化が必要です。
+
 ```js
 class Sample{
   // Usage1: Use the both of resolved value and unresolved promise.(Recommended)

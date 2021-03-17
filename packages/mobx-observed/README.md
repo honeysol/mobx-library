@@ -2,6 +2,10 @@
 
 This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.
 
+## compatibility
+
+Supports MobX5 decorator, MobX6 decorator, and MobX6 annotation. MobX6 decorator requires initialization with makeObservable / makeAutoObservable.
+
 ## APIs
 
 ### onBecomeObserved
