@@ -1,12 +1,12 @@
 import { action, computed, observable, reaction } from "mobx";
-
-import { becomeObserved } from "./becomeObserved";
 import {
   AnnotationFunction,
   assert,
   createAnnotation,
   PropertyAccessor,
-} from "./util";
+} from "mobx-annotation-manipulator";
+
+import { becomeObserved } from "./becomeObserved";
 
 interface ObserveParams {
   change?: ({

@@ -1,13 +1,13 @@
 {
-  "name": "mobx-observed",
+  "name": "mobx-annotation-manipulator",
   "version": "1.0.0-alpha.10",
-  "description": "This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.",
+  "description": "A utility to create third-parth annotation of MobX.",
   "author": "norami",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/honeysol/mobx-library.git",
-    "directory": "packages/mobx-observed"
+    "directory": "packages/mobx-annotation-manipulator"
   },
   "scripts": {
     "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
@@ -17,23 +17,19 @@
     "prepublish": "npm run build"
   },
   "main": "dist/index.js",
-  "module": "dist/mobx-observed.esm.js",
+  "module": "dist/mobx-annotation-manipulator.esm.js",
   "typings": "dist/index.d.ts",
   "files": [
     "README.md",
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "mobx": ">=5"
   },
   "devDependencies": {
     "mobx": "^6.1.8"
-  },
-  "dependencies": {
-    "mobx-annotation-manipulator": "^1.0.0-alpha.10",
-    "ts-decorator-manipulator": "^1.0.0-alpha.10"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

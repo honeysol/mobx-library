@@ -3,7 +3,7 @@ import type {
   ObservableObjectAdministration,
 } from "mobx/dist/internal.d";
 
-import { storedAnnotationKey } from "./symbol";
+import { storedAnnotationKey } from "./mobxInternalSymbol";
 
 export const storedAnnotationEnabled = !!storedAnnotationKey;
 

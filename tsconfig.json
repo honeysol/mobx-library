@@ -9,6 +9,7 @@
       "mobx-async-computed": ["packages/mobx-async-computed/src"],
       "mobx-observed": ["packages/mobx-observed/src"],
       "ts-decorator-manipulator": ["packages/ts-decorator-manipulator/src"],
+      "mobx-annotation-manipulator": ["packages/mobx-annotation-manipulator/src"],
       "mobx-react-class-component": ["packages/mobx-react-class-component/src"],
       "$test/*": ["test/*"]
     }

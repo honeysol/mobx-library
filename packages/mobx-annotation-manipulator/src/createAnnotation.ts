@@ -1,79 +1,17 @@
-import type {
-  Annotation,
-  ObservableObjectAdministration,
-} from "mobx/dist/internal.d";
+import type { ObservableObjectAdministration } from "mobx/dist/internal.d";
 
 import {
   recordAnnotationApplied,
   storeAnnotation,
   storedAnnotationEnabled,
 } from "./storedAnnotation";
+import {
+  AnnotationFunction,
+  ObjectAnnotation,
+  PropertyAccessor,
+} from "./types";
 
-export interface PropertyAccessor<T> {
-  get(): T;
-  set?(value: T): void;
-  debugName?: PropertyKey;
-}
-
-interface ObjectAnnotation<T, R> {
-  (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
-}
-
-export interface ExtendedAnnotation<T, R> extends Annotation {
-  (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
-}
-
-export interface AnnotationFunction<T, R> extends Annotation {
-  (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
-  (
-    target: any,
-    propertyKey: PropertyKey,
-    descriptor: PropertyDescriptor
-  ): void | PropertyDescriptor;
-}
-
-export const assert: (
-  condition: any,
-  message: string,
-  object?: any
-) => asserts condition = (
-  condition: any,
-  message: string,
-  object?: any
-): asserts condition => {
-  if (!condition) {
-    console.error(message, object);
-    throw new Error(message);
-  }
-};
-
-const getPropertyWithDefault = <R>(
-  target: any,
-  key: PropertyKey,
-  callback: () => R
-): R => {
-  if (!target[key]) {
-    target[key] = callback();
-  }
-  return target[key];
-};
-
-const objectAnnotationsKey = Symbol("mobxObjectAnnotation");
-
-const bindAccessor = <T>(
-  target: any,
-  accessor: TypedPropertyDescriptor<T>,
-  debugName: PropertyKey
-) => {
-  return {
-    get: ((accessor?.get ||
-      (typeof accessor?.value === "function"
-        ? accessor?.value
-        : null)) as any)?.bind(target),
-    set: accessor?.set?.bind(target),
-    debugName,
-  };
-};
+const objectAnnotationsKey = Symbol("mobx-object-annotation");
 
 export function createAnnotation<T, R>(
   objectAnnotation: ObjectAnnotation<T, R>,
@@ -170,4 +108,30 @@ const traverseDescriptor = (_source: any, key: PropertyKey) => {
     }
     source = Object.getPrototypeOf(source);
   }
+};
+
+const bindAccessor = <T>(
+  target: any,
+  accessor: TypedPropertyDescriptor<T>,
+  debugName: PropertyKey
+) => {
+  return {
+    get: ((accessor?.get ||
+      (typeof accessor?.value === "function"
+        ? accessor?.value
+        : null)) as any)?.bind(target),
+    set: accessor?.set?.bind(target),
+    debugName,
+  };
+};
+
+const getPropertyWithDefault = <R>(
+  target: any,
+  key: PropertyKey,
+  callback: () => R
+): R => {
+  if (!target[key]) {
+    target[key] = callback();
+  }
+  return target[key];
 };

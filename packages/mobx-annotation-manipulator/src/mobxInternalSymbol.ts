@@ -1,13 +1,9 @@
 import { computed } from "mobx";
 
 const { storedAnnotationKey } = (() => {
-  class C {
-    @computed
-    get dammy() {
-      return null;
-    }
-  }
-  const storedAnnotationKey = Object.getOwnPropertySymbols(C.prototype).find(
+  const prototype = {};
+  computed(prototype, "dammy");
+  const storedAnnotationKey = Object.getOwnPropertySymbols(prototype).find(
     (key) => key.description === "mobx-stored-annotations"
   );
   return { storedAnnotationKey };

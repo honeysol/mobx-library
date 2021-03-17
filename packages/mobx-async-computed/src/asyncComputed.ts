@@ -3,9 +3,9 @@ import {
   assert,
   createAnnotation,
   ExtendedAnnotation,
-  observed,
   PropertyAccessor,
-} from "mobx-observed";
+} from "mobx-annotation-manipulator";
+import { observed } from "mobx-observed";
 
 import { AsyncCommitter } from "./asyncCommitter";
 

@@ -1,11 +1,10 @@
 import { computed, createAtom, observable } from "mobx";
-
 import {
   assert,
   createAnnotation,
   ExtendedAnnotation,
   PropertyAccessor,
-} from "./util";
+} from "mobx-annotation-manipulator";
 
 export const becomeObservedObject = <T>(
   handler: () => () => void | null,

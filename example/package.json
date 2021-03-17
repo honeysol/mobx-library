@@ -19,7 +19,8 @@
     "mobx-async-computed": "../packages/mobx-async-computed",
     "mobx-observed": "../packages/mobx-observed",
     "mobx-react-class-component": "../packages/mobx-react-class-component",
-    "ts-decorator-manipulator": "../packages/ts-decorator-manipulator"
+    "ts-decorator-manipulator": "../packages/ts-decorator-manipulator",
+    "mobx-annotation-manipulator": "../packages/mobx-annotation-manipulator"
   },
   "devDependencies": {
     "@types/react": "^16.9.11",
