@@ -1,8 +1,8 @@
 import { computed } from "mobx";
 import {
+  AnnotationFunction,
   assert,
   createAnnotation,
-  ExtendedAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 import { observed } from "mobx-observed";
@@ -32,22 +32,22 @@ const asyncComputedObject = <T>() => (
   return asyncComputedPrimitive<T>()(computed(accessor.get));
 };
 
-const asyncComputedFromObject = <T>(propertyKey: string | symbol) => (
-  accessor?: PropertyAccessor<Promise<T> | undefined>,
+const asyncComputedFromObject = (propertyKey: string | symbol) => (
+  accessor?: PropertyAccessor<Promise<any> | undefined>,
   context?: any
-): PropertyAccessor<T | undefined> => {
+): PropertyAccessor<any | undefined> => {
   assert(!accessor?.get, "Accessor have get property");
-  return asyncComputedPrimitive<T>()({
-    get(): Promise<T> | undefined {
+  return asyncComputedPrimitive<any>()({
+    get(): Promise<any> | undefined {
       return context?.[propertyKey];
     },
   });
 };
 
-export const asyncComputedFrom = <T>(
+export const asyncComputedFrom = (
   propertyKey: symbol | string
-): ExtendedAnnotation<Promise<T> | undefined, T | undefined> =>
-  createAnnotation(asyncComputedFromObject<T>(propertyKey), {
+): AnnotationFunction<Promise<any> | undefined, any | undefined> =>
+  createAnnotation(asyncComputedFromObject(propertyKey), {
     annotationType: "asyncComputedFrom",
   });
 

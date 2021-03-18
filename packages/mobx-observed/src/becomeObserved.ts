@@ -1,8 +1,8 @@
 import { computed, createAtom, observable } from "mobx";
 import {
+  AnnotationFunction,
   assert,
   createAnnotation,
-  ExtendedAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 
@@ -37,7 +37,7 @@ export const becomeObservedObject = <T>(
 export const becomeObserved = <T>(
   handler: () => () => void | null,
   cancelHandler?: () => void
-): ExtendedAnnotation<T, T> => {
+): AnnotationFunction<T, T> => {
   return createAnnotation<T, T>(becomeObservedObject(handler, cancelHandler), {
     annotationType: "becomeObserved",
   });

@@ -8,18 +8,18 @@ import {
 
 import { becomeObserved } from "./becomeObserved";
 
-interface ObserveParams {
+interface ObserveParams<T> {
   change?: ({
     newValue,
     oldValue,
     type,
   }: {
-    newValue?: any;
-    oldValue?: any;
+    newValue?: T;
+    oldValue?: T;
     type: "change";
   }) => void;
-  enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
-  leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
+  enter?: ({ oldValue, type }: { oldValue?: T; type: "enter" }) => void;
+  leave?: ({ oldValue, type }: { oldValue?: T; type: "leave" }) => void;
 }
 
 interface ObservAsyncParams<T, S> {
@@ -41,48 +41,33 @@ interface ObservAsyncParams<T, S> {
   ) => void;
 }
 
-const observedObject = <T>({
-  change,
-  enter,
-  leave,
-}: {
-  change?: ({
-    newValue,
-    oldValue,
-    type,
-  }: {
-    newValue?: any;
-    oldValue?: any;
-    type: "change";
-  }) => void;
-  enter?: ({ oldValue, type }: { oldValue?: any; type: "enter" }) => void;
-  leave?: ({ oldValue, type }: { oldValue?: any; type: "leave" }) => void;
-}) => (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
+const observedObject = <T>({ change, enter, leave }: ObserveParams<T>) => (
+  accessor?: PropertyAccessor<T>,
+  context?: any
+): PropertyAccessor<T> => {
   assert(accessor?.get, "accessor doesn't have get property", accessor);
-  const getter = () => accessor.get();
-  const newDescriptor = becomeObserved<T>(
-    function () {
-      enter?.({ oldValue: getter(), type: "enter" });
-      return () => {};
+  let oldValue: T | undefined = undefined;
+  return becomeObserved<T>(function(this: any) {
+    enter?.call(this, { oldValue, type: "enter" });
+    return () => {
+      leave?.call(this, { oldValue, type: "leave" });
+    };
+  })(
+    {
+      get(): T {
+        const newValue = accessor.get();
+        if (oldValue !== newValue) {
+          change?.call(this, { oldValue, newValue, type: "change" });
+        }
+        oldValue = newValue;
+        return newValue;
+      },
+      set(value: T) {
+        accessor.set?.(value);
+      },
     },
-    function () {
-      leave?.({ oldValue: getter(), type: "leave" });
-      return () => {};
-    }
-  )(accessor, context);
-  return {
-    set(value: any) {
-      change?.({
-        newValue: value,
-        oldValue: newDescriptor.get?.(),
-        type: "change",
-      });
-      newDescriptor.set?.(value);
-    },
-    get() {
-      return newDescriptor.get?.();
-    },
-  };
+    context
+  );
 };
 
 const observedObjectAsync = <T, S>({
@@ -94,12 +79,12 @@ const observedObjectAsync = <T, S>({
   context?: any
 ): PropertyAccessor<S> => {
   assert(accessor?.get, "accessor doesn't have get property", accessor);
-  const resolvedAccessor = observable.box(undefined as S | undefined, {
+  const resultAccessor = observable.box(undefined as S | undefined, {
     deep: false,
   });
-  return becomeObserved<S>(function (this: any) {
+  return becomeObserved<S>(function(this: any) {
     const setter = action((value: S) => {
-      resolvedAccessor.set?.(value);
+      resultAccessor.set?.(value);
     });
     const getter = () => accessor.get();
     enter?.call(this, { oldValue: getter(), type: "enter" }, setter);
@@ -118,8 +103,28 @@ const observedObjectAsync = <T, S>({
       cancelObserve();
       leave?.call(this, { oldValue: getter(), type: "leave" }, setter);
     };
-  })(resolvedAccessor, context);
+  })(resultAccessor, context);
 };
+
+// MobX6 Annotations
+
+export const observed = <T>(
+  param: ObserveParams<T>
+): AnnotationFunction<T, T> => {
+  return createAnnotation<T, T>(observedObject<T>(param), {
+    annotationType: "observed",
+  });
+};
+
+const observedAsync = <T, S>(
+  param: ObservAsyncParams<T, S>
+): AnnotationFunction<T, S> => {
+  return createAnnotation<T, S>(observedObjectAsync(param), {
+    annotationType: "observed.async",
+  });
+};
+
+// compound annotations
 
 const observedObjectAsyncComputed = <T, S>({
   change,
@@ -137,35 +142,6 @@ const observedObjectAsyncComputed = <T, S>({
   })(computed(accessor.get), context);
 };
 
-const observedAutoclose = <T>(handler: (oldValue: T) => void) => {
-  const wrappedHandler = ({
-    oldValue,
-    newValue,
-  }: {
-    oldValue?: any;
-    newValue?: any;
-  }) => {
-    if (oldValue && oldValue !== newValue) {
-      handler(oldValue);
-    }
-  };
-  return observed<T>({ leave: wrappedHandler, change: wrappedHandler });
-};
-
-export const observed = <T>(param: ObserveParams): AnnotationFunction<T, T> => {
-  return createAnnotation<T, T>(observedObject(param), {
-    annotationType: "observed",
-  });
-};
-
-const observedAsync = <T, S>(
-  param: ObservAsyncParams<T, S>
-): AnnotationFunction<T, S> => {
-  return createAnnotation<T, S>(observedObjectAsync(param), {
-    annotationType: "observed",
-  });
-};
-
 observedAsync.computed = <T, S>(
   param: ObservAsyncParams<T, S>
 ): AnnotationFunction<T, S> => {
@@ -174,12 +150,41 @@ observedAsync.computed = <T, S>(
   });
 };
 
-observed.async = observedAsync;
+const observedObjectComputed = <T>(params: ObserveParams<T>) => (
+  accessor?: PropertyAccessor<T>,
+  context?: any
+): PropertyAccessor<T> => {
+  assert(accessor?.get, "accessor doesn't have get property", accessor);
+  return observedObject<T>(params)(computed(accessor.get), context);
+};
 
-observed.computed = <T>(
-  param: (oldValue: T) => void
-): AnnotationFunction<T, T> => {
-  return createAnnotation<T, T>(observedAutoclose(param), {
+observed.computed = <T>(param: ObserveParams<T>): AnnotationFunction<T, T> => {
+  return createAnnotation<T, T>(observedObjectComputed(param), {
     annotationType: "observed.computed",
   });
 };
+
+// derived annotations
+
+observed.autoclose = <T>(handler: (oldValue: T) => void) => {
+  const wrappedHandler = ({
+    oldValue,
+    newValue,
+  }: {
+    oldValue?: T;
+    newValue?: T;
+  }) => {
+    if (oldValue) {
+      handler(oldValue);
+    }
+    return newValue;
+  };
+  return observed.computed<T>({
+    leave: wrappedHandler,
+    change: wrappedHandler,
+  });
+};
+
+// nested object
+
+observed.async = observedAsync;

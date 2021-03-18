@@ -1,5 +1,6 @@
 import type { Annotation } from "mobx/dist/internal.d";
 
+/*  eslint-disable @typescript-eslint/ban-types */
 export interface PropertyAccessor<T> {
   get(): T;
   set?(value: T): void;
@@ -7,18 +8,18 @@ export interface PropertyAccessor<T> {
 }
 
 export interface ObjectAnnotation<T, R> {
-  (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
+  (accessor?: PropertyAccessor<T>, context?: object): PropertyAccessor<R>;
 }
 
 export interface ExtendedAnnotation<T, R> extends Annotation {
-  (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
+  (accessor?: PropertyAccessor<T>, context?: object): PropertyAccessor<R>;
 }
 
 export interface AnnotationFunction<T, R> extends Annotation {
-  (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<R>;
-  (
-    target: any,
+  (accessor?: PropertyAccessor<T>, context?: object): PropertyAccessor<R>;
+  <T extends object, K>(
+    target: T,
     propertyKey: PropertyKey,
-    descriptor: PropertyDescriptor
-  ): void | PropertyDescriptor;
+    descriptor?: TypedPropertyDescriptor<K>
+  ): void | any;
 }
