@@ -3,8 +3,6 @@ import {
   autorun,
   computed,
   configure,
-  createAtom,
-  getObserverTree,
   makeObservable,
   observable,
   runInAction,
