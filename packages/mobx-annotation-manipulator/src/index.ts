@@ -4,5 +4,6 @@ export {
   ExtendedAnnotation,
   ObjectAnnotation,
   AnnotationFunction,
+  AnnotationFunctionPromise,
 } from "./types";
 export { createAnnotation } from "./createAnnotation";

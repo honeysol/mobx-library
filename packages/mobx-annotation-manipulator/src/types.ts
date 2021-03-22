@@ -23,3 +23,15 @@ export interface AnnotationFunction<T, R> extends Annotation {
     descriptor?: TypedPropertyDescriptor<K>
   ): void | any;
 }
+
+export interface AnnotationFunctionPromise extends Annotation {
+  <T>(
+    accessor?: PropertyAccessor<Promise<T>>,
+    context?: object
+  ): PropertyAccessor<T>;
+  <T extends object, K>(
+    target: T,
+    propertyKey: PropertyKey,
+    descriptor?: TypedPropertyDescriptor<K>
+  ): void | any;
+}

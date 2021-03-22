@@ -1,6 +1,7 @@
 import { computed } from "mobx";
 import {
   AnnotationFunction,
+  AnnotationFunctionPromise,
   assert,
   createAnnotation,
   PropertyAccessor,
@@ -32,34 +33,37 @@ const asyncComputedObject = <T>() => (
   return asyncComputedPrimitive<T>()(computed(accessor.get));
 };
 
-const asyncComputedFromObject = (propertyKey: string | symbol) => (
-  accessor?: PropertyAccessor<Promise<any> | undefined>,
+const asyncComputedFromObject = <T>(propertyKey: string | symbol) => (
+  accessor?: PropertyAccessor<Promise<T> | undefined>,
   context?: any
-): PropertyAccessor<any | undefined> => {
+): PropertyAccessor<T | undefined> => {
   assert(!accessor?.get, "Accessor have get property");
   return asyncComputedPrimitive<any>()({
-    get(): Promise<any> | undefined {
+    get(): Promise<T> | undefined {
       return context?.[propertyKey];
     },
   });
 };
 
-export const asyncComputedFrom = (
+export const asyncComputedFrom = <T>(
   propertyKey: symbol | string
-): AnnotationFunction<Promise<any> | undefined, any | undefined> =>
-  createAnnotation(asyncComputedFromObject(propertyKey), {
-    annotationType: "asyncComputedFrom",
-  });
+): AnnotationFunction<Promise<T>, T | undefined> =>
+  createAnnotation<Promise<T>, T | undefined>(
+    asyncComputedFromObject<T>(propertyKey),
+    {
+      annotationType: "asyncComputedFrom",
+    }
+  );
 
 export const asyncComputed = createAnnotation(asyncComputedObject(), {
   annotationType: "asyncComputed",
-});
+}) as AnnotationFunctionPromise;
 
-type ResolvedType<T extends Promise<any>> = T extends Promise<infer P>
+type ResolvedType<T extends Promise<unknown>> = T extends Promise<infer P>
   ? P
   : never;
 
-export const resolveType = <T extends Promise<any>>(
+export const resolveType = <T extends Promise<unknown>>(
   value: T
 ): ResolvedType<T> => {
   return value as any;
