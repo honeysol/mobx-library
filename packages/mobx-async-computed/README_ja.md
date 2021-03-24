@@ -8,6 +8,8 @@ MobXのフィールドを非同期に解決します。非同期の順序処理�
 
 MobX5 decorator, MobX6 decorator, MobX6 annotationのいずれにも対応します。MobX6 decoratorでは、makeObservable / makeObservableによる初期化が必要です。
 
+## Example
+
 ```js
 class Sample{
   // Usage1: Without annotation
