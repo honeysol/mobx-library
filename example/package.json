@@ -12,15 +12,16 @@
     "react-app-polyfill": "^1.0.0"
   },
   "alias": {
+    "mobx": "./node_modules/mobx",
     "react": "../node_modules/react",
     "react-dom": "../node_modules/react-dom/profiling",
     "scheduler/tracing": "../node_modules/scheduler/tracing-profiling",
-    "mobx": "./node_modules/mobx",
     "mobx-async-computed": "../packages/mobx-async-computed",
     "mobx-observed": "../packages/mobx-observed",
     "mobx-react-class-component": "../packages/mobx-react-class-component",
     "ts-decorator-manipulator": "../packages/ts-decorator-manipulator",
-    "mobx-annotation-manipulator": "../packages/mobx-annotation-manipulator"
+    "mobx-annotation-manipulator": "../packages/mobx-annotation-manipulator",
+    "mobx-resource-cache": "../packages/mobx-resource-cache"
   },
   "devDependencies": {
     "@types/react": "^16.9.11",
