@@ -47,7 +47,7 @@ const observedObject = <T>({ change, enter, leave }: ObserveParams<T>) => (
 ): PropertyAccessor<T> => {
   assert(accessor?.get, "accessor doesn't have get property", accessor);
   let oldValue: T | undefined = undefined;
-  return becomeObserved<T>(function(this: any) {
+  return becomeObserved<T>(function (this: any) {
     enter?.call(this, { oldValue, type: "enter" });
     return () => {
       leave?.call(this, { oldValue, type: "leave" });
@@ -82,7 +82,7 @@ const observedObjectAsync = <T, S>({
   const resultAccessor = observable.box(undefined as S | undefined, {
     deep: false,
   });
-  return becomeObserved<S>(function(this: any) {
+  return becomeObserved<S>(function (this: any) {
     const setter = action((value: S) => {
       resultAccessor.set?.(value);
     });
@@ -166,23 +166,44 @@ observed.computed = <T>(param: ObserveParams<T>): AnnotationFunction<T, T> => {
 
 // derived annotations
 
-observed.autoclose = <T>(handler: (oldValue: T) => void) => {
-  const wrappedHandler = ({
-    oldValue,
-    newValue,
-  }: {
-    oldValue?: T;
-    newValue?: T;
-  }) => {
-    if (oldValue) {
-      handler(oldValue);
-    }
-    return newValue;
-  };
-  return observed.computed<T>({
-    leave: wrappedHandler,
-    change: wrappedHandler,
-  });
+observed.autoclose = <T>(handler: (oldValue: T) => void, delay?: number) => {
+  const close = (value: T | undefined) => value && handler(value);
+  if (typeof delay === "number") {
+    let canceler: NodeJS.Timeout | undefined = undefined;
+    const startTimer = (value: T | undefined) => {
+      cancelTimer();
+      canceler = setTimeout(() => {
+        cancelTimer();
+        close(value);
+      }, delay);
+    };
+    const cancelTimer = () => {
+      if (canceler) {
+        clearTimeout(canceler);
+        canceler = undefined;
+      }
+    };
+    return observed.computed<T>({
+      leave: ({ oldValue }) => {
+        startTimer(oldValue);
+      },
+      enter: () => {
+        cancelTimer();
+      },
+      change: ({ oldValue }) => {
+        close(oldValue);
+      },
+    });
+  } else {
+    return observed.computed<T>({
+      leave: ({ oldValue }) => {
+        close(oldValue);
+      },
+      change: ({ oldValue }) => {
+        close(oldValue);
+      },
+    });
+  }
 };
 
 // nested object

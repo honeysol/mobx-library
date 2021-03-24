@@ -11,6 +11,7 @@
       "ts-decorator-manipulator": ["packages/ts-decorator-manipulator/src"],
       "mobx-annotation-manipulator": ["packages/mobx-annotation-manipulator/src"],
       "mobx-react-class-component": ["packages/mobx-react-class-component/src"],
+      "mobx-resource-cache": ["packages/mobx-resource-cache/src"],
       "$test/*": ["test/*"]
     }
   }

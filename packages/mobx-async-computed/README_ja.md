@@ -8,24 +8,28 @@ MobXのフィールドを非同期に解決します。非同期の順序処理�
 
 MobX5 decorator, MobX6 decorator, MobX6 annotationのいずれにも対応します。MobX6 decoratorでは、makeObservable / makeObservableによる初期化が必要です。
 
+## Example
+
 ```js
 class Sample{
-  // Usage1: Use the both of resolved value and unresolved promise.(Recommended)
+  // Usage1: Without annotation
+  computed = asyncComputed(() => delay(100, 10));
+  get resolve3 (): number {
+    return computed.get();
+  }
+
+// Usage2: Use the both of resolved value and unresolved promise.
   @computed
   get promise1 (): Promise<number> {
     return delay(100, 10);
   }
   @asyncComputedFrom ("promise1")
   resolved1: number;
-  // Usage2: Simple case
+
+  // Usage3: Simple annotation (not recommended in TypeScript)
   @asyncComputed
   get resolved2 (): number {
     return delay(100, 10) as any;
-  }
-  // Usage3: Resolve type mismatch
-  @asyncComputed
-  get resolved3 (): number {
-    return resolveType(delay(100, 10));
   }
 }
 ```
@@ -38,9 +42,4 @@ class Sample{
 ### @asyncComputed
 _Typescriptでは非推奨_
 
-Promiseを解決した値を取得します。ただし、Typescriptでは、デコレータによる型の変更に対応していないため、型を調整するためには、resolveTypeを使う必要があります。実際の型と表現上の型が一致しなくなるため、Typescriptでは推奨しません。
-
-### resolveType(value: T): ResolvedType<T>
-_Typescriptでは非推奨_
-
-与えられたPromiseを、そのまま返します。ただし、型だけは解決された型に偽装します。asyncComputedとともに使います。
+Promiseを解決した値を取得します。ただし、Typescriptでは、デコレータによる型の変更に対応しておらず、実際の型と表現上の型が一致しなくなるため、Typescriptでは推奨しません。
