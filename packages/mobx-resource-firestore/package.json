@@ -1,0 +1,42 @@
+{
+  "name": "mobx-resource-firestore",
+  "version": "1.0.0-alpha.12",
+  "description": "Decorators to resolve MobX fields asynchronously.",
+  "author": "norami",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/honeysol/mobx-library.git",
+    "directory": "packages/mobx-resource-firestore"
+  },
+  "scripts": {
+    "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
+    "build": "tsdx build --tsconfig tsconfig.build.json",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepublish": "npm run build"
+  },
+  "main": "dist/index.js",
+  "module": "dist/mobx-resource-firestore.esm.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "peerDependencies": {
+    "firebase": ">=8",
+    "mobx": ">=5"
+  },
+  "devDependencies": {
+    "firebase": "^8.3.0",
+    "mobx": "^6.1.8"
+  },
+  "dependencies": {
+    "mobx-async-computed": "^1.0.0-alpha.12",
+    "mobx-observed": "^1.0.0-alpha.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "ca8c40bee3bc649e32f3ca7ccc2ec07bdc78cbb1"
+}
