@@ -12,11 +12,11 @@ import {
   ExtendedAsymmetricAnnotation,
   ExtendedBaseAnnotation,
   ExtendedConversionAnnotation,
-  ExtendedObjectAnnotation,
   ExtendedPromiseAnnotation,
-  ObjectAnnotation,
+  ExtendedSymmetricAnnotation,
   PromiseAnnotation,
   PropertyAccessor,
+  SymmetricAnnotation,
 } from "./types";
 
 const objectAnnotationsKey = Symbol("mobx-object-annotation");
@@ -33,7 +33,7 @@ export const createBaseAnnotation = <T, R>(
   ) => PropertyDescriptor,
   asFunction?: boolean
 ) => (
-  objectAnnotation: BaseAnnotation<T, R>,
+  annotation: BaseAnnotation<T, R>,
   { annotationType }: { annotationType: string }
 ): ExtendedBaseAnnotation<T, R> => {
   const annotate = (
@@ -41,11 +41,11 @@ export const createBaseAnnotation = <T, R>(
     key: PropertyKey,
     descriptor?: PropertyDescriptor
   ) => {
-    const _descriptor = annotator(objectAnnotation, source, key, descriptor);
+    const _descriptor = annotator(annotation, source, key, descriptor);
     Object.defineProperty(source, key, _descriptor);
     return !!_descriptor;
   };
-  const annotation = Object.assign(
+  const extendedAnnotation = Object.assign(
     ((
       target: context,
       key: string | symbol,
@@ -53,10 +53,10 @@ export const createBaseAnnotation = <T, R>(
     ) => {
       if (typeof key !== "string" && typeof key !== "symbol") {
         // delegate original objectAnnotation
-        return objectAnnotation(target as any, key);
+        return annotation(target as any, key);
       } else if (storedAnnotationEnabled) {
         // simulate MobX6 decorator (initialized with mobx.makeObservable or mobx.makeAutoObservable)
-        storeAnnotation.call(target, key, annotation);
+        storeAnnotation.call(target, key, extendedAnnotation);
       } else {
         // simulate MobX5 decorator (initialized in first access)
         const getObjectAnnotation = function (this: context) {
@@ -66,7 +66,7 @@ export const createBaseAnnotation = <T, R>(
             () => ({})
           );
           return getPropertyWithDefault(objectAnnotations, key, () =>
-            annotator(objectAnnotation, this, key, descriptor)
+            annotator(annotation, this, key, descriptor)
           );
         };
         if (!asFunction) {
@@ -99,7 +99,7 @@ export const createBaseAnnotation = <T, R>(
         const source = adm.target_;
         const descriptor = traverseDescriptor(source, key);
         if (annotate(source, key, descriptor)) {
-          recordAnnotationApplied(adm, annotation, key);
+          recordAnnotationApplied(adm, extendedAnnotation, key);
         } else {
           throw Error(
             `Annotation ${annotationType} cannot apply to ${key.toString()}`
@@ -116,13 +116,13 @@ export const createBaseAnnotation = <T, R>(
       },
     }
   );
-  return annotation;
+  return extendedAnnotation;
 };
 
-export const createAnnotation = <T>(
-  objectAnnotation: ObjectAnnotation<T>,
+export const createSymmetricAnnotation = <T>(
+  objectAnnotation: SymmetricAnnotation<T>,
   { annotationType }: { annotationType: string }
-): ExtendedObjectAnnotation<T> => {
+): ExtendedSymmetricAnnotation<T> => {
   return createBaseAnnotation<PropertyAccessor<T>, PropertyAccessor<T>>(
     (
       annotation: BaseAnnotation<PropertyAccessor<T>, PropertyAccessor<T>>,

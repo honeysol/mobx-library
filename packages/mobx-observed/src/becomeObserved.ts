@@ -1,8 +1,8 @@
 import { computed, createAtom, observable } from "mobx";
 import {
   assert,
-  createAnnotation,
-  ExtendedObjectAnnotation,
+  createSymmetricAnnotation,
+  ExtendedSymmetricAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 
@@ -40,17 +40,20 @@ export const becomeObservedObject = (
 export const becomeObserved = <T>(
   handler: () => () => void | null,
   cancelHandler?: () => void
-): ExtendedObjectAnnotation<T> => {
-  return createAnnotation<T>(becomeObservedObject(handler, cancelHandler), {
-    annotationType: "becomeObserved",
-  });
+): ExtendedSymmetricAnnotation<T> => {
+  return createSymmetricAnnotation<T>(
+    becomeObservedObject(handler, cancelHandler),
+    {
+      annotationType: "becomeObserved",
+    }
+  );
 };
 
 becomeObserved.observable = <TT>(
   handler: () => () => void | null,
   cancelHandler?: () => void
 ) => {
-  return createAnnotation<TT>(
+  return createSymmetricAnnotation<TT>(
     <T extends TT>(
       _accessor?: PropertyAccessor<T>,
       context?: any
@@ -70,7 +73,7 @@ becomeObserved.computed = <TT>(
   handler: () => () => void | null,
   cancelHandler?: () => void
 ) => {
-  return createAnnotation<TT>(
+  return createSymmetricAnnotation<TT>(
     <T extends TT>(
       accessor?: PropertyAccessor<T>,
       context?: any

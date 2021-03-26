@@ -1,10 +1,10 @@
 import { action, computed, observable, reaction } from "mobx";
 import {
   assert,
-  createAnnotation,
   createAsymmetricAnnotation,
+  createSymmetricAnnotation,
   ExtendedAsymmetricAnnotation,
-  ExtendedObjectAnnotation,
+  ExtendedSymmetricAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 
@@ -112,7 +112,7 @@ const observedObjectAsync = <T, S>({
 
 export const observed = <T>(
   param: ObserveParams<T>
-): ExtendedObjectAnnotation<T> => {
+): ExtendedSymmetricAnnotation<T> => {
   return createAsymmetricAnnotation<T, T>(observedObject<T>(param), {
     annotationType: "observed",
   });
@@ -164,8 +164,8 @@ const observedObjectComputed = <TT>(params: ObserveParams<TT>) => <
 
 observed.computed = <T>(
   param: ObserveParams<T>
-): ExtendedObjectAnnotation<T> => {
-  return createAnnotation<T>(observedObjectComputed(param), {
+): ExtendedSymmetricAnnotation<T> => {
+  return createSymmetricAnnotation<T>(observedObjectComputed(param), {
     annotationType: "observed.computed",
   });
 };

@@ -17,7 +17,7 @@ export type AsymmetricAnnotation<T, S> = (
   context?: object
 ) => PropertyAccessor<S>;
 
-export type ObjectAnnotation<TT> = <T extends TT>(
+export type SymmetricAnnotation<TT> = <T extends TT>(
   params: PropertyAccessor<T>,
   context?: object
 ) => PropertyAccessor<T>;
@@ -47,10 +47,10 @@ export interface ExtendedBaseAnnotation<P, R>
     Decorator,
     BaseAnnotation<P, R> {}
 
-export interface ExtendedObjectAnnotation<T>
+export interface ExtendedSymmetricAnnotation<T>
   extends Annotation,
     Decorator,
-    ObjectAnnotation<T> {}
+    SymmetricAnnotation<T> {}
 
 export interface ExtendedConversionAnnotation<A extends unknown[], R>
   extends Annotation,

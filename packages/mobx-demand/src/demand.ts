@@ -1,8 +1,8 @@
 import { createAtom, IAtom } from "mobx";
 import {
   assert,
-  createAnnotation,
-  ExtendedObjectAnnotation,
+  createSymmetricAnnotation,
+  ExtendedSymmetricAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 
@@ -92,8 +92,8 @@ export const demand = <TT>({
   cleanUpFn?: (value: TT) => void;
   delay?: number;
   name?: string;
-}): ExtendedObjectAnnotation<TT> => {
-  return createAnnotation<TT>(
+}): ExtendedSymmetricAnnotation<TT> => {
+  return createSymmetricAnnotation<TT>(
     <T extends TT>(accessor?: PropertyAccessor<T>) => {
       assert(accessor?.get, "accessor doesn't have get property", accessor);
       return new Demand<T>({
