@@ -6,7 +6,7 @@ export class AsyncCommitter<T> {
   requestId = 0;
   commitId = 0;
   async resolve(
-    promise: Promise<T> | undefined
+    promise: Promise<T | undefined> | T | undefined
   ): Promise<AsyncCommiterResult<T>> {
     this.requestId += 1;
     const currentRequestId = this.requestId;

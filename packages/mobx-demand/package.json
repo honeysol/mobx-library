@@ -1,13 +1,13 @@
 {
-  "name": "mobx-resource-cache",
+  "name": "mobx-demand",
   "version": "1.0.0-alpha.13",
-  "description": "Resource cache based on MobX, which supports an automatic genaration and clean-up of resource, lazy clean-up and a customized clean-up function",
+  "description": "This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.",
   "author": "norami",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/honeysol/mobx-library.git",
-    "directory": "packages/mobx-resource-cache"
+    "directory": "packages/mobx-demand"
   },
   "scripts": {
     "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
@@ -17,7 +17,7 @@
     "prepublish": "npm run build"
   },
   "main": "dist/index.js",
-  "module": "dist/mobx-resource-cache.esm.js",
+  "module": "dist/mobx-demand.esm.js",
   "typings": "dist/index.d.ts",
   "files": [
     "README.md",

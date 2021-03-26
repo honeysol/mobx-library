@@ -1,8 +1,10 @@
 import { action, computed, observable, reaction } from "mobx";
 import {
-  AnnotationFunction,
   assert,
   createAnnotation,
+  createAsymmetricAnnotation,
+  ExtendedAsymmetricAnnotation,
+  ExtendedObjectAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 
@@ -79,7 +81,7 @@ const observedObjectAsync = <T, S>({
   context?: any
 ): PropertyAccessor<S> => {
   assert(accessor?.get, "accessor doesn't have get property", accessor);
-  const resultAccessor = observable.box(undefined as S | undefined, {
+  const resultAccessor = observable.box<S>(undefined, {
     deep: false,
   });
   return becomeObserved<S>(function (this: any) {
@@ -110,16 +112,16 @@ const observedObjectAsync = <T, S>({
 
 export const observed = <T>(
   param: ObserveParams<T>
-): AnnotationFunction<T, T> => {
-  return createAnnotation<T, T>(observedObject<T>(param), {
+): ExtendedObjectAnnotation<T> => {
+  return createAsymmetricAnnotation<T, T>(observedObject<T>(param), {
     annotationType: "observed",
   });
 };
 
 const observedAsync = <T, S>(
   param: ObservAsyncParams<T, S>
-): AnnotationFunction<T, S> => {
-  return createAnnotation<T, S>(observedObjectAsync(param), {
+): ExtendedAsymmetricAnnotation<T, S> => {
+  return createAsymmetricAnnotation<T, S>(observedObjectAsync(param), {
     annotationType: "observed.async",
   });
 };
@@ -144,13 +146,15 @@ const observedObjectAsyncComputed = <T, S>({
 
 observedAsync.computed = <T, S>(
   param: ObservAsyncParams<T, S>
-): AnnotationFunction<T, S> => {
-  return createAnnotation<T, S>(observedObjectAsyncComputed(param), {
+): ExtendedAsymmetricAnnotation<T, S> => {
+  return createAsymmetricAnnotation<T, S>(observedObjectAsyncComputed(param), {
     annotationType: "observed.async.computed",
   });
 };
 
-const observedObjectComputed = <T>(params: ObserveParams<T>) => (
+const observedObjectComputed = <TT>(params: ObserveParams<TT>) => <
+  T extends TT
+>(
   accessor?: PropertyAccessor<T>,
   context?: any
 ): PropertyAccessor<T> => {
@@ -158,8 +162,10 @@ const observedObjectComputed = <T>(params: ObserveParams<T>) => (
   return observedObject<T>(params)(computed(accessor.get), context);
 };
 
-observed.computed = <T>(param: ObserveParams<T>): AnnotationFunction<T, T> => {
-  return createAnnotation<T, T>(observedObjectComputed(param), {
+observed.computed = <T>(
+  param: ObserveParams<T>
+): ExtendedObjectAnnotation<T> => {
+  return createAnnotation<T>(observedObjectComputed(param), {
     annotationType: "observed.computed",
   });
 };
@@ -183,8 +189,8 @@ observed.autoclose = <T>(handler: (oldValue: T) => void, delay?: number) => {
         canceler = undefined;
       }
     };
-    return observed.computed<T>({
-      leave: ({ oldValue }) => {
+    return observed.async.computed<T, T>({
+      leave: ({ oldValue }, setter) => {
         startTimer(oldValue);
       },
       enter: () => {

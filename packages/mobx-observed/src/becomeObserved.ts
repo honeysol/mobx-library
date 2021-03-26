@@ -1,15 +1,18 @@
 import { computed, createAtom, observable } from "mobx";
 import {
-  AnnotationFunction,
   assert,
   createAnnotation,
+  ExtendedObjectAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
 
-export const becomeObservedObject = <T>(
+export const becomeObservedObject = (
   handler: () => () => void | null,
   cancelHandler?: () => void
-) => (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
+) => <T>(
+  accessor?: PropertyAccessor<T>,
+  context?: any
+): PropertyAccessor<T> => {
   assert(accessor?.get, "accessor doesn't have get property", accessor);
   assert(typeof handler === "function", "handler not specified");
   let canceler: (() => void) | null = null;
@@ -37,41 +40,44 @@ export const becomeObservedObject = <T>(
 export const becomeObserved = <T>(
   handler: () => () => void | null,
   cancelHandler?: () => void
-): AnnotationFunction<T, T> => {
-  return createAnnotation<T, T>(becomeObservedObject(handler, cancelHandler), {
+): ExtendedObjectAnnotation<T> => {
+  return createAnnotation<T>(becomeObservedObject(handler, cancelHandler), {
     annotationType: "becomeObserved",
   });
 };
 
-becomeObserved.observable = <T>(
+becomeObserved.observable = <TT>(
   handler: () => () => void | null,
   cancelHandler?: () => void
 ) => {
-  return createAnnotation<T, T>(
-    (
-      _accessor?: PropertyAccessor<unknown>,
+  return createAnnotation<TT>(
+    <T extends TT>(
+      _accessor?: PropertyAccessor<T>,
       context?: any
     ): PropertyAccessor<T> => {
       assert(!_accessor?.get, "accessor have get property", _accessor);
       const accessor = observable.box(undefined as T | undefined, {
         deep: false,
       });
-      return becomeObservedObject<T>(handler, cancelHandler)(accessor, context);
+      return becomeObservedObject(handler, cancelHandler)(accessor, context);
     },
     {
       annotationType: "becomeObserved",
     }
   );
 };
-becomeObserved.computed = <T>(
+becomeObserved.computed = <TT>(
   handler: () => () => void | null,
   cancelHandler?: () => void
 ) => {
-  return createAnnotation<T, T>(
-    (accessor?: PropertyAccessor<T>, context?: any): PropertyAccessor<T> => {
+  return createAnnotation<TT>(
+    <T extends TT>(
+      accessor?: PropertyAccessor<T>,
+      context?: any
+    ): PropertyAccessor<T> => {
       assert(accessor?.get, "accessor doesn't have get property", accessor);
       const computedAccessor = computed(accessor?.get);
-      return becomeObservedObject<T>(handler, cancelHandler)(
+      return becomeObservedObject(handler, cancelHandler)(
         computedAccessor,
         context
       );

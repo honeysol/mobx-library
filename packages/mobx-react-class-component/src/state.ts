@@ -24,7 +24,7 @@ const _stateWithOption = (options?: StateOption) => (
     (target as any).stateAnnotation[propertyKey] = options.annotation;
   }
   return watch(
-    function(this: any) {
+    function (this: any) {
       if (options?.canceler?.call(this, this[propertyKey])) {
         return;
       }

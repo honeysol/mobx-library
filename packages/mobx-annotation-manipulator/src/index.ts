@@ -1,9 +1,18 @@
 export { assert } from "./assert";
 export {
   PropertyAccessor,
-  ExtendedAnnotation,
+  ExtendedAsymmetricAnnotation,
+  ExtendedObjectAnnotation,
+  ExtendedPromiseAnnotation,
+  ExtendedConversionAnnotation,
+  AsymmetricAnnotation,
   ObjectAnnotation,
-  AnnotationFunction,
-  AnnotationFunctionPromise,
+  PromiseAnnotation,
+  ConversionAnnotation,
 } from "./types";
-export { createAnnotation } from "./createAnnotation";
+export {
+  createAnnotation,
+  createConversionAnnotation,
+  createAsymmetricAnnotation,
+  createPromiseAnnotation,
+} from "./createAnnotation";

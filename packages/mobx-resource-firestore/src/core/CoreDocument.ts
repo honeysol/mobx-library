@@ -9,18 +9,15 @@ type DocumentReference = firebase.firestore.DocumentReference;
 type DocumentSnapshot = firebase.firestore.DocumentSnapshot;
 
 class DocumentSession<R> {
-  @observable snapshot?: DocumentSnapshot;
   @observable promise?: Promise<R | undefined> | R;
-  @observable value?: R;
   cancelHandler?: () => void;
   constructor(documentRef: DocumentReference, downConverter: downConverter<R>) {
     this.promise = new Promise((resolve, reject) => {
       this.cancelHandler = documentRef.onSnapshot(
         (snapshot) => {
-          this.snapshot = snapshot;
-          this.promise = this.value = downConverter(snapshot);
+          this.promise = downConverter(snapshot);
           // this resolve is ignored in the secondary access for the specification of Promise API
-          resolve(this.value);
+          resolve(this.promise);
         },
         (error) => reject(error)
       );
@@ -45,6 +42,7 @@ export class CoreDocument<R> {
     this.documentRef = documentRef;
     this.downConverter = downConverter;
   }
+  // これだとsessionが終了した後、再開しない
   @observed.autoclose((session: DocumentSession<R>) => session.close())
   get session(): DocumentSession<R> | undefined {
     return (
@@ -68,12 +66,11 @@ export class CoreDocument<R> {
   delete(): Promise<void> | undefined {
     return this.documentRef?.delete();
   }
-  @computed
   get exists(): boolean | undefined {
-    return this.session?.snapshot?.exists;
+    return !!this.value;
   }
   async getExists(): Promise<boolean | undefined> {
     await this.promise;
-    return this.exists;
+    return !!this.value;
   }
 }

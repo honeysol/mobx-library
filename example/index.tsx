@@ -1,4 +1,6 @@
-import "./cache";
+// import "./cache";
+import "./memo";
+import "./firestore";
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";

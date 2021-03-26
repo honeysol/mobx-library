@@ -15,7 +15,7 @@ export const combineMethodDecorator = (
   };
 };
 
-const isClass = (target: any) => {
+const isClass = (target: unknown) => {
   return (
     typeof target === "object" &&
     Object.prototype.hasOwnProperty.call(target, "constructor")

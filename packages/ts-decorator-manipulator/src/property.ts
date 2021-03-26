@@ -24,10 +24,9 @@ const isClass = (target: any) => {
 };
 
 export type PropertyDecoratorGenerator<A> = (params: A) => PropertyDecorator;
-export type PropertyDecoratorOptionalGenerator<A> = PropertyDecoratorGenerator<
+export type PropertyDecoratorOptionalGenerator<
   A
-> &
-  PropertyDecorator;
+> = PropertyDecoratorGenerator<A> & PropertyDecorator;
 
 export const parametrizePropertyDecorator = <T, S>(
   decoratorGenerator: PropertyDecoratorGenerator<S>,

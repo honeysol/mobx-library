@@ -1,5 +1,5 @@
 import { autorun } from "mobx";
-import { ResourceCache } from "mobx-resource-cache";
+import { resourceCache } from "mobx-resource-cache";
 
 import { delay } from "./delay";
 
@@ -18,11 +18,12 @@ class Speeker {
     }, 1000);
   }
   close() {
+    console.log("close", this.id);
     clearInterval(this.canceler);
   }
 }
 
-const cache = new ResourceCache<Speeker>({
+const cache = resourceCache<Speeker>({
   generatorFn(key) {
     return new Speeker(key);
   },

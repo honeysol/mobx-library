@@ -1,7 +1,7 @@
 import { configOption } from "./configure";
 
 export const logger = {
-  log(...args: any[]) {
+  log(...args: unknown[]): void {
     if (configOption.verbose) {
       console.log(...args);
     }

@@ -7,31 +7,62 @@ export interface PropertyAccessor<T> {
   debugName?: PropertyKey;
 }
 
-export interface ObjectAnnotation<T, R> {
-  (accessor?: PropertyAccessor<T>, context?: object): PropertyAccessor<R>;
-}
+export type BaseAnnotation<P, R> = <PP extends P, RR extends R>(
+  params: PP,
+  context?: object
+) => RR;
 
-export interface ExtendedAnnotation<T, R> extends Annotation {
-  (accessor?: PropertyAccessor<T>, context?: object): PropertyAccessor<R>;
-}
+export type AsymmetricAnnotation<T, S> = (
+  params: PropertyAccessor<T>,
+  context?: object
+) => PropertyAccessor<S>;
 
-export interface AnnotationFunction<T, R> extends Annotation {
-  (accessor?: PropertyAccessor<T>, context?: object): PropertyAccessor<R>;
+export type ObjectAnnotation<TT> = <T extends TT>(
+  params: PropertyAccessor<T>,
+  context?: object
+) => PropertyAccessor<T>;
+
+export type PromiseAnnotation<TT> = <T extends TT>(
+  params: PropertyAccessor<Promise<T | undefined> | T | undefined>,
+  context?: object
+) => PropertyAccessor<T | undefined>;
+
+export type ConversionAnnotation<AA extends unknown[], RR> = <
+  A extends AA,
+  R extends RR
+>(
+  params: (...args: A) => R,
+  context?: object
+) => (...args: A) => R;
+
+interface Decorator {
   <T extends object, K>(
     target: T,
     propertyKey: PropertyKey,
     descriptor?: TypedPropertyDescriptor<K>
   ): void | any;
 }
+export interface ExtendedBaseAnnotation<P, R>
+  extends Annotation,
+    Decorator,
+    BaseAnnotation<P, R> {}
 
-export interface AnnotationFunctionPromise extends Annotation {
-  <T>(
-    accessor?: PropertyAccessor<Promise<T>>,
-    context?: object
-  ): PropertyAccessor<T>;
-  <T extends object, K>(
-    target: T,
-    propertyKey: PropertyKey,
-    descriptor?: TypedPropertyDescriptor<K>
-  ): void | any;
-}
+export interface ExtendedObjectAnnotation<T>
+  extends Annotation,
+    Decorator,
+    ObjectAnnotation<T> {}
+
+export interface ExtendedConversionAnnotation<A extends unknown[], R>
+  extends Annotation,
+    Decorator,
+    ConversionAnnotation<A, R> {}
+
+export interface ExtendedPromiseAnnotation<T>
+  extends Annotation,
+    PromiseAnnotation<T>,
+    Decorator {}
+
+export interface ExtendedAsymmetricAnnotation<T, S>
+  extends Annotation,
+    AsymmetricAnnotation<T, S>,
+    Decorator {}

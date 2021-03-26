@@ -11,7 +11,7 @@ class QuerySession<R> {
   @observable promise?:
     | Promise<(R | undefined)[] | undefined>
     | (R | undefined)[];
-  @observable items: (R | undefined)[] = observable.array<R | undefined>([], {
+  items: (R | undefined)[] = observable.array<R | undefined>([], {
     deep: false,
   });
   cancelHandler?: () => void;
@@ -61,7 +61,8 @@ export class CoreQuery<R> {
     this.query = query;
     this.downConverter = downConverter;
   }
-  @observed.autoclose((session: QuerySession<R>) => session.close())
+  // これだとsessionが終了した後、再開しない
+  @observed.autoclose((session: QuerySession<R>) => session.close(), 0)
   get session(): QuerySession<R> | undefined {
     return this.query && new QuerySession(this.query, this.downConverter);
   }

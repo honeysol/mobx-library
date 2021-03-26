@@ -9,7 +9,7 @@ import {
 const fieldIdentifierToFunc = (fieldIdentifier: string) => {
   const exp = fieldIdentifier
     .split(".")
-    .map(field => `(a=a[${JSON.stringify(field)}])`)
+    .map((field) => `(a=a[${JSON.stringify(field)}])`)
     .join("&&");
   return eval(`(function(a){return ${exp};})`);
 };
@@ -24,7 +24,7 @@ const createPropDecorator = (baseDecorator?: any) => {
       }
       const getter = fieldIdentifierToFunc(propKey);
       return {
-        get: function(this: any) {
+        get: function (this: any) {
           return getter(this.props);
         },
       };
@@ -32,9 +32,7 @@ const createPropDecorator = (baseDecorator?: any) => {
     (_target: unknown, propertyKey: string | symbol) => propertyKey as string
   );
 };
-export const prop = createPropDecorator() as PropertyDecoratorOptionalGenerator<
-  string
-> & {
+export const prop = createPropDecorator() as PropertyDecoratorOptionalGenerator<string> & {
   deep: PropertyDecoratorOptionalGenerator<string>;
   struct: PropertyDecoratorOptionalGenerator<string>;
   static: PropertyDecoratorOptionalGenerator<string>;

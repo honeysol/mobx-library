@@ -6,78 +6,98 @@ import {
   storedAnnotationEnabled,
 } from "./storedAnnotation";
 import {
-  AnnotationFunction,
+  AsymmetricAnnotation,
+  BaseAnnotation,
+  ConversionAnnotation,
+  ExtendedAsymmetricAnnotation,
+  ExtendedBaseAnnotation,
+  ExtendedConversionAnnotation,
+  ExtendedObjectAnnotation,
+  ExtendedPromiseAnnotation,
   ObjectAnnotation,
+  PromiseAnnotation,
   PropertyAccessor,
 } from "./types";
 
 const objectAnnotationsKey = Symbol("mobx-object-annotation");
 
-export function createAnnotation<T, R>(
-  objectAnnotation: ObjectAnnotation<T, R>,
-  { annotationType }: { annotationType: string }
-): AnnotationFunction<T, R> {
-  const annotate = (
-    source: any,
+//  eslint-disable-next-line @typescript-eslint/ban-types
+type context = object;
+
+export const createBaseAnnotation = <T, R>(
+  annotator: (
+    annotation: BaseAnnotation<T, R>,
+    target: context,
     key: PropertyKey,
-    descriptor: PropertyAccessor<T>
+    descriptor?: PropertyDescriptor
+  ) => PropertyDescriptor,
+  asFunction?: boolean
+) => (
+  objectAnnotation: BaseAnnotation<T, R>,
+  { annotationType }: { annotationType: string }
+): ExtendedBaseAnnotation<T, R> => {
+  const annotate = (
+    source: context,
+    key: PropertyKey,
+    descriptor?: PropertyDescriptor
   ) => {
-    const accessor = objectAnnotation(
-      bindAccessor(source, descriptor, key),
-      source
-    );
-    Object.defineProperty(source, key, {
-      configurable: true,
-      get: accessor.get,
-      set: accessor.set,
-    });
-    return !!accessor;
+    const _descriptor = annotator(objectAnnotation, source, key, descriptor);
+    Object.defineProperty(source, key, _descriptor);
+    return !!_descriptor;
   };
   const annotation = Object.assign(
-    ((target: any, key: string | symbol, descriptor: PropertyDescriptor) => {
+    ((
+      target: context,
+      key: string | symbol,
+      descriptor: PropertyDescriptor
+    ) => {
       if (typeof key !== "string" && typeof key !== "symbol") {
         // delegate original objectAnnotation
-        return objectAnnotation(target, key);
+        return objectAnnotation(target as any, key);
       } else if (storedAnnotationEnabled) {
         // simulate MobX6 decorator (initialized with mobx.makeObservable or mobx.makeAutoObservable)
         storeAnnotation.call(target, key, annotation);
       } else {
         // simulate MobX5 decorator (initialized in first access)
-        const getObjectAnnotation = function (this: any) {
+        const getObjectAnnotation = function (this: context) {
           const objectAnnotations = getPropertyWithDefault(
             this,
             objectAnnotationsKey,
             () => ({})
           );
           return getPropertyWithDefault(objectAnnotations, key, () =>
-            objectAnnotation(
-              bindAccessor(this, descriptor as PropertyAccessor<T>, key),
-              this
-            )
+            annotator(objectAnnotation, this, key, descriptor)
           );
         };
-        return {
-          configurable: true,
-          get(this: any): R {
-            const objectAnnotation = getObjectAnnotation.call(this);
-            return objectAnnotation.get();
-          },
-          set(this: any, value: R) {
-            const objectAnnotation = getObjectAnnotation.call(this);
-            objectAnnotation.set?.(value);
-          },
-        };
+        if (!asFunction) {
+          return {
+            configurable: true,
+            get(this: context): R {
+              const objectAnnotation = getObjectAnnotation.call(this);
+              return objectAnnotation.get?.();
+            },
+            set(this: context, value: R) {
+              const objectAnnotation = getObjectAnnotation.call(this);
+              objectAnnotation.set?.(value);
+            },
+          };
+        } else {
+          return {
+            configurable: true,
+            value(...args: unknown[]): R {
+              const objectAnnotation = getObjectAnnotation.call(this);
+              return objectAnnotation.value?.(...args);
+            },
+          };
+        }
       }
-    }) as AnnotationFunction<T, R>,
+    }) as ExtendedBaseAnnotation<T, R>,
     {
       // MobX6 new annotation
       annotationType_: annotationType,
       make_(adm: ObservableObjectAdministration, key: PropertyKey): void {
         const source = adm.target_;
-        const descriptor = traverseDescriptor(
-          source,
-          key
-        ) as PropertyAccessor<T>;
+        const descriptor = traverseDescriptor(source, key);
         if (annotate(source, key, descriptor)) {
           recordAnnotationApplied(adm, annotation, key);
         } else {
@@ -92,14 +112,113 @@ export function createAnnotation<T, R>(
         descriptor: PropertyDescriptor
       ): boolean | null {
         const source = adm.target_;
-        return annotate(source, key, descriptor as PropertyAccessor<T>);
+        return annotate(source, key, descriptor);
       },
     }
   );
   return annotation;
-}
+};
 
-const traverseDescriptor = (_source: any, key: PropertyKey) => {
+export const createAnnotation = <T>(
+  objectAnnotation: ObjectAnnotation<T>,
+  { annotationType }: { annotationType: string }
+): ExtendedObjectAnnotation<T> => {
+  return createBaseAnnotation<PropertyAccessor<T>, PropertyAccessor<T>>(
+    (
+      annotation: BaseAnnotation<PropertyAccessor<T>, PropertyAccessor<T>>,
+      target: context,
+      key: PropertyKey,
+      descriptor?: PropertyDescriptor
+    ) => {
+      return annotation(bindAccessor(target, descriptor, key), target);
+    },
+    true
+  )(
+    objectAnnotation as BaseAnnotation<
+      PropertyAccessor<T>,
+      PropertyAccessor<T>
+    >,
+    { annotationType }
+  );
+};
+
+export const createPromiseAnnotation = <T>(
+  objectAnnotation: PromiseAnnotation<T>,
+  { annotationType }: { annotationType: string }
+): ExtendedPromiseAnnotation<T> => {
+  return createBaseAnnotation<
+    PropertyAccessor<Promise<T>>,
+    PropertyAccessor<T>
+  >(
+    (
+      annotation: BaseAnnotation<
+        PropertyAccessor<Promise<T>>,
+        PropertyAccessor<T>
+      >,
+      target: context,
+      key: PropertyKey,
+      descriptor?: PropertyDescriptor
+    ) => {
+      return annotation(bindAccessor(target, descriptor, key), target);
+    },
+    true
+  )(
+    objectAnnotation as BaseAnnotation<
+      PropertyAccessor<Promise<T>>,
+      PropertyAccessor<T>
+    >,
+    { annotationType }
+  );
+};
+
+export const createAsymmetricAnnotation = <T, S>(
+  objectAnnotation: AsymmetricAnnotation<T, S>,
+  { annotationType }: { annotationType: string }
+): ExtendedAsymmetricAnnotation<T, S> => {
+  return createBaseAnnotation<PropertyAccessor<T>, PropertyAccessor<S>>(
+    (
+      annotation: BaseAnnotation<PropertyAccessor<T>, PropertyAccessor<S>>,
+      target: context,
+      key: PropertyKey,
+      descriptor?: PropertyDescriptor
+    ) => {
+      return annotation(bindAccessor(target, descriptor, key), target);
+    },
+    true
+  )(
+    objectAnnotation as BaseAnnotation<
+      PropertyAccessor<T>,
+      PropertyAccessor<S>
+    >,
+    { annotationType }
+  );
+};
+
+export const createConversionAnnotation = <A extends unknown[], R>(
+  conversionAnnotation: ConversionAnnotation<A, R>,
+  { annotationType }: { annotationType: string }
+): ExtendedConversionAnnotation<A, R> => {
+  return createBaseAnnotation<(...args: A) => R, (...args: A) => R>(
+    (
+      annotation: BaseAnnotation<(...args: A) => R, (...args: A) => R>,
+      target: context,
+      key: PropertyKey,
+      descriptor?: PropertyDescriptor
+    ) => {
+      return {
+        value: annotation(descriptor?.value?.bind(target), target),
+      };
+    }
+  )(
+    conversionAnnotation as BaseAnnotation<
+      (...args: A) => R,
+      (...args: A) => R
+    >,
+    { annotationType }
+  );
+};
+
+const traverseDescriptor = (_source: context, key: PropertyKey) => {
   let source = _source;
   while (source && source !== Object.prototype) {
     const descriptor = Object.getOwnPropertyDescriptor(source, key);
@@ -111,9 +230,9 @@ const traverseDescriptor = (_source: any, key: PropertyKey) => {
 };
 
 const bindAccessor = <T>(
-  target: any,
-  accessor: TypedPropertyDescriptor<T>,
-  debugName: PropertyKey
+  target: context,
+  accessor?: TypedPropertyDescriptor<T>,
+  debugName?: PropertyKey
 ) => {
   return {
     get: ((accessor?.get ||
