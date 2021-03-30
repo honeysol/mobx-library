@@ -1,15 +1,8 @@
-import {
-  action,
-  computed,
-  IReactionDisposer,
-  observable,
-  reaction,
-} from "mobx";
+import { action, IReactionDisposer, observable, reaction } from "mobx";
 import type { PropertyAccessor } from "mobx-annotation-manipulator";
+import { monitor } from "mobx-monitor/src/monitor";
 
-import { monitor } from "./monitor";
-
-interface MonitorAsyncParams<T, S> {
+interface ProjectionParams<T, S> {
   change?: (
     {
       newValue,
@@ -29,12 +22,12 @@ interface MonitorAsyncParams<T, S> {
   get(): T;
 }
 
-export const monitorAsync = <T, S>({
+export const projection = <T, S>({
   change,
   enter,
   leave,
   get,
-}: MonitorAsyncParams<T, S>): PropertyAccessor<S> => {
+}: ProjectionParams<T, S>): PropertyAccessor<S> => {
   const resultAccessor = observable.box<S>(undefined, {
     deep: false,
   });
@@ -64,21 +57,5 @@ export const monitorAsync = <T, S>({
     get() {
       return resultAccessor.get();
     },
-  });
-};
-
-// compound annotations
-
-export const monitorAsyncComputed = <T, S>({
-  change,
-  enter,
-  leave,
-  get,
-}: MonitorAsyncParams<T, S>): PropertyAccessor<S> => {
-  return monitorAsync<T, S>({
-    change,
-    enter,
-    leave,
-    get: computed(get).get,
   });
 };

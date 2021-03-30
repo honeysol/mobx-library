@@ -1,1 +1,1 @@
-export { autoclose } from "./autoclose"; // -> monitorComputed
+export { autoclose } from "./autoclose";

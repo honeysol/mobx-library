@@ -1,10 +1,11 @@
+import { computed } from "mobx";
 import {
   assert,
   createSymmetricAnnotation,
   ExtendedSymmetricAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
-import { IMonitorRetained, monitorComputed } from "mobx-monitor";
+import { IMonitorRetained, monitorChange } from "mobx-monitor";
 
 const _autoclose = <T>({
   get,
@@ -19,7 +20,8 @@ const _autoclose = <T>({
   get: () => T;
   allowUntracked?: boolean;
 }): IMonitorRetained<T> => {
-  return monitorComputed({
+  const accessor = computed<T>(get);
+  return monitorChange({
     enter() {},
     change(_value, oldValue) {
       cleanup(oldValue);
@@ -27,7 +29,7 @@ const _autoclose = <T>({
     leave(oldValue) {
       cleanup(oldValue);
     },
-    get,
+    get: accessor.get,
     retentionTime,
     name,
     allowUntracked,

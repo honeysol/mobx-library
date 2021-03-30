@@ -1,11 +1,11 @@
-import { computed, IReactionDisposer, reaction } from "mobx";
+import { IReactionDisposer, reaction } from "mobx";
 import { assert } from "mobx-annotation-manipulator";
 
 import { IMonitorRetained, monitorRetained } from "./monitorRetained";
 const none = Symbol("none");
 
 // monitor change of `get` with keeping value observed during retentionTime
-export const monitorComputed = <T>({
+export const monitorChange = <T>({
   get,
   enter,
   leave,
@@ -22,9 +22,8 @@ export const monitorComputed = <T>({
   name?: string;
   allowUntracked?: boolean;
 }): IMonitorRetained<T> => {
-  const accessor = computed<T>(get);
-  const _get = () => {
-    const value = accessor.get();
+  const getWithTrap = () => {
+    const value = get();
     if (oldValue !== none) {
       if (oldValue !== value) change(value, oldValue);
     }
@@ -38,7 +37,7 @@ export const monitorComputed = <T>({
       assert(retainer, "internal error");
       if (typeof retentionTime === "number") {
         retainer = reaction(
-          () => _get(),
+          () => getWithTrap(),
           () => {}
         );
       }
@@ -48,9 +47,8 @@ export const monitorComputed = <T>({
       leave(oldValue);
       oldValue = none;
       retainer?.();
-      retainer = undefined;
     },
-    get: _get,
+    get: getWithTrap,
     retentionTime,
     name,
     allowUntracked,

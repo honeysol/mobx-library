@@ -6,9 +6,9 @@ import {
   ExtendedAsymmetricAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
-import { monitorAsync } from "mobx-monitor";
 
 import { AsyncCommitter } from "./asyncCommitter";
+import { projection } from "./projection";
 
 const asyncComputedPrimitive = <T>(
   accessor?: PropertyAccessor<Promise<T | undefined> | T | undefined>,
@@ -16,7 +16,7 @@ const asyncComputedPrimitive = <T>(
 ): PropertyAccessor<T | undefined> => {
   assert(accessor?.get, "Accessor doesn't have get property");
   const asyncCommiter = new AsyncCommitter<T>();
-  return monitorAsync<Promise<T | undefined> | undefined | T, T | undefined>({
+  return projection<Promise<T | undefined> | undefined | T, T | undefined>({
     async change({ newValue }, setter) {
       const { successed, value } = await asyncCommiter.resolve(newValue);
       if (successed) {
