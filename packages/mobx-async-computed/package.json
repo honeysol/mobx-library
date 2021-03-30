@@ -30,7 +30,8 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "mobx-observed": "^1.0.0-alpha.13"
+    "mobx-annotation-manipulator": "^1.0.0-alpha.13",
+    "mobx-monitor": "^1.0.0-alpha.13"
   },
   "publishConfig": {
     "access": "public"

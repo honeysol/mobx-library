@@ -1,32 +1,37 @@
-import { demand, IDemand } from "mobx-demand";
+import { demand } from "mobx-demand";
+import { IMonitorRetained } from "mobx-monitor";
 interface IResourceCache<T> {
   get(key: string): T;
   has(key: string): boolean;
 }
 
 export const resourceCache = <T>({
-  cleanUpFn,
-  delay,
+  cleanup,
+  retentionTime,
   generatorFn,
+  allowUntracked,
 }: {
-  cleanUpFn?: (value: T) => void;
-  delay?: number;
+  cleanup?: (value: T) => void;
+  retentionTime?: number;
   generatorFn: (key: string) => T;
+  allowUntracked?: boolean;
 }): IResourceCache<T> => {
-  const map = new Map<string, IDemand<T>>();
+  const map = new Map<string, IMonitorRetained<T>>();
   return {
     get(key: string): T {
       const item =
         map.get(key) ||
         (() => {
           const item = demand({
-            cleanUpFn: (value: T) => {
+            cleanup: (value: T) => {
               map.delete(key);
-              cleanUpFn?.(value);
+              cleanup?.(value);
             },
-            delay,
+            retentionTime,
             name: key,
-          })({ get: () => generatorFn(key) });
+            get: () => generatorFn(key),
+            allowUntracked,
+          });
           map.set(key, item);
           return item;
         })();

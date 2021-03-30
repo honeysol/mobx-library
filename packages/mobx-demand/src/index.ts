@@ -1,1 +1,1 @@
-export { demand, IDemand } from "./demand";
+export { demand } from "./demand";

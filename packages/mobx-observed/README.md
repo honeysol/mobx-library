@@ -1,3 +1,5 @@
+> **_NOTE:_**  This package is deprecated. Use mobx-monitor instead.
+
 ## Overview
 
 This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.

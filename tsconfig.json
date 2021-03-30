@@ -7,13 +7,14 @@
     "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "mobx-async-computed": ["packages/mobx-async-computed/src"],
-      "mobx-observed": ["packages/mobx-observed/src"],
       "ts-decorator-manipulator": ["packages/ts-decorator-manipulator/src"],
       "mobx-annotation-manipulator": ["packages/mobx-annotation-manipulator/src"],
       "mobx-react-class-component": ["packages/mobx-react-class-component/src"],
       "mobx-resource-cache": ["packages/mobx-resource-cache/src"],
       "mobx-memo": ["packages/mobx-memo/src"],
       "mobx-demand": ["packages/mobx-demand/src"],
+      "mobx-autoclose": ["packages/mobx-autoclose/src"],
+      "mobx-monitor": ["packages/mobx-monitor/src"],
       "$test/*": ["test/*"]
     }
   }

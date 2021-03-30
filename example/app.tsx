@@ -14,7 +14,6 @@ import {
   asyncComputedFrom,
   resolveType,
 } from "mobx-async-computed";
-import { becomeObserved } from "mobx-observed";
 import {
   autorun as autorunDecorator,
   component,
@@ -25,7 +24,6 @@ import {
   state,
 } from "mobx-react-class-component";
 import * as React from "react";
-import { evacuate } from "ts-decorator-manipulator";
 
 import { delay } from "./delay";
 
@@ -274,7 +272,7 @@ class MobxComponent3 extends React.Component<
             });
           }}
         >
-          replace internalStore by mobx
+          replace internalStore by mobx (change to 0)
         </button>
         <button
           onClick={() => {
@@ -337,7 +335,8 @@ export class App extends React.Component {
             });
           }}
         >
-          replace valueObj without structural change by external props
+          replace valueObj without structural change by external props (skip
+          render)
         </button>
 
         <button
@@ -392,19 +391,6 @@ export class X {
   // get a() {
   //   return 10;
   // }
-  // @(becomeObserved.observable(() => {
-  //   console.log("start observe");
-  //   return () => console.log("end observe");
-  // }) as PropertyDecorator)
-
-  // @becomeObserved.observable(() => {
-  //   console.log("start observe");
-  //   return () => console.log("end observe");
-  // })
-  @becomeObserved.computed(function () {
-    console.log("start observe", this);
-    return () => console.log("end observe");
-  })
   get y(): number {
     return Date.now();
   }
@@ -444,3 +430,9 @@ window.mobx = mobx;
 //     createAtom("#" + i);
 //   }
 // };
+
+const y = asyncComputed({
+  get() {
+    return delay(100, 0);
+  },
+});

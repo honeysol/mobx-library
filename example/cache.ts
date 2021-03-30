@@ -3,8 +3,6 @@ import { resourceCache } from "mobx-resource-cache";
 
 import { delay } from "./delay";
 
-console.log("####");
-
 let counter = 0;
 
 class Speeker {
@@ -27,10 +25,11 @@ const cache = resourceCache<Speeker>({
   generatorFn(key) {
     return new Speeker(key);
   },
-  cleanUpFn(value) {
+  cleanup(value) {
     value.close();
   },
-  delay: 2000,
+  retentionTime: 2000,
+  allowUntracked: true,
 });
 
 console.log(cache.get("100").id);

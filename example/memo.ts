@@ -25,8 +25,8 @@ class MobXCalc {
 const mobxCalc = (a: number, b: number) => new MobXCalc(a, b);
 // As function
 const memoizedFetch = memoize({
-  delay: 3000,
-  cleanUpFn: (item: MobXCalc) => {
+  retentionTime: 3000,
+  cleanup: (item: MobXCalc) => {
     item.close();
   },
 })(mobxCalc);

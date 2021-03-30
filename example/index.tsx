@@ -1,5 +1,5 @@
-// import "./cache";
-import "./memo";
+import "./cache";
+// import "./memo";
 import "./firestore";
 
 import * as React from "react";

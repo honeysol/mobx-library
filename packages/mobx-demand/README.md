@@ -1,21 +1,14 @@
 ## Overview
 
-Resource controller based on MobX, with automatically resource generation and release.
+Generate value on demand, cleanup when it will become unused, with non-MobX generator
 
-If `delay` field is specified, the cache is retained until `delay` millisecond after `object.get(key)` is unobserved or untracked access is performed.
+If `delay` field is specified, the cache is retained until `delay` millisecond after `object.get()` is unobserved or untracked access is performed.
 
-If `delay` field is not specified, the cache is retained while `object.get(key)` is observed, and untracked access is not cached.
-
-## Comparison with similar libary
-
-mobx-demand is similar to `fromResource` of mobx-utils. But the points below are different.
-
-- mobx-demand supports lazy release with `delay` propoerty.
-- mobx-demand generates a new object when it becomes observed and release it when it becomes unobserved, while `fromResource` only calls the event and provides an accessor. This can reduce memory usage when the object is not observed and makes it easy to develop the caching and memoization implementation like [mobx-resource-cache](https://github.com/honeysol/mobx-library/tree/develop/packages/mobx-resource-cache) and [mobx-memo](https://github.com/honeysol/mobx-library/tree/develop/packages/mobx-memo).
+If `delay` field is not specified, the cache is retained while `object.get()` is observed, and untracked access is not cached.
 
 ## compatibility
 
-Supports MobX5, MobX6.
+Supports MobX5, MobX6 including Annotation/Decorator.
 
 ## Example
 

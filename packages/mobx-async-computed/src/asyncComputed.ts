@@ -6,36 +6,37 @@ import {
   ExtendedAsymmetricAnnotation,
   PropertyAccessor,
 } from "mobx-annotation-manipulator";
-import { observed } from "mobx-observed";
+import { monitorAsync } from "mobx-monitor";
 
 import { AsyncCommitter } from "./asyncCommitter";
 
 const asyncComputedPrimitive = <T>(
   accessor?: PropertyAccessor<Promise<T | undefined> | T | undefined>,
-  context?: any
+  _context?: any
 ): PropertyAccessor<T | undefined> => {
   assert(accessor?.get, "Accessor doesn't have get property");
   const asyncCommiter = new AsyncCommitter<T>();
-  return observed.async<Promise<T | undefined> | undefined, T | undefined>({
+  return monitorAsync<Promise<T | undefined> | undefined | T, T | undefined>({
     async change({ newValue }, setter) {
       const { successed, value } = await asyncCommiter.resolve(newValue);
       if (successed) {
         setter(value);
       }
     },
-  })(accessor, context);
+    get() {
+      return accessor.get();
+    },
+  });
 };
 
-const asyncComputedObject = <T>(
+const _asyncComputed = <T>(
   accessor?: PropertyAccessor<Promise<T | undefined> | T | undefined>
 ): PropertyAccessor<T | undefined> => {
   assert(accessor?.get, "Accessor doesn't have get property");
   return asyncComputedPrimitive<T>(computed(accessor.get));
 };
 
-const asyncComputedFromObject = <TT>(propertyKey: string | symbol) => <
-  T extends TT
->(
+const _asyncComputedFrom = <TT>(propertyKey: string | symbol) => <T extends TT>(
   accessor?: PropertyAccessor<T | undefined>,
   context?: any
 ): PropertyAccessor<T | undefined> => {
@@ -49,20 +50,20 @@ const asyncComputedFromObject = <TT>(propertyKey: string | symbol) => <
 
 export const asyncComputedFrom = <T>(
   propertyKey: symbol | string
-): ExtendedAsymmetricAnnotation<unknown, T | undefined> =>
+): ExtendedAsymmetricAnnotation<
+  Promise<T | undefined> | T | undefined,
+  T | undefined
+> =>
   createAsymmetricAnnotation<any, T | undefined>(
-    asyncComputedFromObject<T>(propertyKey),
+    _asyncComputedFrom<T>(propertyKey),
     {
       annotationType: "asyncComputedFrom",
     }
   );
 
-export const asyncComputed = createPromiseAnnotation<unknown>(
-  asyncComputedObject,
-  {
-    annotationType: "asyncComputed",
-  }
-);
+export const asyncComputed = createPromiseAnnotation<unknown>(_asyncComputed, {
+  annotationType: "asyncComputed",
+});
 
 type ResolvedType<T extends Promise<unknown>> = T extends Promise<infer P>
   ? P

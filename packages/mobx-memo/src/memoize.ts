@@ -2,24 +2,27 @@ import {
   createConversionAnnotation,
   ExtendedConversionAnnotation,
 } from "mobx-annotation-manipulator";
-import { demand, IDemand } from "mobx-demand";
+import { demand } from "mobx-demand";
+import type { IMonitorRetained } from "mobx-monitor";
 
 import stringify from "./stringify";
 
 const defaultSerializer = <A extends unknown[]>(...args: A) => stringify(args);
 
 const _memoize = <AA extends unknown[], TT>({
-  cleanUpFn,
-  delay,
+  cleanup,
+  retentionTime,
   serializer,
+  allowUntracked,
 }: {
-  cleanUpFn?: (value: TT) => void;
-  delay?: number;
+  cleanup?: (value: TT) => void;
+  retentionTime?: number;
   serializer?: (...args: AA) => string;
+  allowUntracked?: boolean;
 }) => <A extends AA, T extends TT>(
   generatorFn: (...args: A) => T
 ): ((...args: A) => T) => {
-  const map = new Map<string, IDemand<T>>();
+  const map = new Map<string, IMonitorRetained<T>>();
   const _serializer = serializer || defaultSerializer;
   return (...args: A): T => {
     const key = _serializer(...args);
@@ -27,13 +30,15 @@ const _memoize = <AA extends unknown[], TT>({
       map.get(key) ||
       (() => {
         const item = demand({
-          cleanUpFn: (value: T) => {
+          cleanup: (value: T) => {
             map.delete(key);
-            cleanUpFn?.(value);
+            cleanup?.(value);
           },
-          delay,
+          retentionTime,
           name: key,
-        })({ get: () => generatorFn(...args) });
+          get: () => generatorFn(...args),
+          allowUntracked,
+        });
         map.set(key, item);
         return item;
       })();
@@ -42,9 +47,10 @@ const _memoize = <AA extends unknown[], TT>({
 };
 
 export const memoize = <A extends unknown[], T>(params: {
-  cleanUpFn?: (value: T) => void;
-  delay?: number;
+  cleanup?: (value: T) => void;
+  retentionTime?: number;
   serializer?: (...args: A) => string;
+  allowUntracked?: boolean;
 }): ExtendedConversionAnnotation<A, T> => {
   return createConversionAnnotation<A, T>(_memoize(params), {
     annotationType: "demand",

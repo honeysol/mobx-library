@@ -27,9 +27,13 @@
     "mobx": ">=5"
   },
   "devDependencies": {
-    "mobx": "^6.1.8"
+    "mobx": "^6.1.8",
+    "mobx-monitor": "^1.0.0-alpha.13"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mobx-annotation-manipulator": "^1.0.0-alpha.13",
+    "mobx-demand": "^1.0.0-alpha.13"
+  },
   "publishConfig": {
     "access": "public"
   }
