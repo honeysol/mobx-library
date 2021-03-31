@@ -30,9 +30,10 @@ export class FirestoreDocument<R> extends CoreDocument<R> {
     collectionRef?: CollectionReference;
   }) {
     super({ documentRef, downConverter });
-    if (!collectionRef || documentRef?.parent) {
+    const _collectionRef = collectionRef || documentRef?.parent;
+    if (!_collectionRef) {
       throw new Error("collectionRef or documentRef should be specified");
     }
-    this.collectionRef = collectionRef || documentRef?.parent;
+    this.collectionRef = _collectionRef;
   }
 }

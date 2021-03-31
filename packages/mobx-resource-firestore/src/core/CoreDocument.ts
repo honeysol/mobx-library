@@ -1,7 +1,6 @@
 import type firebase from "firebase";
-import { computed, observable } from "mobx";
-import { asyncComputed, asyncComputedFrom } from "mobx-async-computed";
-import { observed } from "mobx-observed";
+import { makeObservable, observable, runInAction } from "mobx";
+import { autoclose } from "mobx-autoclose";
 
 export type downConverter<R> = (snapshot: DocumentSnapshot) => R;
 
@@ -9,13 +8,17 @@ type DocumentReference = firebase.firestore.DocumentReference;
 type DocumentSnapshot = firebase.firestore.DocumentSnapshot;
 
 class DocumentSession<R> {
-  @observable promise?: Promise<R | undefined> | R;
+  @observable.ref promise?: Promise<R | undefined> | R = undefined;
+  @observable.ref value?: R = undefined;
   cancelHandler?: () => void;
   constructor(documentRef: DocumentReference, downConverter: downConverter<R>) {
+    makeObservable(this);
     this.promise = new Promise((resolve, reject) => {
       this.cancelHandler = documentRef.onSnapshot(
         (snapshot) => {
-          this.promise = downConverter(snapshot);
+          runInAction(() => {
+            this.value = this.promise = downConverter(snapshot);
+          });
           // this resolve is ignored in the secondary access for the specification of Promise API
           resolve(this.promise);
         },
@@ -29,8 +32,8 @@ class DocumentSession<R> {
 }
 
 export class CoreDocument<R> {
-  @observable
-  documentRef?: DocumentReference;
+  @observable.ref
+  documentRef?: DocumentReference = undefined;
   downConverter: downConverter<R>;
   constructor({
     documentRef,
@@ -39,32 +42,23 @@ export class CoreDocument<R> {
     documentRef?: DocumentReference;
     downConverter: downConverter<R>;
   }) {
+    makeObservable(this);
     this.documentRef = documentRef;
     this.downConverter = downConverter;
   }
   // これだとsessionが終了した後、再開しない
-  @observed.autoclose((session: DocumentSession<R>) => session.close())
+  @autoclose({ cleanup: (session: DocumentSession<R>) => session.close() })
   get session(): DocumentSession<R> | undefined {
     return (
       this.documentRef &&
       new DocumentSession(this.documentRef, this.downConverter)
     );
   }
-  @computed
   get promise(): Promise<R | undefined> | R | undefined {
     return this.session?.promise;
   }
-  @asyncComputedFrom("promise")
-  value: R | undefined;
-
-  valueAccessor = asyncComputed({
-    get: async () => {
-      return this.promise;
-    },
-  });
-
-  delete(): Promise<void> | undefined {
-    return this.documentRef?.delete();
+  get value(): R | undefined {
+    return this.session?.value;
   }
   get exists(): boolean | undefined {
     return !!this.value;
