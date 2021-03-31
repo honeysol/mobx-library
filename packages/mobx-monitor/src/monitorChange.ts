@@ -34,8 +34,9 @@ export const monitorChange = <T>({
   let oldValue: T | typeof none = none;
   return monitorRetained({
     enter() {
-      assert(retainer, "internal error");
+      assert(oldValue === none, "internal error");
       if (typeof retentionTime === "number") {
+        assert(!retainer, "internal error");
         retainer = reaction(
           () => getWithTrap(),
           () => {}
@@ -46,7 +47,11 @@ export const monitorChange = <T>({
       assert(oldValue !== none, "internal error");
       leave(oldValue);
       oldValue = none;
-      retainer?.();
+      if (typeof retentionTime === "number") {
+        assert(retainer, "internal error");
+        retainer();
+        retainer = undefined;
+      }
     },
     get: getWithTrap,
     retentionTime,

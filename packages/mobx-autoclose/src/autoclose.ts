@@ -29,7 +29,7 @@ const _autoclose = <T>({
     leave(oldValue) {
       cleanup(oldValue);
     },
-    get: accessor.get,
+    get: () => accessor.get(),
     retentionTime,
     name,
     allowUntracked,
