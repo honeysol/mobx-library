@@ -8,12 +8,12 @@ interface IResourceCache<T> {
 export const resourceCache = <T>({
   cleanup,
   retentionTime,
-  generatorFn,
+  get,
   allowUntracked,
 }: {
   cleanup?: (value: T) => void;
   retentionTime?: number;
-  generatorFn: (key: string) => T;
+  get: (key: string) => T;
   allowUntracked?: boolean;
 }): IResourceCache<T> => {
   const map = new Map<string, IMonitorRetained<T>>();
@@ -29,7 +29,7 @@ export const resourceCache = <T>({
             },
             retentionTime,
             name: key,
-            get: () => generatorFn(key),
+            get: () => get(key),
             allowUntracked,
           });
           map.set(key, item);

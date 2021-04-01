@@ -20,7 +20,7 @@ const _memoize = <AA extends unknown[], TT>({
   serializer?: (...args: AA) => string;
   allowUntracked?: boolean;
 }) => <A extends AA, T extends TT>(
-  generatorFn: (...args: A) => T
+  get: (...args: A) => T
 ): ((...args: A) => T) => {
   const map = new Map<string, IMonitorRetained<T>>();
   const _serializer = serializer || defaultSerializer;
@@ -36,7 +36,7 @@ const _memoize = <AA extends unknown[], TT>({
           },
           retentionTime,
           name: key,
-          get: () => generatorFn(...args),
+          get: () => get(...args),
           allowUntracked,
         });
         map.set(key, item);

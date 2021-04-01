@@ -32,7 +32,7 @@ const mobxFetch = (url: string) => new MobXFetch(url);
 // main
 const cache = resourceCache({
   delay: 60000,
-  generatorFn: (url: string) => mobxFetch,
+  get: (url: string) => mobxFetch,
   cleanUpFn: (item: MobXFetch<unknown>) => {
     item.close();
   },

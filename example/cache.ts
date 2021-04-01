@@ -22,7 +22,7 @@ class Speeker {
 }
 
 const cache = resourceCache<Speeker>({
-  generatorFn(key) {
+  get(key) {
     return new Speeker(key);
   },
   cleanup(value) {
