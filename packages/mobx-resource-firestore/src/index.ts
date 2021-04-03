@@ -1,3 +1,3 @@
 export { FirestoreDocument } from "./FirestoreDocument";
-export { FirestoreCollection } from "./FirestoreCollection";
+export { FirestoreFactory } from "./FirestoreFactory";
 export { FirestoreQuery } from "./FirestoreQuery";

@@ -32,21 +32,19 @@ class DocumentSession<R> {
 }
 
 export class CoreDocument<R> {
-  @observable.ref
-  documentRef?: DocumentReference = undefined;
+  documentRef: DocumentReference;
   downConverter: downConverter<R>;
   constructor({
     documentRef,
     downConverter,
   }: {
-    documentRef?: DocumentReference;
+    documentRef: DocumentReference;
     downConverter: downConverter<R>;
   }) {
     makeObservable(this);
     this.documentRef = documentRef;
     this.downConverter = downConverter;
   }
-  // これだとsessionが終了した後、再開しない
   @autoclose({ cleanup: (session: DocumentSession<R>) => session.close() })
   get session(): DocumentSession<R> | undefined {
     return (
