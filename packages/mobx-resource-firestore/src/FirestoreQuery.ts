@@ -7,7 +7,7 @@ import type { FirestoreFactory } from "./FirestoreFactory";
 type DocumentSnapshot = firebase.firestore.DocumentSnapshot;
 type Query = firebase.firestore.Query;
 
-interface ListItem<D extends FirestoreDocument<unknown>> {
+interface ListItem<D extends FirestoreDocument<unknown, unknown>> {
   data: DocumentType<D>;
   doc: D;
   id: string;
@@ -16,14 +16,15 @@ interface ListItem<D extends FirestoreDocument<unknown>> {
 const defaultConverter = (snapshot: DocumentSnapshot) => snapshot.data();
 
 export class FirestoreQuery<
-  D extends FirestoreDocument<unknown>
+  D extends FirestoreDocument<unknown, B>,
+  B
 > extends CoreQuery<ListItem<D>> {
   constructor({
     query,
     factory,
   }: {
     query: Query;
-    factory: FirestoreFactory<D>;
+    factory: FirestoreFactory<D, B>;
   }) {
     const downConverter = factory.downConverter || defaultConverter;
     super({

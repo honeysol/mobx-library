@@ -12,10 +12,11 @@ import { deriveQuery, QueryParams } from "./queryBuilder";
 
 type Firestore = firebase.firestore.Firestore;
 
-export class FirestoreFactory<D extends FirestoreDocument<unknown>> {
+export class FirestoreFactory<D extends FirestoreDocument<unknown, B>, B> {
   constructor(
-    private documentConstructor: DocumentConstructor<D>,
-    private firestore: Firestore
+    private documentConstructor: DocumentConstructor<D, B>,
+    private firestore: Firestore,
+    public database: B
   ) {}
   @memoize({})
   doc(path: string): D {
@@ -25,8 +26,8 @@ export class FirestoreFactory<D extends FirestoreDocument<unknown>> {
     });
   }
   @memoize({})
-  query(path: string, queryParams?: QueryParams): FirestoreQuery<D> {
-    return new FirestoreQuery<D>({
+  query(path: string, queryParams?: QueryParams): FirestoreQuery<D, B> {
+    return new FirestoreQuery<D, B>({
       query: deriveQuery(this.firestore.collection(path), queryParams),
       factory: this,
     });
