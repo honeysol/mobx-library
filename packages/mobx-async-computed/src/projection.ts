@@ -1,6 +1,6 @@
 import { action, IReactionDisposer, observable, reaction } from "mobx";
 import type { PropertyAccessor } from "mobx-annotation-manipulator";
-import { monitor } from "mobx-monitor/src/monitor";
+import { monitor } from "mobx-monitor";
 
 interface ProjectionParams<T, S> {
   change?: (

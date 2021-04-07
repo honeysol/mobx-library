@@ -131,8 +131,7 @@ export const createSymmetricAnnotation = <T>(
       descriptor?: PropertyDescriptor
     ) => {
       return annotation(bindAccessor(target, descriptor, key), target);
-    },
-    true
+    }
   )(
     objectAnnotation as BaseAnnotation<
       PropertyAccessor<T>,
@@ -160,8 +159,7 @@ export const createPromiseAnnotation = <T>(
       descriptor?: PropertyDescriptor
     ) => {
       return annotation(bindAccessor(target, descriptor, key), target);
-    },
-    true
+    }
   )(
     objectAnnotation as BaseAnnotation<
       PropertyAccessor<Promise<T>>,
@@ -183,8 +181,7 @@ export const createAsymmetricAnnotation = <T, S>(
       descriptor?: PropertyDescriptor
     ) => {
       return annotation(bindAccessor(target, descriptor, key), target);
-    },
-    true
+    }
   )(
     objectAnnotation as BaseAnnotation<
       PropertyAccessor<T>,
@@ -208,7 +205,8 @@ export const createConversionAnnotation = <A extends unknown[], R>(
       return {
         value: annotation(descriptor?.value?.bind(target), target),
       };
-    }
+    },
+    true
   )(
     conversionAnnotation as BaseAnnotation<
       (...args: A) => R,
