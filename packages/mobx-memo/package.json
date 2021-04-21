@@ -12,7 +12,7 @@
   "scripts": {
     "start": "tsdx watch --tsconfig tsconfig.build.json --verbose --noClean",
     "build": "tsdx build --tsconfig tsconfig.build.json",
-    "test": "tsdx test",
+    "test": "jest",
     "lint": "tsdx lint",
     "prepublish": "npm run build"
   },
@@ -27,8 +27,11 @@
     "mobx": ">=5"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "jest": "^26.6.3",
     "mobx": "^6.1.8",
-    "mobx-monitor": "^1.0.0-alpha.13"
+    "mobx-monitor": "^1.0.0-alpha.13",
+    "ts-jest": "^26.5.5"
   },
   "dependencies": {
     "mobx-annotation-manipulator": "^1.0.0-alpha.13",
