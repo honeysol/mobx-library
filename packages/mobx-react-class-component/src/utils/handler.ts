@@ -50,7 +50,7 @@ export const addHandler = (target: any, handlerName: string, handler: any) => {
   target[handlersKey].push(handler);
 };
 
-export const getHandlerAppliedMap = function(this: any) {
+export const getHandlerAppliedMap = function (this: any) {
   if (!this[handlerAppliedMapKey]) {
     this[handlerAppliedMapKey] = new Set();
   }
@@ -65,14 +65,14 @@ export const addInitializer = (
 ) => {
   const cancelerKey = Symbol("canceler");
 
-  addHandler(target, trigger, function(this: any) {
+  addHandler(target, trigger, function (this: any) {
     const handlerAppliedMap = getHandlerAppliedMap.call(this);
     if (!handlerAppliedMap.has(propertyKey)) {
       handlerAppliedMap.add(propertyKey);
       this[cancelerKey] = handler.apply(this);
     }
   });
-  addHandler(target, "release", function(this: any) {
+  addHandler(target, "release", function (this: any) {
     this[cancelerKey]?.();
   });
 };
@@ -86,7 +86,7 @@ export const addUpdator = (
   handler: any,
   propertyKey: string | symbol
 ) => {
-  addHandler(target, "update", function(this: any) {
+  addHandler(target, "update", function (this: any) {
     handler.apply(this);
   });
 };
