@@ -7,7 +7,7 @@ import {
 } from "mobx-annotation-manipulator";
 
 export const becomeObservedObject = (
-  handler: () => () => void | null,
+  handler: () => (() => void) | null,
   cancelHandler?: () => void
 ) => <T>(
   accessor?: PropertyAccessor<T>,
@@ -50,7 +50,7 @@ export const becomeObserved = <T>(
 };
 
 becomeObserved.observable = <TT>(
-  handler: () => () => void | null,
+  handler: () => (() => void) | null,
   cancelHandler?: () => void
 ) => {
   return createSymmetricAnnotation<TT>(
@@ -70,7 +70,7 @@ becomeObserved.observable = <TT>(
   );
 };
 becomeObserved.computed = <TT>(
-  handler: () => () => void | null,
+  handler: () => (() => void) | null,
   cancelHandler?: () => void
 ) => {
   return createSymmetricAnnotation<TT>(
