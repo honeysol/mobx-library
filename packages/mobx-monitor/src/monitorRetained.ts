@@ -86,6 +86,7 @@ export const monitorRetained = <T>({
       if (!observed && entered) {
         stopCleanUpTimer();
         _leave();
+        atom.reportChanged();
       }
     },
   };

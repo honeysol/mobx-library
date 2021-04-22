@@ -4,10 +4,10 @@ import { assert } from "mobx-annotation-manipulator";
 
 import type { downConverter } from "./CoreDocument";
 
-type DocumentSnapshot = firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>;
+type QuerySnapshot = firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>;
 
 export const reflectChange = <R>(
-  snapshot: DocumentSnapshot,
+  snapshot: QuerySnapshot,
   items: IObservableArray<R | undefined>,
   map: Map<string, R>,
   downConverter: downConverter<R>

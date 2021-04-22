@@ -1,6 +1,8 @@
 import type firebase from "firebase";
-import { makeObservable, observable, runInAction } from "mobx";
-import { autoclose } from "mobx-autoclose";
+import { observable, runInAction } from "mobx";
+import { demand } from "mobx-demand";
+
+import { nonPromise, Promisable } from "./util";
 
 export type downConverter<R> = (snapshot: DocumentSnapshot) => R;
 
@@ -8,16 +10,30 @@ type DocumentReference = firebase.firestore.DocumentReference;
 type DocumentSnapshot = firebase.firestore.DocumentSnapshot;
 
 class DocumentSession<R> {
-  @observable.ref promise?: Promise<R | undefined> | R = undefined;
-  @observable.ref value?: R = undefined;
-  cancelHandler?: () => void;
-  constructor(documentRef: DocumentReference, downConverter: downConverter<R>) {
-    makeObservable(this);
-    this.promise = new Promise((resolve, reject) => {
+  private promiseAccessor = observable.box<Promisable<R | undefined>>();
+  get promise(): Promisable<R | undefined> {
+    return this.promiseAccessor.get();
+  }
+  set promise(value: Promisable<R | undefined>) {
+    this.promiseAccessor.set(value);
+  }
+  private cancelHandler?: () => void;
+  private canceled?: boolean;
+  constructor(
+    documentRefPromise: Promisable<DocumentReference | undefined>,
+    downConverter: downConverter<R>
+  ) {
+    // eslint-disable-next-line no-async-promise-executor
+    this.promise = new Promise(async (resolve, reject) => {
+      const documentRef = await documentRefPromise;
+      if (this.canceled || !documentRef) {
+        resolve(undefined);
+        return;
+      }
       this.cancelHandler = documentRef.onSnapshot(
         (snapshot) => {
           runInAction(() => {
-            this.value = this.promise = downConverter(snapshot);
+            this.promise = downConverter(snapshot);
           });
           // this resolve is ignored in the secondary access for the specification of Promise API
           resolve(this.promise);
@@ -27,42 +43,50 @@ class DocumentSession<R> {
     });
   }
   close() {
+    this.canceled = true;
     this.cancelHandler?.();
   }
 }
 
 export class CoreDocument<R> {
-  documentRef: DocumentReference;
-  downConverter: downConverter<R>;
+  private _documentRefPromise: Promisable<DocumentReference | undefined>;
+  protected set documentRefPromise(
+    value: Promisable<DocumentReference | undefined>
+  ) {
+    this._documentRefPromise = value;
+    this.sessionAccessor.invalidate();
+  }
+  protected get documentRefPromise(): Promisable<
+    DocumentReference | undefined
+  > {
+    return this._documentRefPromise;
+  }
+  private downConverter: downConverter<R>;
   constructor({
     documentRef,
     downConverter,
   }: {
-    documentRef: DocumentReference;
+    documentRef: Promisable<DocumentReference | undefined>;
     downConverter: downConverter<R>;
   }) {
-    makeObservable(this);
-    this.documentRef = documentRef;
+    this._documentRefPromise = documentRef;
     this.downConverter = downConverter;
   }
-  @autoclose({ cleanup: (session: DocumentSession<R>) => session.close() })
-  get session(): DocumentSession<R> | undefined {
-    return (
-      this.documentRef &&
-      new DocumentSession(this.documentRef, this.downConverter)
-    );
-  }
-  get promise(): Promise<R | undefined> | R | undefined {
-    return this.session?.promise;
+  protected sessionAccessor = demand({
+    get: () => new DocumentSession(this.documentRefPromise, this.downConverter),
+    cleanup: (session: DocumentSession<R>) => session.close(),
+    retentionTime: 2000,
+  });
+  get promise(): Promisable<R | undefined> {
+    return this.sessionAccessor.get().promise;
   }
   get value(): R | undefined {
-    return this.session?.value;
+    return nonPromise(this.promise);
   }
-  get exists(): boolean | undefined {
+  get exists(): boolean {
     return !!this.value;
   }
-  async getExists(): Promise<boolean | undefined> {
-    await this.promise;
-    return !!this.value;
+  async getExists(): Promise<boolean> {
+    return !!(await this.promise);
   }
 }

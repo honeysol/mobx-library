@@ -7,7 +7,7 @@ import type {
   DocumentType,
   FirestoreDocument,
 } from "./FirestoreDocument";
-import { FirestoreQuery } from "./FirestoreQuery";
+import { FirestoreQuery, FirestoreSimpleQuery } from "./FirestoreQuery";
 import { deriveQuery, QueryParams } from "./queryBuilder";
 
 type Firestore = firebase.firestore.Firestore;
@@ -28,6 +28,16 @@ export class FirestoreFactory<D extends FirestoreDocument<unknown, B>, B> {
   @memoize({})
   query(path: string, queryParams?: QueryParams): FirestoreQuery<D, B> {
     return new FirestoreQuery<D, B>({
+      query: deriveQuery(this.firestore.collection(path), queryParams),
+      factory: this,
+    });
+  }
+  @memoize({})
+  simpleQuery(
+    path: string,
+    queryParams?: QueryParams
+  ): FirestoreSimpleQuery<D, B> {
+    return new FirestoreSimpleQuery<D, B>({
       query: deriveQuery(this.firestore.collection(path), queryParams),
       factory: this,
     });

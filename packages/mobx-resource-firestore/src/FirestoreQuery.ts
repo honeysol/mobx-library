@@ -44,3 +44,24 @@ export class FirestoreQuery<
     });
   }
 }
+
+export class FirestoreSimpleQuery<
+  D extends FirestoreDocument<unknown, B>,
+  B
+> extends CoreQuery<DocumentType<D>> {
+  constructor({
+    query,
+    factory,
+  }: {
+    query: Query;
+    factory: FirestoreFactory<D, B>;
+  }) {
+    const downConverter = (factory.downConverter || defaultConverter) as (
+      snapshot: DocumentSnapshot
+    ) => DocumentType<D>;
+    super({
+      query,
+      downConverter,
+    });
+  }
+}
