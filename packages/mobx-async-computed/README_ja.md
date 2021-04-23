@@ -36,6 +36,9 @@ class Sample{
 
 ## APIs
 
+### <T>asyncComputed(callback: () => Promise<T>): { get(): T}
+Promiseを解決した結果を取得します。
+
 ### @asyncComputedFrom(propertyName: string)
 指定されたpropertyのPromiseを解決した値をこのフィールドに代入します。外部のproperty(this[propertyName])には通常、@computedを指定します。
 

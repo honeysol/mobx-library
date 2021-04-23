@@ -14,7 +14,7 @@ See [./src/asyncCommitter.ts](./src/asyncCommitter.ts) to investigate the intern
 
 Supports MobX5 / MobX6 including decorator and MobX6 new annotation. 
 
-MobX6 decorator/annotation requires initialization with makeObservable / makeAutoObservable. This feature is experimental and vulnerable for MobX6 internal update in future.
+MobX6 decorator/annotation requires initialization with makeObservable / makeAutoObservable. This feature is experimental and dependent to MobX6 internal behavior.
 
 ## Example
 
@@ -44,10 +44,13 @@ class Sample{
 
 ## APIs
 
+### <T>asyncComputed(callback: () => Promise<T>): { get(): T}
+Gets the resolved value from promise.
+
 ### @asyncComputedFrom(propertyName: string)
 Assign the resolved value of Promise in specified field to this field. The external property(this[propertyName]) is usually @computed.
 
 ### @asyncComputed
 _Deprecated for Typescript_
 
-Gets the value that resolved the promise. However, Typescript doesn't support changing types with decorators. It is not recommended in Typescript as the actual type and the expression type will not match.
+Gets the resolved value from promise. However, Typescript doesn't support changing types with decorators. It is not recommended in Typescript as the actual type and the expression type will not match.
