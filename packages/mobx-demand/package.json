@@ -1,6 +1,7 @@
 {
   "name": "mobx-demand",
   "version": "1.0.0-alpha.13",
+  "private": true,
   "description": "Generate value on demand, cleanup when it will become unused, with non-MobX generator",
   "author": "norami",
   "license": "MIT",

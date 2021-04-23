@@ -1,6 +1,7 @@
 {
   "name": "mobx-resource-firestore",
   "version": "1.0.0-alpha.12",
+  "private": true,
   "description": "Decorators to resolve MobX fields asynchronously.",
   "author": "norami",
   "license": "MIT",

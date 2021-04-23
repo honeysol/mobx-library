@@ -1,6 +1,7 @@
 {
   "name": "mobx-autoclose",
   "version": "1.0.0-alpha.13",
+  "private": true,
   "description": "automatically release the resource with MobX",
   "author": "norami",
   "license": "MIT",
