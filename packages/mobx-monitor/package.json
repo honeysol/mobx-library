@@ -1,6 +1,6 @@
 {
   "name": "mobx-monitor",
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "description": "This library provides a decorator version of MobX onBecomeObserved and a decorator to make it more convenient.",
   "author": "norami",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "mobx-annotation-manipulator": "^1.0.0-alpha.14"
+    "mobx-annotation-manipulator": "^1.0.0-alpha.15"
   },
   "publishConfig": {
     "access": "public"

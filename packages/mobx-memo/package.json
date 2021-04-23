@@ -1,7 +1,7 @@
 {
   "name": "mobx-memo",
   "private": true,
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "description": "Implementation of memoizer based on MobX, which supports an automatic genaration and clean-up of resource, lazy clean-up and a customized clean-up function",
   "author": "norami",
   "license": "MIT",
@@ -29,11 +29,11 @@
   },
   "devDependencies": {
     "mobx": "^6.1.8",
-    "mobx-monitor": "^1.0.0-alpha.14"
+    "mobx-monitor": "^1.0.0-alpha.15"
   },
   "dependencies": {
-    "mobx-annotation-manipulator": "^1.0.0-alpha.14",
-    "mobx-demand": "^1.0.0-alpha.14"
+    "mobx-annotation-manipulator": "^1.0.0-alpha.15",
+    "mobx-demand": "^1.0.0-alpha.15"
   },
   "publishConfig": {
     "access": "public"

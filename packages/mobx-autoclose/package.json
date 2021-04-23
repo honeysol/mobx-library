@@ -1,6 +1,6 @@
 {
   "name": "mobx-autoclose",
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "private": true,
   "description": "automatically release the resource with MobX",
   "author": "norami",
@@ -31,8 +31,8 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "mobx-annotation-manipulator": "^1.0.0-alpha.14",
-    "mobx-monitor": "^1.0.0-alpha.14"
+    "mobx-annotation-manipulator": "^1.0.0-alpha.15",
+    "mobx-monitor": "^1.0.0-alpha.15"
   },
   "publishConfig": {
     "access": "public"

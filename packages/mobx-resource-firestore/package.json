@@ -1,6 +1,6 @@
 {
   "name": "mobx-resource-firestore",
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "private": true,
   "description": "Decorators to resolve MobX fields asynchronously.",
   "author": "norami",
@@ -33,8 +33,8 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "mobx-async-computed": "^1.0.0-alpha.14",
-    "mobx-observed": "^1.0.0-alpha.14"
+    "mobx-async-computed": "^1.0.0-alpha.15",
+    "mobx-observed": "^1.0.0-alpha.15"
   },
   "publishConfig": {
     "access": "public"
