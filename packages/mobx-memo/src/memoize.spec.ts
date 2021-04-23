@@ -1,11 +1,13 @@
+import { reaction } from "mobx";
 import { memoize } from "mobx-memo";
 
 const wait = (time: number) =>
   new Promise((resolve) => setTimeout(resolve, time));
 
-describe("memoize with untracked value", () => {
+describe("memoize", () => {
   const close = jest.fn();
   const init = jest.fn();
+  const changed = jest.fn();
   class Box<T> {
     value: T;
     constructor(value: T) {
@@ -52,7 +54,25 @@ describe("memoize with untracked value", () => {
     expect(init).toBeCalledWith("test2");
   });
 
-  afterAll(
-    async () => await new Promise((resolve) => setTimeout(resolve, 1000))
-  );
+  it("wait", async () => {
+    await wait(1000);
+  });
+
+  it("tracked call", async () => {
+    // Can I devide this test?
+    init.mockClear();
+    close.mockClear();
+    const reactionCanceler = reaction(() => getBoxMemoized("test3"), changed);
+    expect(init).toBeCalledWith("test3");
+    expect(changed).not.toBeCalled();
+    expect(close).not.toBeCalled();
+    await wait(1000);
+    expect(close).not.toBeCalled();
+    reactionCanceler();
+    expect(close).not.toBeCalled();
+    await wait(1000);
+    expect(close).toBeCalled();
+  });
+
+  afterAll(async () => await wait(1000));
 });
