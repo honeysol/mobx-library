@@ -1,6 +1,6 @@
 {
   "name": "mobx-resource-cache",
-  "version": "1.0.0-alpha.13",
+  "version": "1.0.0-alpha.14",
   "description": "Resource cache based on MobX, which supports an automatic genaration and clean-up of resource, lazy clean-up and a customized clean-up function",
   "author": "norami",
   "license": "MIT",
@@ -28,10 +28,10 @@
   },
   "devDependencies": {
     "mobx": "^6.1.8",
-    "mobx-monitor": "^1.0.0-alpha.13"
+    "mobx-monitor": "^1.0.0-alpha.14"
   },
   "dependencies": {
-    "mobx-demand": "^1.0.0-alpha.13"
+    "mobx-demand": "^1.0.0-alpha.14"
   },
   "publishConfig": {
     "access": "public"

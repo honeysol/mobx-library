@@ -1,6 +1,6 @@
 {
   "name": "mobx-demand",
-  "version": "1.0.0-alpha.13",
+  "version": "1.0.0-alpha.14",
   "private": true,
   "description": "Generate value on demand, cleanup when it will become unused, with non-MobX generator",
   "author": "norami",
@@ -31,8 +31,8 @@
     "mobx": "^6.1.8"
   },
   "dependencies": {
-    "mobx-annotation-manipulator": "^1.0.0-alpha.13",
-    "mobx-monitor": "^1.0.0-alpha.13"
+    "mobx-annotation-manipulator": "^1.0.0-alpha.14",
+    "mobx-monitor": "^1.0.0-alpha.14"
   },
   "publishConfig": {
     "access": "public"
