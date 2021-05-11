@@ -1,4 +1,4 @@
-import { reaction } from "mobx";
+import { IReactionDisposer, reaction } from "mobx";
 import { memoize } from "mobx-memo";
 
 const wait = (time: number) =>
@@ -58,18 +58,27 @@ describe("memoize", () => {
     await wait(1000);
   });
 
-  it("tracked call", async () => {
-    // Can I devide this test?
+  let reactionCanceler: IReactionDisposer;
+  it("should call init with tracked", async () => {
     init.mockClear();
     close.mockClear();
-    const reactionCanceler = reaction(() => getBoxMemoized("test3"), changed);
+    reactionCanceler = reaction(() => getBoxMemoized("test3"), changed);
     expect(init).toBeCalledWith("test3");
     expect(changed).not.toBeCalled();
     expect(close).not.toBeCalled();
+  });
+
+  it("should not closes after timeout", async () => {
     await wait(1000);
     expect(close).not.toBeCalled();
+  });
+
+  it("should not closes immediately after cancel", async () => {
     reactionCanceler();
     expect(close).not.toBeCalled();
+  });
+
+  it("should closes after timeout", async () => {
     await wait(1000);
     expect(close).toBeCalled();
   });
